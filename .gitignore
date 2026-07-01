@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+prototype/.venv/
+.venv/
+venv/
+
+# Secrets
+.env
+*.env
+
+# Cognee local data / system state
+.cognee_system/
+.cognee_data/
+.cognee_cache/
+.data_storage/
+cognee_system/
+databases/
+*.lance/
+
+# Spike outputs (regenerable debug artifacts)
+prototype/memory_core_spike/outputs/*
+!prototype/memory_core_spike/outputs/.gitkeep
+
+# Local tooling (machine-specific, not shared project config)
+.claude/settings.local.json
+.tokensave/
+
