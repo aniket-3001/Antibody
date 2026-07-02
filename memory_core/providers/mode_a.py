@@ -74,6 +74,9 @@ _SYSTEM_DIR.mkdir(exist_ok=True)
 cognee.config.data_root_directory(str(_DATA_DIR))
 cognee.config.system_root_directory(str(_SYSTEM_DIR))
 
+# Ensure chunk size is safely below NVIDIA NIM's embedding token limit (512 max)
+cognee.config.set_chunk_size(256)
+
 # All Cognee search types map through GRAPH_COMPLETION today. gap_analysis
 # is specified in ARCHITECTURE.md §6 as a candidate for a dedicated CYPHER
 # traversal, deferred until a query actually needs it — not implemented
@@ -145,7 +148,7 @@ class ModeAProvider:
         except Exception as exc:
             raise ProviderError(f"cognee.add() failed for dataset={dataset}: {exc}") from exc
 
-        cognify_kwargs: dict = {"datasets": dataset}
+        cognify_kwargs: dict = {"datasets": dataset, "chunk_size": 256, "chunks_per_batch": 1}
         if custom_prompt:
             cognify_kwargs["custom_prompt"] = custom_prompt
         if ontology.owl_path:
