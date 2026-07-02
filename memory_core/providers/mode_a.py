@@ -31,6 +31,7 @@ this layer should never need to catch a raw Cognee exception.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import pathlib
 import uuid
@@ -198,15 +199,21 @@ class ModeAProvider:
         # exception raised here into RecallError; adding a ProviderError
         # wrapper in between would just be re-typed twice for no benefit.
         search_type = _STRATEGY_TO_SEARCH_TYPE[strategy]
-        answers = await cognee.search(
-            query_text=query_text, query_type=search_type, datasets=dataset
+        
+        # Parallelize the two search calls to cut latency in half.
+        # `only_context=True` skips the LLM generation step.
+        answers, context = await asyncio.gather(
+            cognee.search(
+                query_text=query_text, query_type=search_type, datasets=dataset
+            ),
+            cognee.search(
+                query_text=query_text,
+                query_type=search_type,
+                datasets=dataset,
+                only_context=True,
+            )
         )
-        context = await cognee.search(
-            query_text=query_text,
-            query_type=search_type,
-            datasets=dataset,
-            only_context=True,
-        )
+        
         return ProviderQueryResult(
             answer=_extract_search_text(answers),
             raw_context=_extract_search_text(context),

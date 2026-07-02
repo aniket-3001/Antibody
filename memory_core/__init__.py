@@ -23,6 +23,7 @@ recall/forget changed shape.
 
 from __future__ import annotations
 
+import asyncio
 import time
 
 from memory_core.config import get_provider
@@ -128,18 +129,27 @@ async def recall(
 
     started = time.monotonic()
     try:
-        result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
+        degraded_check = not provider.capabilities().supports_deterministic_evidence
+        
+        if not degraded_check:
+            # Parallelize LLM query and graph fetch
+            result, graph = await asyncio.gather(
+                provider.query(query, dataset=project_id, strategy=resolved_strategy),
+                _get_graph(project_id=project_id, provider=provider)
+            )
+        else:
+            result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
+            graph = None
 
-        degraded = not provider.capabilities().supports_deterministic_evidence
+        degraded = degraded_check
         evidence: list[Evidence] = []
         evidence_graph: MemoryGraph | None = None
-        if not degraded:
+        if not degraded and graph is not None:
             relationship = (
                 RelationshipType.CONTRADICTS
                 if resolved_strategy == "contradiction"
                 else RelationshipType.SUPPORTS
             )
-            graph = await _get_graph(project_id=project_id, provider=provider)
             evidence = build_evidence(graph, relationship)
             if evidence:
                 edges = find_edges_by_relationship(graph, relationship)

@@ -13,6 +13,7 @@ ADAPTERS = {
     "paper": markdown,
     "experiment": markdown,
     "research_note": markdown,
+    "markdown": markdown,
     "text": text,
     "pdf": pdf,
     "url": url,

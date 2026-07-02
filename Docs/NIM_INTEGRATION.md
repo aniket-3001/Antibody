@@ -39,6 +39,8 @@ The `cognee` library's `LiteLLMEmbeddingEngine` was patched (in-place in
    or a `passage`. Cognee always embeds documents during indexing, so
    `passage` is always correct here.
 
+3. **Patched `LanceDBAdapter.py` for search queries** — Since NIM's `nv-embedqa-e5-v5` is asymmetric, queries must be embedded with `input_type="query"`. We patched `LanceDBAdapter.search` to pass `input_type="query"` when making inference embedding calls during vector search.
+
 These patches apply only when `nvidia_nim/` is detected in the model string,
 so other providers are unaffected.
 
