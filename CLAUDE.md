@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> **Resuming work? Read `Docs/PROGRESS.md` first.** It has the current
+> milestone status, what's blocked, and the next action. This file below is
+> the durable project charter (role, principles, philosophy) — it doesn't
+> change session to session. `Docs/PROGRESS.md` does.
+
 # MemoryOS
 
 Welcome.

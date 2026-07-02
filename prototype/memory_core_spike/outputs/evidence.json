@@ -1,0 +1,161 @@
+{
+  "chains": [
+    {
+      "source_node": {
+        "type": "Entity",
+        "label": "rt-detr: transformers beat yolo on accuracy"
+      },
+      "target_node": {
+        "type": "Entity",
+        "label": "yolo11 is the best object detector for our real-time use case"
+      },
+      "edge": "CONTRADICTS"
+    },
+    {
+      "source_node": {
+        "type": "Entity",
+        "label": "rt-detr exceeds yolo11 by 2.1 map points"
+      },
+      "target_node": {
+        "type": "Entity",
+        "label": "yolo11 is the best object detector for our real-time use case"
+      },
+      "edge": "CONTRADICTS"
+    }
+  ],
+  "subgraph": {
+    "nodes": [
+      {
+        "name": "yolo11 is the best object detector for our real-time use case",
+        "type": "Entity",
+        "created_at": 1782976004514,
+        "updated_at": 1782976004514,
+        "ontology_valid": false,
+        "version": 1,
+        "topological_rank": 0,
+        "metadata": {
+          "index_fields": [
+            "name"
+          ],
+          "identity_fields": [
+            "name"
+          ]
+        },
+        "belongs_to_set": [
+          "paper_c"
+        ],
+        "source_pipeline": "cognify_pipeline",
+        "source_task": "extract_graph_from_data",
+        "source_node_set": null,
+        "source_user": null,
+        "source_content_hash": null,
+        "feedback_weight": 0.5,
+        "importance_weight": 0.5,
+        "description": "The active hypothesis that YOLO11 is the best detector for real-time object detection use cases.",
+        "relations": [],
+        "truth_alignment": null,
+        "truth_subspace_signature": null,
+        "truth_epoch": null,
+        "id": "bbdc6dee-9bbb-5626-868a-a55420782b82"
+      },
+      {
+        "name": "rt-detr exceeds yolo11 by 2.1 map points",
+        "type": "Entity",
+        "created_at": 1782976004514,
+        "updated_at": 1782976004514,
+        "ontology_valid": false,
+        "version": 1,
+        "topological_rank": 0,
+        "metadata": {
+          "index_fields": [
+            "name"
+          ],
+          "identity_fields": [
+            "name"
+          ]
+        },
+        "belongs_to_set": [
+          "paper_c"
+        ],
+        "source_pipeline": "cognify_pipeline",
+        "source_task": "extract_graph_from_data",
+        "source_node_set": null,
+        "source_user": null,
+        "source_content_hash": null,
+        "feedback_weight": 0.5,
+        "importance_weight": 0.5,
+        "description": "On COCO dataset, RT-DETR achieves 2.1 mAP points higher accuracy than YOLO11 at comparable latency, contradicting the claim that YOLO11 is the best detector for real-time use cases.",
+        "truth_alignment": null,
+        "truth_subspace_signature": null,
+        "truth_epoch": null,
+        "id": "ac72d51b-b12b-550a-a105-dea44d0b33b0"
+      },
+      {
+        "name": "rt-detr: transformers beat yolo on accuracy",
+        "type": "Entity",
+        "created_at": 1782976004509,
+        "updated_at": 1782976004509,
+        "ontology_valid": false,
+        "version": 1,
+        "topological_rank": 0,
+        "metadata": {
+          "index_fields": [
+            "name"
+          ],
+          "identity_fields": [
+            "name"
+          ]
+        },
+        "belongs_to_set": [
+          "paper_c"
+        ],
+        "source_pipeline": "cognify_pipeline",
+        "source_task": "extract_graph_from_data",
+        "source_node_set": null,
+        "source_user": null,
+        "source_content_hash": null,
+        "feedback_weight": 0.5,
+        "importance_weight": 0.5,
+        "description": "A 2025 paper by Zhao and Lv introducing RT-DETR, a real-time detection transformer that exceeds YOLO11 in accuracy on COCO dataset.",
+        "truth_alignment": null,
+        "truth_subspace_signature": null,
+        "truth_epoch": null,
+        "id": "7080dde8-00ec-5d9e-82d6-4f2c6a4146e3"
+      }
+    ],
+    "edges": [
+      {
+        "source": "7080dde8-00ec-5d9e-82d6-4f2c6a4146e3",
+        "target": "bbdc6dee-9bbb-5626-868a-a55420782b82",
+        "relationship": "contradicts",
+        "props": {
+          "source_node_id": "7080dde8-00ec-5d9e-82d6-4f2c6a4146e3",
+          "target_node_id": "bbdc6dee-9bbb-5626-868a-a55420782b82",
+          "relationship_name": "contradicts",
+          "updated_at": "2026-07-02 07:06:44",
+          "relationship_type": "contradicts",
+          "edge_text": "The RT-DETR paper contradicts the hypothesis that YOLO11 is the best detector for real-time use cases by showing RT-DETR achieves higher accuracy.",
+          "edge_object_id": "c4273708-429c-5825-8554-d94f96934ef4",
+          "feedback_weight": 0.5
+        },
+        "rel_norm": "CONTRADICTS"
+      },
+      {
+        "source": "ac72d51b-b12b-550a-a105-dea44d0b33b0",
+        "target": "bbdc6dee-9bbb-5626-868a-a55420782b82",
+        "relationship": "contradicts",
+        "props": {
+          "source_node_id": "ac72d51b-b12b-550a-a105-dea44d0b33b0",
+          "target_node_id": "bbdc6dee-9bbb-5626-868a-a55420782b82",
+          "relationship_name": "contradicts",
+          "updated_at": "2026-07-02 07:06:44",
+          "relationship_type": "contradicts",
+          "edge_text": "The finding that RT-DETR exceeds YOLO11 by 2.1 mAP points contradicts the hypothesis that YOLO11 is the best detector for real-time use cases.",
+          "edge_object_id": "84cae637-b25a-52ac-a0ad-f2e1d1eafdd9",
+          "feedback_weight": 0.5
+        },
+        "rel_norm": "CONTRADICTS"
+      }
+    ]
+  }
+}

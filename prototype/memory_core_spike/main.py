@@ -19,7 +19,7 @@ natural-language answer. Every claim in the report is backed by an artifact in
 outputs/.
 
 Run:
-  1. put your OpenAI key in .env  (see .env in this directory)
+  1. put your Anthropic key in .env  (see .env in this directory)
   2. prototype/.venv/Scripts/python.exe prototype/memory_core_spike/main.py
 """
 from __future__ import annotations
@@ -30,6 +30,9 @@ import pathlib
 import sys
 from typing import Any
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+
 from dotenv import load_dotenv
 
 HERE = pathlib.Path(__file__).parent
@@ -38,7 +41,9 @@ load_dotenv(HERE / ".env")
 import cognee  # noqa: E402  (import after dotenv so config picks up env)
 from cognee import SearchType  # noqa: E402
 from cognee.infrastructure.databases.graph import get_graph_engine  # noqa: E402
-from cognee.modules.ontology.rdf_xml import RDFLibOntologyResolver  # noqa: E402
+from cognee.modules.ontology.rdf_xml.RDFLibOntologyResolver import (  # noqa: E402
+    RDFLibOntologyResolver,
+)
 
 # --- isolate all Cognee state inside the prototype directory -----------------
 cognee.config.data_root_directory(str(HERE / ".cognee_data"))
