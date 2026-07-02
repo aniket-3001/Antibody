@@ -12,7 +12,7 @@ structural claims are never asserted by an LLM.
 from __future__ import annotations
 
 from memory_core.graph.query import get_graph
-from memory_core.models import Evidence, MemoryEdge, MemoryGraph, RelationshipType
+from memory_core.models import Evidence, Hypothesis, MemoryEdge, MemoryGraph, RelationshipType
 from memory_core.providers.base import MemoryProvider
 
 
@@ -35,13 +35,38 @@ def subgraph_for_edges(graph: MemoryGraph, edges: list[MemoryEdge]) -> MemoryGra
 
 
 def build_evidence(graph: MemoryGraph, relationship: RelationshipType) -> list[Evidence]:
-    """Resolve full Evidence objects (with Hypothesis/SourceRecord attached).
+    """Resolve Evidence objects for every edge of `relationship` type.
 
-    Not implemented yet — requires cross-referencing Hypothesis and
-    SourceRecord lookups beyond a pure graph filter (Milestone 2.2, as
-    part of recall() orchestration).
+    `source: SourceRecord | None` is always None here — resolving the full
+    anchored SourceRecord (project_id, ingested_at, node_set) needs a
+    provider round-trip (list_data()), which would break this function's
+    pure/no-provider-calls contract (design §1.1's determinism guarantee).
+    Callers that need it can cross-reference `evidence_node.source_ids`
+    against list_sources() themselves.
     """
-    raise NotImplementedError("Milestone 2.2: resolve Hypothesis/SourceRecord for each edge")
+    edges = find_edges_by_relationship(graph, relationship)
+    by_id = {n.id: n for n in graph.nodes}
+    evidence: list[Evidence] = []
+    for e in edges:
+        evidence_node = by_id.get(e.source_id)
+        hypothesis_node = by_id.get(e.target_id)
+        if evidence_node is None or hypothesis_node is None:
+            continue
+        status = str(hypothesis_node.attributes.get("status", "active")).lower()
+        hypothesis = Hypothesis(
+            id=hypothesis_node.id,
+            statement=hypothesis_node.label,
+            status="retired" if status == "retired" else "active",
+        )
+        evidence.append(
+            Evidence(
+                evidence_node=evidence_node,
+                hypothesis=hypothesis,
+                relationship=relationship,
+                source=None,
+            )
+        )
+    return evidence
 
 
 async def find_evidence(

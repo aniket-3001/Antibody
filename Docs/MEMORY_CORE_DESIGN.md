@@ -1,15 +1,16 @@
 # `memory_core` — Design Document
 
-Version: 1.2 (approved; extended by a pre-2.2 architecture review — §11)
+Version: 1.3 (Milestone 2.2 — ModeAProvider implemented; §12)
 Status: **Approved.** v1.1 revised v1.0 per reviewer request: `improve()`
 promoted to a stable public function (§2.2, §10.2); Cognee Cloud
 capability claims made explicitly version-scoped rather than permanent
-(§4); Performance Budget section added (§8). v1.2 adds §11, recording two
+(§4); Performance Budget section added (§8). v1.2 added §11, recording two
 new public functions and three type adjustments found by a pre-2.2
-architecture review that traced the Milestone 1 spike's steps against the
-API. Milestone 2.1 (module skeleton) is implemented; this document is the
-spec Milestone 2.2 (ModeAProvider) implements against.
-Precedes: Milestone 2.2 implementation.
+architecture review. v1.3 adds §12: ModeAProvider is implemented and
+verified — Milestone 1's spike is fully reproducible through the public
+API (`tests/reproduce_milestone_1.py`, 10/10 PASS) and is now superseded.
+Mode B remains scaffolded only, per instruction.
+Precedes: Milestone 3 (Backend API).
 Depends on: `Docs/ONTOLOGY.md` (schema, source of truth), `Docs/ARCHITECTURE.md`
 (system context), `Docs/MILESTONE_1_REPORT.md` (validated evidence that the
 patterns this design formalizes actually work against real Cognee 1.2.2).
@@ -1098,3 +1099,55 @@ need to become stream-based for large files; `active_hypotheses: list[str]`
 and the module-level-function/no-`MemoryCore`-class design were already
 named as breaking-change risks in §10.1/§10.7 and are reaffirmed, not
 re-litigated.
+
+---
+
+## 12. Milestone 2.2 — ModeAProvider implementation notes
+
+`ModeAProvider` is implemented (Mode A only, per instruction; Mode B
+remains scaffolded per §4.4). Verified against real Cognee 1.2.2 +
+Anthropic, not assumed. `tests/reproduce_milestone_1.py` reproduces
+Milestone 1 entirely through the public API (10/10 criteria, PASS) —
+`prototype/memory_core_spike/` is superseded, retained for reference only.
+
+Real findings from wiring the actual calls, each incorporated into the
+implementation and documented in code where the decision lives:
+
+- **`cognee.datasets.delete_data(mode=...)`'s `"hard"` value is explicitly
+  marked legacy/dangerous in Cognee's own source** and isn't branched on
+  in the visible deletion logic — graph-consistent node/edge cleanup
+  happens automatically (`has_data_related_nodes` check), independent of
+  the flag. `forget(hard: bool)` is kept in the public signature for
+  contract stability (§2.4) but `ModeAProvider.delete_source()` always
+  requests `mode="soft"`, never `"hard"` — a correctness fix this review's
+  original assumption (`hard=True` maps to real hard-delete semantics) got
+  wrong. `ONTOLOGY.md` §7's target orphan-pruning semantics are honored by
+  Cognee's automatic behavior, not by this flag.
+- **`get_graph_engine().get_graph_data()` has no dataset-scoping parameter**
+  found anywhere in the installed package. Mode A v1 inherits the Milestone
+  1 spike's own operating assumption — one project per configured storage
+  root (`data_root_directory`/`system_root_directory`) — rather than
+  silently claiming multi-project isolation it hasn't verified. True
+  multi-tenant graph scoping within one shared Cognee installation is
+  unverified and out of scope for this milestone.
+- **Cold-start gap**: `cognee.add()` bootstraps the relational schema
+  internally on first use, but `cognee.datasets.list_datasets()` (needed by
+  `reset_project()`, `list_sources()`, `forget()`) does not — calling
+  `reset_project()` as the very first operation against a brand-new storage
+  root raised `DatabaseNotCreatedError`. Fixed by treating that specific
+  exception as "no dataset exists yet" (a correct answer, not an error) in
+  `ModeAProvider._resolve_dataset_id()`.
+- **Title/source_type round-trip is unsolved.** Cognee's stored data items
+  don't expose a human-readable title or the `source_type` discriminator
+  memory_core cares about — `list_sources()`/`get_stats()` report best-effort
+  fallbacks (`SourceRecord.title` falls back to Cognee's internal hash-based
+  name; `source_type` defaults to `"text"`), documented in `graph/query.py`
+  rather than silently faked. Real title/type tracking needs its own
+  metadata store — deferred, not solved here.
+- **Reproduction used incremental per-source `cognify()`** (one `ingest()`
+  call per fixture) rather than the spike's single batched `cognify()` over
+  all four sources at once. Result: 55 nodes / 170 edges vs. the spike's
+  58 / 180 — close but not identical, as anticipated in
+  `tests/reproduce_milestone_1.py`'s own docstring. The structural criteria
+  that matter (Tier-1 relationships present, correct `CONTRADICTS` edges,
+  working recall) passed regardless; exact parity was never the bar.

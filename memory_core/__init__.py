@@ -23,6 +23,8 @@ recall/forget changed shape.
 
 from __future__ import annotations
 
+import time
+
 from memory_core.config import get_provider
 from memory_core.errors import (
     CapabilityUnavailableError,
@@ -53,7 +55,12 @@ from memory_core.models import (
     SourceInput,
     SourceRecord,
 )
-from memory_core.retrieval.evidence import find_evidence as _find_evidence
+from memory_core.retrieval.evidence import (
+    build_evidence,
+    find_edges_by_relationship,
+    find_evidence as _find_evidence,
+    subgraph_for_edges,
+)
 from memory_core.retrieval.router import classify_intent
 
 __all__ = [
@@ -108,11 +115,48 @@ async def recall(
     project_id: str,
     strategy: RecallStrategy | None = None,
 ) -> RecallResult:
-    """Design §2.3."""
+    """Design §2.3.
+
+    v1 evidence-relationship mapping is deliberately simple, not a full
+    router: "contradiction" strategy looks for CONTRADICTS evidence,
+    everything else looks for SUPPORTS — matching the only two query
+    shapes Milestone 1 actually validated. Broaden when a real query needs
+    EVALUATES/DERIVED_FROM evidence attached.
+    """
     provider = get_provider()
     resolved_strategy = strategy or classify_intent(query)
-    raise NotImplementedError(
-        "Milestone 2.2: wire provider.query() + retrieval.evidence.build_evidence()"
+
+    started = time.monotonic()
+    try:
+        result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
+    except Exception as exc:
+        raise RecallError(f"recall failed for project_id={project_id}: {exc}") from exc
+    duration_ms = int((time.monotonic() - started) * 1000)
+
+    degraded = not provider.capabilities().supports_deterministic_evidence
+    evidence: list[Evidence] = []
+    evidence_graph: MemoryGraph | None = None
+    if not degraded:
+        relationship = (
+            RelationshipType.CONTRADICTS
+            if resolved_strategy == "contradiction"
+            else RelationshipType.SUPPORTS
+        )
+        graph = await _get_graph(project_id=project_id, provider=provider)
+        evidence = build_evidence(graph, relationship)
+        if evidence:
+            edges = find_edges_by_relationship(graph, relationship)
+            evidence_graph = subgraph_for_edges(graph, edges)
+
+    return RecallResult(
+        query=query,
+        answer=result.answer,
+        evidence=evidence,
+        evidence_graph=evidence_graph,
+        degraded=degraded,
+        strategy_used=resolved_strategy,
+        duration_ms=duration_ms,
+        raw_llm_context=result.raw_context,
     )
 
 

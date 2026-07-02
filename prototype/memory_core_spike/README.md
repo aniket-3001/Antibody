@@ -1,5 +1,13 @@
 # Memory Core Spike (Milestone 1)
 
+> **Superseded as of Milestone 2.2.** Everything this script does is now
+> reproducible through the real `memory_core` public API — see
+> `tests/reproduce_milestone_1.py`, which performs the same corpus/query
+> using only `memory_core.ingest/find_evidence/recall/get_graph/reset_project`,
+> and passes the same 10 structural criteria. This directory is retained for
+> historical reference (it's the evidence behind `Docs/MILESTONE_1_REPORT.md`)
+> but is no longer the way to exercise this functionality. Use `memory_core`.
+
 Throwaway validation prototype. **Not product code.** It answers exactly one
 question: *can Cognee reliably build the research memory graph MemoryOS needs?*
 

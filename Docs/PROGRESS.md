@@ -9,7 +9,65 @@ Last updated: 2026-07-02.
 
 ---
 
-## Milestone 1 (Memory Core Spike) — COMPLETE ✅
+## Milestone 2 (`memory_core` module) — COMPLETE ✅
+
+**Design → skeleton → architecture review → ModeAProvider, all done and
+verified.** Full spec: [`Docs/MEMORY_CORE_DESIGN.md`](MEMORY_CORE_DESIGN.md)
+(now v1.3, §12 has the implementation notes). Milestone 1's spike is
+**superseded**: `tests/reproduce_milestone_1.py` reproduces it entirely
+through the public API (`ingest`/`find_evidence`/`recall`/`get_graph`/
+`reset_project`) and passes the same 10 structural criteria — see
+`tests/outputs/reproduction_report.md`. `prototype/memory_core_spike/` is
+retained for historical reference only.
+
+### Sequence
+
+1. **Design** (`MEMORY_CORE_DESIGN.md` v1.0→v1.1): public API, internal
+   architecture, provider abstraction, data models, error model, testing
+   strategy, extension points, tradeoffs. Approved with 3 changes:
+   `improve()` promoted to a real public function (not folded into
+   `ingest()`); Cognee Cloud capability claims made version-scoped, not
+   permanent; a Performance Budget section added.
+2. **Milestone 2.1 skeleton**: full package structure, all pure/mechanical
+   pieces implemented (models, errors, ontology vocabulary + domain/range
+   checks, `custom_prompt` builder, content-hash id derivation, graph
+   normalization, evidence filtering), provider-calling orchestration
+   stubbed with `NotImplementedError`.
+3. **Pre-2.2 architecture review** (design v1.2, §11): traced the M1
+   spike's 7 steps against the skeleton's API and found two real gaps —
+   no LLM-free evidence lookup, no per-project reset. Added
+   `find_evidence()` and `reset_project()`, plus three cheap type fixes
+   (`Evidence.relationship` widened, `RecallStrategy` moved to the correct
+   owning module, `RecallResult.raw_llm_context` added for transparency).
+   All additive; nothing in `ingest`/`improve`/`recall`/`forget` changed shape.
+4. **Milestone 2.2 — `ModeAProvider`** (design v1.3, §12): wired the real
+   Cognee calls. Mode B remains scaffolded only, per instruction. Four real
+   findings surfaced by actually running it (not assumed):
+   - `delete_data(mode="hard")` is legacy/dangerous per Cognee's own source
+     and isn't functionally wired — `forget(hard=...)` stays in the public
+     API for contract stability, but `ModeAProvider` always requests
+     `mode="soft"`. Orphan-pruning is automatic in Cognee 1.2.2, not
+     controlled by this flag.
+   - `get_graph_engine().get_graph_data()` has no dataset-scoping parameter
+     — Mode A v1 inherits the spike's own assumption of one project per
+     storage root; true multi-project isolation is unverified, named as a
+     limitation, not silently assumed to work.
+   - Cold-start bug: `reset_project()` as the very first call against a
+     fresh storage root hit `DatabaseNotCreatedError` (`cognee.add()`
+     bootstraps the schema; `list_datasets()` doesn't). Fixed by treating
+     that exception as "no dataset yet," which is the correct answer.
+   - Title/`source_type` aren't recoverable from what Cognee stores —
+     `list_sources()` reports honest best-effort fallbacks, documented in
+     code, not faked.
+
+### Where we are now
+
+Milestone 2 is done. Per `ARCHITECTURE.md` §11's original sequence, next
+is **Milestone 3 (Backend API — FastAPI over `memory_core`)**, not started.
+
+---
+
+## Milestone 1 (Memory Core Spike) — COMPLETE ✅ (superseded by Milestone 2.2)
 
 **Verdict: PASS. All 10 success criteria passed**, including the one
 genuinely uncertain criterion (`CONTRADICTS` edge extraction). Full polished
@@ -164,17 +222,6 @@ Full table and raw evidence: `MILESTONE_1_REPORT.md` and
 
 ---
 
-## Where we are now
-
-**Milestone 1 is done and checkpointed.** Milestone 2 (`memory_core` module)
-has **not** been started — per explicit instruction, no architectural work
-begins until this checkpoint is committed. See the assistant's proposed
-Milestone 2 plan in the conversation for the next-session starting point, and
-`ARCHITECTURE.md` §11 for the originally planned milestone sequence
-(`memory_core` → Backend API → Frontend → Demo hardening).
-
----
-
 ## Decisions log (don't re-litigate these without a reason)
 
 - Low-level Cognee API (`add`/`cognify`/`search`) chosen over high-level
@@ -192,3 +239,15 @@ Milestone 2 plan in the conversation for the next-session starting point, and
   general "spike outputs are regenerable, don't commit them" `.gitignore`
   rule — they are the evidence backing `MILESTONE_1_REPORT.md`'s claims.
   Future re-runs of the spike still shouldn't be committed by default.
+- `memory_core` lives at repo root (sibling to `Backend/`/`Frontend/`/
+  `prototype/`), not nested under `Backend/` — it must be importable and
+  runnable standalone, independent of any web framework (design §1.1).
+- `forget(hard: bool)` stays in the public API even though Cognee 1.2.2
+  doesn't functionally honor a hard/soft distinction today — the parameter
+  is contract-stable API surface, not a lie; `ModeAProvider` always uses
+  the sanctioned `mode="soft"` internally (design §12).
+- Mode A v1 assumes one project per configured Cognee storage root (same
+  assumption the Milestone 1 spike operated under). Multi-project isolation
+  within one shared local Cognee installation is unverified and explicitly
+  not claimed — don't build multi-project UI/backend features assuming
+  `memory_core` already isolates them; it doesn't yet.
