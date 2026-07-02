@@ -30,3 +30,7 @@ prototype/memory_core_spike/outputs/*
 .claude/settings.local.json
 .tokensave/
 
+node_modules/
+.next/
+Frontend/.next/
+Frontend/node_modules/
