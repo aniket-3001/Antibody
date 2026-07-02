@@ -29,6 +29,8 @@ async def list_sources() -> dict:
         raise MemoryAPIError(502, ErrorCode.PROVIDER_ERROR, "Memory provider failed.", str(exc)) from exc
     except ConfigurationError as exc:
         raise MemoryAPIError(503, ErrorCode.CONFIGURATION_ERROR, "Server is misconfigured.", str(exc)) from exc
+    except MemoryAPIError:
+        raise
     except Exception as exc:
         raise MemoryAPIError(500, ErrorCode.INTERNAL_ERROR, "Unexpected error.", str(exc)) from exc
 
