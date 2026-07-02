@@ -61,6 +61,13 @@ app.add_middleware(
 @app.exception_handler(MemoryAPIError)
 async def memory_api_error_handler(request: Request, exc: MemoryAPIError) -> JSONResponse:
     """Serialise MemoryAPIError into the standard error envelope (spec §2)."""
+    if exc.status_code == 500:
+        import traceback
+        import sys
+        print(f"--- INTERNAL ERROR 500 ---", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        print(f"Detail: {exc.detail}", file=sys.stderr)
+        print(f"--------------------------", file=sys.stderr)
     return JSONResponse(
         status_code=exc.status_code,
         content={

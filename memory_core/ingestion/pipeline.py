@@ -78,6 +78,7 @@ async def run_ingest(
             node_set=[source_id],
             ontology=ontology,
             custom_prompt=custom_prompt,
+            title=source.title,
         )
     except MemoryCoreError:
         # The provider (mode_a.py) already typed this correctly —

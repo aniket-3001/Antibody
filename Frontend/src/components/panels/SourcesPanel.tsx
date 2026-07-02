@@ -110,11 +110,18 @@ function SourceCard({
   onConfirm,
   onCancel,
 }: SourceCardProps) {
-  const date = source.ingested_at
-    ? new Date(source.ingested_at).toLocaleDateString(undefined, {
-        month: 'short', day: 'numeric', year: 'numeric',
-      })
-    : '—'
+  let date = '—'
+  if (source.ingested_at) {
+    const d = new Date(source.ingested_at)
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear()
+      const month = d.toLocaleString('en-US', { month: 'short' })
+      const day = d.getDate()
+      const hours = String(d.getHours()).padStart(2, '0')
+      const minutes = String(d.getMinutes()).padStart(2, '0')
+      date = `${month} ${day}, ${year} ${hours}:${minutes}`
+    }
+  }
 
   return (
     <div

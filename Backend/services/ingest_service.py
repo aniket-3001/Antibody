@@ -103,6 +103,10 @@ async def run_ingest(
     except MemoryAPIError:
         raise
     except Exception as exc:
+        import traceback, sys
+        print("=== INGEST 500 ===", file=sys.stderr, flush=True)
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()
         raise MemoryAPIError(500, ErrorCode.INTERNAL_ERROR, "Unexpected error.", str(exc)) from exc
 
     return result

@@ -226,7 +226,7 @@ export function applyEvidenceGlow(
 /** Remove evidence glow from a node (restore its class-derived border). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function removeEvidenceGlow(node: any) {
-  node.removeStyle('border-color shadow-blur shadow-color shadow-opacity shadow-offset-x shadow-offset-y')
+  node.removeStyle()
 }
 
 // ── Entity type metadata for legend ──────────────────────────────────────────

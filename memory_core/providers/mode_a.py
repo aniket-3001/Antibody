@@ -107,6 +107,15 @@ class ModeAProvider:
             # nothing has been ingested into this storage root yet, so
             # "no dataset found" is the correct answer, not an error.
             return None
+        except Exception as exc:
+            # After a hard reset (rm -rf .cognee_system), SQLite raises
+            # OperationalError("unable to open database file") because the
+            # databases/ subdirectory does not yet exist.  Treat the same
+            # as DatabaseNotCreatedError — the schema will be bootstrapped
+            # by cognee.add() on the first ingest call.
+            if "unable to open database file" in str(exc) or "DatabaseNotCreated" in type(exc).__name__:
+                return None
+            raise
         for d in datasets:
             if d.name == dataset:
                 return d.id
@@ -120,13 +129,18 @@ class ModeAProvider:
         node_set: list[str],
         ontology: OntologyBundle,
         custom_prompt: str,
+        title: str | None = None,
     ) -> ProviderIngestReceipt:
         before = await self.fetch_graph(dataset=dataset)
         before_nodes = len(before.nodes) if before else 0
         before_edges = len(before.edges) if before else 0
 
         try:
-            await cognee.add(text, dataset_name=dataset, node_set=node_set)
+            if title:
+                from cognee.tasks.ingestion.data_item import DataItem
+                await cognee.add(DataItem(data=text, label=title), dataset_name=dataset, node_set=node_set)
+            else:
+                await cognee.add(text, dataset_name=dataset, node_set=node_set)
         except Exception as exc:
             raise ProviderError(f"cognee.add() failed for dataset={dataset}: {exc}") from exc
 
@@ -215,6 +229,17 @@ class ModeAProvider:
                 eng = await get_graph_engine()
                 nodes, edges = await eng.get_graph_data()
         except Exception as exc:
+            err_str = str(exc)
+            # On a fresh database (after rm -rf .cognee_system or first run),
+            # Cognee raises DatabaseNotCreatedError or OperationalError before
+            # cognee.add() has bootstrapped the schema. Treat as empty graph —
+            # the caller computes a delta, so zero nodes/edges is correct here.
+            if (
+                "DatabaseNotCreated" in type(exc).__name__
+                or "unable to open database file" in err_str
+                or "database has not been created" in err_str.lower()
+            ):
+                return RawGraph(nodes=[], edges=[])
             raise ProviderError(f"get_graph_data() failed for dataset={dataset}: {exc}") from exc
         return RawGraph(nodes=nodes, edges=edges)
 
@@ -230,7 +255,7 @@ class ModeAProvider:
             ProviderDataItem(
                 data_id=str(item.id),
                 node_set=(json.loads(item.node_set)[0] if item.node_set else item.name),
-                title=None,
+                title=item.name,
                 ingested_at=item.created_at,
                 raw={"name": item.name},
             )

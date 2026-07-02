@@ -101,6 +101,7 @@ class MemoryProvider(Protocol):
         node_set: list[str],
         ontology: OntologyBundle,
         custom_prompt: str,
+        title: str | None = None,
     ) -> ProviderIngestReceipt: ...
 
     async def query(
