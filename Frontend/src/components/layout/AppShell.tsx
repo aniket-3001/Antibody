@@ -25,7 +25,7 @@ const GraphArea = dynamic(
     loading: () => (
       <div className="flex-1 flex items-center justify-center bg-[#0a0e1a]">
         <div className="text-slate-600 text-sm flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center animate-pulse">
             <span className="text-white text-sm font-bold">M</span>
           </div>
           <span>Initialising graph canvas…</span>

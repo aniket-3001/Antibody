@@ -132,7 +132,7 @@ export function RecallPanel() {
                 <MetaRow label="Evidence">
                   <button
                     onClick={() => {/* canvas auto-fit is handled in GraphArea */}}
-                    className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors"
+                    className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors"
                   >
                     {lastRecall.evidence_graph.node_count} nodes highlighted in graph →
                   </button>
@@ -191,7 +191,7 @@ export function RecallPanel() {
                 rows={4}
                 maxLength={2000}
                 disabled={loading}
-                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 transition-colors resize-none disabled:opacity-50"
+                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-colors resize-none disabled:opacity-50"
                 aria-describedby="recall-hint"
               />
               <span className="absolute bottom-2 right-2.5 text-xs text-slate-600" aria-hidden="true">
@@ -213,7 +213,7 @@ export function RecallPanel() {
               value={strategy}
               onChange={(e) => setStrategy(e.target.value as RecallStrategy | '')}
               disabled={loading}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:border-indigo-500/60 focus:outline-none transition-colors disabled:opacity-50"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:border-emerald-500/60 focus:outline-none transition-colors disabled:opacity-50"
             >
               {STRATEGY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -243,7 +243,7 @@ export function RecallPanel() {
           <button
             onClick={() => void handleSubmit()}
             disabled={loading || !query.trim() || !hasGraph}
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm font-medium rounded-lg transition-colors shadow-md shadow-indigo-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm font-medium rounded-lg transition-colors shadow-md shadow-emerald-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
             aria-label="Submit recall query"
           >
             {loading ? (

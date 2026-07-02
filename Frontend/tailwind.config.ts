@@ -14,8 +14,8 @@ const config: Config = {
         // Spec Appendix A
         graph: '#0a0e1a',
         accent: {
-          DEFAULT: '#6366f1',
-          hover: '#818cf8',
+          DEFAULT: '#10b981', // emerald-500
+          hover: '#34d399',   // emerald-400
         },
       },
       fontFamily: {

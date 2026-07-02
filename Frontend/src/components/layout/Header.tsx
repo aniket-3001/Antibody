@@ -69,7 +69,7 @@ function TabBar() {
             onKeyDown={(e) => handleKeyDown(e, i)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150
               ${active
-                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-900/50'
+                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-900/50'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
           >
@@ -128,7 +128,7 @@ export function Header() {
       <div className="flex items-center gap-4 px-4 h-14">
         {/* Logo */}
         <div className="flex items-center gap-2.5 flex-none">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-900/50">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-900/50">
             <span className="text-white text-xs font-bold" aria-hidden="true">M</span>
           </div>
           <div className="hidden sm:block">

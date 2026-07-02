@@ -100,7 +100,7 @@ export function NodeDetailPanel() {
                 return (
                   <li key={edgeData.id} className="flex items-start gap-2 text-xs">
                     <span className="text-slate-600 mt-0.5">{isSource ? '→' : '←'}</span>
-                    <span className="text-indigo-400 font-medium">{edgeData.relationship}</span>
+                    <span className="text-emerald-400 font-medium">{edgeData.relationship}</span>
                     <span className="text-slate-400 break-words">{otherLabel}</span>
                   </li>
                 )

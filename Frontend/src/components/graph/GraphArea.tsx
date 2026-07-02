@@ -70,7 +70,7 @@ export function GraphArea() {
           style={{ background: '#0a0e1a' }}
         >
           <div className="flex flex-col items-center gap-4 text-slate-600">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600/25 to-violet-600/25 border border-indigo-500/20 flex items-center justify-center animate-pulse">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600/25 to-teal-600/25 border border-emerald-500/20 flex items-center justify-center animate-pulse">
               <span className="text-xl">✦</span>
             </div>
             <span className="text-sm">Loading knowledge graph…</span>

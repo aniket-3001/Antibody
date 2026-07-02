@@ -19,8 +19,8 @@ export function ProgressBar({ complete = false }: { complete?: boolean }) {
       <div
         className={
           complete
-            ? 'h-full bg-indigo-500 w-full transition-all duration-300 ease-out'
-            : 'h-full bg-indigo-500 progress-animate'
+            ? 'h-full bg-emerald-500 w-full transition-all duration-300 ease-out'
+            : 'h-full bg-emerald-500 progress-animate'
         }
       />
     </div>

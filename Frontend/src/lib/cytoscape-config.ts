@@ -9,8 +9,8 @@ import type { Stylesheet, LayoutOptions } from 'cytoscape'
 
 // ── Node colours (spec §7.2) ──────────────────────────────────────────────────
 const NODE_COLORS: Record<string, { bg: string; border: string }> = {
-  'entity-paper':          { bg: '#6366f1', border: '#4338ca' },
-  'entity-author':         { bg: '#8b5cf6', border: '#6d28d9' },
+  'entity-paper':          { bg: '#10b981', border: '#047857' },
+  'entity-author':         { bg: '#14b8a6', border: '#0f766e' },
   'entity-method':         { bg: '#0ea5e9', border: '#0369a1' },
   'entity-dataset':        { bg: '#14b8a6', border: '#0f766e' },
   'entity-benchmark':      { bg: '#f59e0b', border: '#b45309' },
@@ -109,7 +109,7 @@ export function buildCytoscapeStylesheet(): Stylesheet[] {
       selector: 'node:selected',
       style: {
         'border-width': 3,
-        'border-color': '#818cf8',
+        'border-color': '#34d399',
         'z-index': 20,
       } as Record<string, unknown>,
     },
@@ -202,7 +202,7 @@ export const LAYOUT_CONFIG = {
 // ── Evidence glow colours per strategy (spec §7.4) ───────────────────────────
 export const EVIDENCE_COLORS: Record<string, string> = {
   contradiction: '#ef4444',
-  relationship:  '#6366f1',
+  relationship:  '#10b981',
   gap_analysis:  '#f59e0b',
   factual:       '#22c55e',
 }
@@ -231,8 +231,8 @@ export function removeEvidenceGlow(node: any) {
 
 // ── Entity type metadata for legend ──────────────────────────────────────────
 export const ENTITY_LEGEND = [
-  { cls: 'entity-paper',         label: 'Paper',         color: '#6366f1' },
-  { cls: 'entity-author',        label: 'Author',        color: '#8b5cf6' },
+  { cls: 'entity-paper',         label: 'Paper',         color: '#10b981' },
+  { cls: 'entity-author',        label: 'Author',        color: '#14b8a6' },
   { cls: 'entity-method',        label: 'Method',        color: '#0ea5e9' },
   { cls: 'entity-dataset',       label: 'Dataset',       color: '#14b8a6' },
   { cls: 'entity-benchmark',     label: 'Benchmark',     color: '#f59e0b' },

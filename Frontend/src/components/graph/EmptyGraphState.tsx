@@ -35,7 +35,7 @@ export function EmptyGraphState() {
         {PARTICLES.map((p, i) => (
           <span
             key={i}
-            className="absolute text-indigo-500/40 font-bold text-lg animate-[drift_6s_ease-in-out_infinite]"
+            className="absolute text-emerald-500/40 font-bold text-lg animate-[drift_6s_ease-in-out_infinite]"
             style={{
               top: p.top,
               left: p.left,
@@ -50,10 +50,10 @@ export function EmptyGraphState() {
 
         {/* Subtle connection lines (SVG) */}
         <svg className="absolute inset-0 w-full h-full opacity-10" aria-hidden="true">
-          <line x1="35%" y1="20%" x2="25%" y2="35%" stroke="#6366f1" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="35%" y1="20%" x2="55%" y2="25%" stroke="#6366f1" strokeWidth="1" strokeDasharray="4 4" />
+          <line x1="35%" y1="20%" x2="25%" y2="35%" stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" />
+          <line x1="35%" y1="20%" x2="55%" y2="25%" stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" />
           <line x1="55%" y1="25%" x2="60%" y2="45%" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="25%" y1="35%" x2="40%" y2="55%" stroke="#6366f1" strokeWidth="1" strokeDasharray="4 4" />
+          <line x1="25%" y1="35%" x2="40%" y2="55%" stroke="#10b981" strokeWidth="1" strokeDasharray="4 4" />
           <line x1="60%" y1="45%" x2="55%" y2="60%" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="4 4" />
         </svg>
       </div>
@@ -61,7 +61,7 @@ export function EmptyGraphState() {
       {/* Central message */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-xs px-6 animate-[fadeIn_0.6s_ease-out]">
         {/* Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-violet-600/30 border border-indigo-500/30 flex items-center justify-center mb-5 shadow-lg shadow-indigo-900/30">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600/30 to-teal-600/30 border border-emerald-500/30 flex items-center justify-center mb-5 shadow-lg shadow-emerald-900/30">
           <span className="text-2xl" aria-hidden="true">✦</span>
         </div>
 
@@ -75,7 +75,7 @@ export function EmptyGraphState() {
 
         <button
           onClick={() => setTab('upload')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-md shadow-indigo-900/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors duration-150 shadow-md shadow-emerald-900/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
           aria-label="Open upload panel to add your first paper"
         >
           <span aria-hidden="true">→</span>

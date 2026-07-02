@@ -15,14 +15,14 @@ const BORDER: Record<ToastType, string> = {
   success: 'border-green-500/40 bg-green-500/10',
   warning: 'border-amber-500/40 bg-amber-500/10',
   error:   'border-red-500/40   bg-red-500/10',
-  info:    'border-blue-500/40  bg-blue-500/10',
+  info:    'border-emerald-500/40  bg-emerald-500/10',
 }
 
 const TEXT: Record<ToastType, string> = {
   success: 'text-green-300',
   warning: 'text-amber-300',
   error:   'text-red-300',
-  info:    'text-blue-300',
+  info:    'text-emerald-300',
 }
 
 function ToastItem({ id, type, message }: { id: string; type: ToastType; message: string }) {

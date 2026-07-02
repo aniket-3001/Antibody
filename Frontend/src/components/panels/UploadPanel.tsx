@@ -196,7 +196,7 @@ export function UploadPanel() {
           <p className="text-xs text-slate-600">Switching to Recall…</p>
           <button
             onClick={handleReset}
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
           >
             Upload another
           </button>
@@ -233,7 +233,7 @@ export function UploadPanel() {
                   onClick={() => setOperation(op)}
                   className={`flex-1 py-2 text-xs font-medium transition-colors ${
                     operation === op
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-emerald-600 text-white'
                       : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                   }`}
                   aria-pressed={operation === op}
@@ -256,7 +256,7 @@ export function UploadPanel() {
                   onClick={() => { setContentType(ct.value); setFieldErrors({}) }}
                   className={`flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-all ${
                     contentType === ct.value
-                      ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
+                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
                       : 'border-slate-700 bg-slate-800/40 text-slate-500 hover:border-slate-600 hover:text-slate-300'
                   }`}
                   aria-pressed={contentType === ct.value}
@@ -278,7 +278,7 @@ export function UploadPanel() {
                 onDragOver={handleDragOver}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                  file ? 'border-indigo-500/60 bg-indigo-500/5' : 'border-slate-700 hover:border-slate-600 bg-slate-800/30'
+                  file ? 'border-emerald-500/60 bg-emerald-500/5' : 'border-slate-700 hover:border-slate-600 bg-slate-800/30'
                 }`}
                 role="button"
                 aria-label="Click or drag to upload PDF"
@@ -332,7 +332,7 @@ export function UploadPanel() {
                 placeholder="Paste or type content here…"
                 rows={8}
                 maxLength={500_000}
-                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 resize-none transition-colors"
+                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 resize-none transition-colors"
               />
               <div className="flex justify-between items-center mt-1">
                 {fieldErrors.content ? <FieldError msg={fieldErrors.content} /> : <span />}
@@ -352,7 +352,7 @@ export function UploadPanel() {
                 value={url}
                 onChange={(e) => { setUrl(e.target.value); setFieldErrors((p) => ({ ...p, url: '' })) }}
                 placeholder="https://…"
-                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 transition-colors"
+                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
               />
               {fieldErrors.url && <FieldError msg={fieldErrors.url} />}
             </div>
@@ -370,7 +370,7 @@ export function UploadPanel() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="YOLO11 Detection Paper"
               maxLength={255}
-              className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 transition-colors"
+              className="w-full bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
             />
             {fieldErrors.title && <FieldError msg={fieldErrors.title} />}
           </div>
@@ -401,7 +401,7 @@ export function UploadPanel() {
                   onChange={(e) => setHypothesisInput(e.target.value)}
                   placeholder="YOLO11 outperforms YOLO9 on COCO"
                   maxLength={1000}
-                  className="flex-1 bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 placeholder-slate-600 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 transition-colors"
+                  className="flex-1 bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 placeholder-slate-600 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && hypothesisInput.trim()) {
                       e.preventDefault()
@@ -417,7 +417,7 @@ export function UploadPanel() {
                       setHypothesisInput('')
                     }
                   }}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2"
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors px-2"
                   aria-label="Add hypothesis"
                 >
                   + Add
@@ -434,7 +434,7 @@ export function UploadPanel() {
           {/* Submit */}
           <button
             onClick={() => void handleSubmit()}
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors shadow-md shadow-indigo-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors shadow-md shadow-emerald-900/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
             aria-label={operation === 'remember' ? 'Add to memory' : 'Expand memory'}
           >
             <span aria-hidden="true">▶</span>

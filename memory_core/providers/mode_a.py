@@ -214,9 +214,40 @@ class ModeAProvider:
             )
         )
         
+        import os
+        from litellm import acompletion
+        
+        raw_answer_str = _extract_search_text(answers)
+        raw_context_str = _extract_search_text(context)
+        
+        # Add an LLM generation step after retrieval to convert the JSON into a proper natural-language response
+        model = os.getenv("LLM_MODEL", "nvidia_nim/meta/llama-3.3-70b-instruct")
+        api_key = os.getenv("NVIDIA_NIM_API_KEY") or os.getenv("LLM_API_KEY")
+        
+        prompt = f"""
+You are a helpful AI assistant. Answer the user's query based on the retrieved graph context.
+Always respond in a natural, conversational manner. Do NOT return raw JSON.
+
+User Query: {query_text}
+
+Retrieved Graph Information (Structured):
+{raw_answer_str}
+{raw_context_str}
+"""
+        try:
+            llm_res = await acompletion(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                api_key=api_key
+            )
+            final_answer = llm_res.choices[0].message.content
+        except Exception as e:
+            # Fallback to the raw string if the LLM generation fails
+            final_answer = raw_answer_str
+
         return ProviderQueryResult(
-            answer=_extract_search_text(answers),
-            raw_context=_extract_search_text(context),
+            answer=final_answer,
+            raw_context=raw_context_str,
         )
 
     async def fetch_graph(self, *, dataset: str) -> RawGraph | None:

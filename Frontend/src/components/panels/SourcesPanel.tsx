@@ -47,7 +47,7 @@ export function SourcesPanel() {
         <p className="text-sm font-medium text-slate-400">No sources in memory yet.</p>
         <p className="text-xs text-slate-600">
           Upload your first document in the{' '}
-          <span className="text-indigo-400">Upload</span> tab.
+          <span className="text-emerald-400">Upload</span> tab.
         </p>
       </div>
     )

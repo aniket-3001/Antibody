@@ -8,7 +8,7 @@ export function LoadingSpinner({ size = 'md', label = 'Loading...' }: {
   return (
     <span className="inline-flex items-center gap-2" role="status" aria-label={label}>
       <svg
-        className={`${sizeClass} animate-spin text-indigo-400`}
+        className={`${sizeClass} animate-spin text-emerald-400`}
         fill="none"
         viewBox="0 0 24 24"
         aria-hidden="true"
