@@ -17,35 +17,34 @@
 
 ## Graph
 
-nodes=56, edges=180
+nodes=58, edges=156
 
 ### Relationship counts
 
-- `ABOUT`: 5
-- `BELONGS_TO_SET`: 55
-- `CONTAINS`: 43
-- `CONTRADICTS`: 2
+- `ABOUT`: 4
+- `BELONGS_TO_SET`: 48
+- `CONTAINS`: 36
+- `CONTRADICTS`: 1
 - `DERIVED_FROM`: 2
-- `EVALUATES`: 4
-- `IS_A`: 30
+- `EVALUATES`: 3
+- `IS_A`: 33
 - `IS_PART_OF`: 4
 - `MADE_FROM`: 4
-- `REFERENCES`: 4
-- `SUPPORTS`: 4
-- `USES`: 14
-- `WRITTEN_BY`: 9
+- `REFERENCES`: 2
+- `SUPPORTS`: 3
+- `USES`: 5
+- `WRITTEN_BY`: 11
 
 ## CONTRADICTS evidence (find_evidence(), zero LLM calls)
 
-- **rt-detr: transformers beat yolo on accuracy** --CONTRADICTS--> **yolo11 is the best object detector for our real-time use case**
-- **rt-detr exceeds yolo11 in accuracy** --CONTRADICTS--> **yolo11 is the best object detector for our real-time use case**
+- **rt-detr exceeds yolo11 in accuracy** --CONTRADICTS--> **yolo11 is the best object detector for our real-time use case.**
 
 ## recall() natural-language answer
 
-{'dataset_id': UUID('9c318f8d-7279-5823-92b4-b13b506a12a6'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': ['**Paper that contradicts the hypothesis:**\n\n**RT-DETR: Transformers Beat YOLO on Accuracy** (Zhao & Lv, 2025)\n\n**Why:**\n- Current hypothesis: YOLO11 is the best detector for real-time use cases with strict latency budgets\n- RT-DETR contradicts this by achieving 2.1 mAP points higher accuracy than YOLO11 at comparable latency\n- Demonstrates a transformer-based detector can outperform YOLO11 without sacrificing real-time performance']}
+{'dataset_id': UUID('81a1198f-dffb-5094-8242-2619e071fdb5'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': ['Based on the context, the papers that contradict our current hypothesis are not explicitly stated. However, we can infer potential contradictions from papers that discuss alternative approaches or findings. \n\nOne potential contradictory paper is "rt-detr" which is about a real-time detection transformer, implying a different approach to real-time object detection. Another potential contradictory paper is "latency-first detection in production" which discusses object detection under strict production latency budgets, potentially contradicting the findings of "yolo11 meets real-time budget". \n\nHowever, without more information on the current hypothesis, it\'s difficult to determine which papers directly contradict it.']}
 
 ## recall() raw_llm_context (transparency field)
 
 ```
-{'dataset_id': UUID('9c318f8d-7279-5823-92b4-b13b506a12a6'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': 'Nodes:\nNode: rt-detr research note\n__node_content_start__\nResearch note documenting the RT-DETR work and its comparison to YOLO11 on real-time object detection.\n__node_content_end__\n\nNode: researchnote\n__node_content_start__\nresearchnote\n__node_content_end__\n\nNode: # Research Note — Detector Choice for... [real-time, research, note]\n__node_content_start__\n# Research Note — Detector Choice for Real-Time Pipeline\n\nAuthor: Internal Research Team\nDate: 2026-06-01\nTopic: real-time object detection\n\n## Current working hypothesis\n\nWe currently believe that **YOLO11 is the best object detector for our\nreal-time use case**. Our production constraint is a strict latency budget, and\nso far YOLO11 has been our default choice.\n\nThis note records that belief so we can track which evidence supports it and\nwhich evidence contradicts it as we read more papers and run more experiments.\n\nStatus: active.\n\n__node_content_end__\n\nNode: internal research team\n__node_content_start__\nInternal research team authoring the research note\n__node_content_end__\n\nNode: rt-detr: transformers beat yolo on accuracy\n__node_content_start__\nA 2025 paper by Yian Zhao and Wenyu Lv introducing RT-DETR, a real-time detection transformer that exceeds YOLO11 in accuracy on the COCO dataset.\n__node_content_end__\n\nNode: paper\n__node_content_start__\npaper\n__node_content_end__\n\nNode: latency-first detection in production\n__node_content_start__\nA 2025 paper by Maria Santos and Wei Chen studying object detection under strict production latency budgets, deploying and comparing detectors in a real-time serving environment.\n__node_content_end__\n\nNode: author\n__node_content_start__\nauthor\n__node_content_end__\n\nNode: text_ec7c879cbea3e36b6e4c68454cc64499\n__node_content_start__\nNone\n__node_content_end__\n\nNode: This chu
+{'dataset_id': UUID('81a1198f-dffb-5094-8242-2619e071fdb5'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': 'Nodes:\nNode: real-time object detection\n__node_content_start__\nTopic of the paper.\n__node_content_end__\n\nNode: topic\n__node_content_start__\ntopic\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nTopic of the paper\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nTopic of the paper\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__node_content_start__\nA real-time object detector.\n__node_content_end__\n\nNode: detector choice for real-time pipeline\n__node_content_start__\nResearch note on detector choice for real-time pipeline\n__node_content_end__\n\nNode: researchnote\n__node_content_start__\nresearchnote\n__node_content_end__\n\nNode: map@0.5\n__node_content_start__\nA benchmark for object detection accuracy\n__node_content_end__\n\nNode: latency-first detection in production\n__node_content_start__\nA paper about object detection under strict production latency budgets.\n__node_content_end__\n\nNode: yolo11 meets real-time budget\n__node_content_start__\nKey finding of the paper.\n__node_content_end__\n\nNode: finding\n__node_content_start__\nfinding\n__node_content_end__\n\nNode: yolo11 real-time performance\n__node_content_start__\nYOLO11 achieves state-of-the-art real-time performance\n__node_content_end__\n\nNode: paper\n__node_content_start__\npaper\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__node_content_start__\nPaper cited in the paper.\n__node_content_end__\n\nNode: benchmark\n__node_content_start__\nbenchmark\n__node_content_end__\n\nNode: map@0.5\n__node_content_start__\nA benchmark for object detection\n__node_content_end__\n\nNode: rt-detr\n__node_content_start__\nA real-time detection transformer paper\n__node_content_end__\n\n\nConnections:\nreal-time object detection --[is_a]--> topic
 ```
