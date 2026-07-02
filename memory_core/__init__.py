@@ -129,24 +129,35 @@ async def recall(
     started = time.monotonic()
     try:
         result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
+
+        degraded = not provider.capabilities().supports_deterministic_evidence
+        evidence: list[Evidence] = []
+        evidence_graph: MemoryGraph | None = None
+        if not degraded:
+            relationship = (
+                RelationshipType.CONTRADICTS
+                if resolved_strategy == "contradiction"
+                else RelationshipType.SUPPORTS
+            )
+            graph = await _get_graph(project_id=project_id, provider=provider)
+            evidence = build_evidence(graph, relationship)
+            if evidence:
+                edges = find_edges_by_relationship(graph, relationship)
+                evidence_graph = subgraph_for_edges(graph, edges)
+    except CapabilityUnavailableError:
+        # A distinct, meaningful signal ("this provider fundamentally can't
+        # do this") — preserved as-is rather than collapsed into RecallError,
+        # even though it's raised from inside recall()'s own pipeline.
+        raise
     except Exception as exc:
+        # Everything else — a failed search() call, a failed graph fetch
+        # during evidence-building, anything unexpected — is "the recall
+        # pipeline itself failed," which is exactly what RecallError means
+        # (design §6). Recall gets one outward failure type, deliberately,
+        # unlike ingest()'s three-way split — see mode_a.py's query() for
+        # why that asymmetry is intentional, not an oversight.
         raise RecallError(f"recall failed for project_id={project_id}: {exc}") from exc
     duration_ms = int((time.monotonic() - started) * 1000)
-
-    degraded = not provider.capabilities().supports_deterministic_evidence
-    evidence: list[Evidence] = []
-    evidence_graph: MemoryGraph | None = None
-    if not degraded:
-        relationship = (
-            RelationshipType.CONTRADICTS
-            if resolved_strategy == "contradiction"
-            else RelationshipType.SUPPORTS
-        )
-        graph = await _get_graph(project_id=project_id, provider=provider)
-        evidence = build_evidence(graph, relationship)
-        if evidence:
-            edges = find_edges_by_relationship(graph, relationship)
-            evidence_graph = subgraph_for_edges(graph, edges)
 
     return RecallResult(
         query=query,

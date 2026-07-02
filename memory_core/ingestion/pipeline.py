@@ -13,7 +13,7 @@ import hashlib
 import pathlib
 import time
 
-from memory_core.errors import ProviderError
+from memory_core.errors import MemoryCoreError, ProviderError
 from memory_core.models import EntityType, IngestResult, RelationshipType, SourceInput
 from memory_core.ontology.prompts import build_custom_prompt
 from memory_core.providers.base import MemoryProvider, OntologyBundle
@@ -79,7 +79,16 @@ async def run_ingest(
             ontology=ontology,
             custom_prompt=custom_prompt,
         )
-    except Exception as exc:  # provider-specific exceptions are not part of memory_core's contract
+    except MemoryCoreError:
+        # The provider (mode_a.py) already typed this correctly —
+        # ExtractionError for a cognify() fault, OntologyError for a bad
+        # OWL file, ProviderError for everything else. Re-raise as-is;
+        # re-wrapping here would collapse that distinction right back into
+        # one generic type, which is the exact bug this fix closes.
+        raise
+    except Exception as exc:
+        # Defense in depth only: something the provider itself failed to
+        # type (a bug in the provider, not an expected Cognee failure mode).
         raise ProviderError(f"ingest failed for source_id={source_id}: {exc}") from exc
     duration_ms = int((time.monotonic() - started) * 1000)
 

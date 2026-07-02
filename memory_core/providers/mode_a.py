@@ -16,7 +16,17 @@ run — i.e. one project per process. Mode A v1 inherits that exact same
 assumption: this provider is correct for a single project per configured
 storage root, not yet verified for multiple concurrent projects sharing
 one local Cognee installation. True multi-project isolation is future
-work, not a Milestone 2.2 claim.
+work, not a Milestone 2.2 claim — recorded as technical debt in
+Docs/PROJECT_HEALTH.md, not silently fixed here.
+
+Exception typing lives here, not in ingestion/pipeline.py or __init__.py
+(pre-Milestone-3 exception-taxonomy fix). This is the only module that
+knows which raw Cognee call is executing and therefore the only place
+that can correctly distinguish, e.g., an ontology-load failure from a
+cognify() extraction failure from a plain add()/DB failure. Every method
+below converts Cognee/SQLAlchemy/anthropic exceptions into the
+memory_core.errors hierarchy before they leave this class — callers above
+this layer should never need to catch a raw Cognee exception.
 """
 
 from __future__ import annotations
@@ -27,6 +37,7 @@ import uuid
 
 from dotenv import load_dotenv
 
+from memory_core.errors import ExtractionError, OntologyError, ProviderError
 from memory_core.providers.base import (
     OntologyBundle,
     ProviderCapabilities,
@@ -43,6 +54,9 @@ load_dotenv(_REPO_ROOT / ".env")
 
 import cognee  # noqa: E402  (import after dotenv so config picks up env)
 from cognee import SearchType  # noqa: E402
+from cognee.context_global_variables import (  # noqa: E402
+    set_database_global_context_variables,
+)
 from cognee.infrastructure.databases.exceptions.exceptions import (  # noqa: E402
     DatabaseNotCreatedError,
 )
@@ -50,6 +64,7 @@ from cognee.infrastructure.databases.graph import get_graph_engine  # noqa: E402
 from cognee.modules.ontology.rdf_xml.RDFLibOntologyResolver import (  # noqa: E402
     RDFLibOntologyResolver,
 )
+from cognee.modules.users.methods.get_default_user import get_default_user  # noqa: E402
 
 _DATA_DIR = _REPO_ROOT / ".cognee_data"
 _SYSTEM_DIR = _REPO_ROOT / ".cognee_system"
@@ -110,15 +125,29 @@ class ModeAProvider:
         before_nodes = len(before.nodes) if before else 0
         before_edges = len(before.edges) if before else 0
 
-        await cognee.add(text, dataset_name=dataset, node_set=node_set)
+        try:
+            await cognee.add(text, dataset_name=dataset, node_set=node_set)
+        except Exception as exc:
+            raise ProviderError(f"cognee.add() failed for dataset={dataset}: {exc}") from exc
 
         cognify_kwargs: dict = {"datasets": dataset}
         if custom_prompt:
             cognify_kwargs["custom_prompt"] = custom_prompt
         if ontology.owl_path:
-            resolver = RDFLibOntologyResolver(ontology_file=ontology.owl_path)
+            try:
+                resolver = RDFLibOntologyResolver(ontology_file=ontology.owl_path)
+            except Exception as exc:
+                raise OntologyError(
+                    f"failed to load ontology file {ontology.owl_path!r}: {exc}"
+                ) from exc
             cognify_kwargs["config"] = {"ontology_config": {"ontology_resolver": resolver}}
-        await cognee.cognify(**cognify_kwargs)
+
+        try:
+            await cognee.cognify(**cognify_kwargs)
+        except Exception as exc:
+            # The one exception type this class treats as a hard pipeline
+            # fault rather than a generic provider error — design §6.3.
+            raise ExtractionError(f"cognee.cognify() failed for dataset={dataset}: {exc}") from exc
 
         after = await self.fetch_graph(dataset=dataset)
         after_nodes = len(after.nodes) if after else 0
@@ -127,7 +156,10 @@ class ModeAProvider:
         dataset_id = await self._resolve_dataset_id(dataset)
         data_id = ""
         if dataset_id is not None:
-            items = await cognee.datasets.list_data(dataset_id)
+            try:
+                items = await cognee.datasets.list_data(dataset_id)
+            except Exception as exc:
+                raise ProviderError(f"cognee.datasets.list_data() failed: {exc}") from exc
             matches = [i for i in items if json.loads(i.node_set or "[]") == node_set]
             if matches:
                 data_id = str(max(matches, key=lambda i: i.created_at).id)
@@ -145,6 +177,12 @@ class ModeAProvider:
         dataset: str,
         strategy: RecallStrategy,
     ) -> ProviderQueryResult:
+        # Deliberately unwrapped, unlike ingest_source(): the design's error
+        # model (§6) gives recall() a single failure type — RecallError,
+        # "the recall pipeline itself failed" — rather than the three-way
+        # split ingest gets. memory_core.recall() already converts any
+        # exception raised here into RecallError; adding a ProviderError
+        # wrapper in between would just be re-typed twice for no benefit.
         search_type = _STRATEGY_TO_SEARCH_TYPE[strategy]
         answers = await cognee.search(
             query_text=query_text, query_type=search_type, datasets=dataset
@@ -161,15 +199,33 @@ class ModeAProvider:
         )
 
     async def fetch_graph(self, *, dataset: str) -> RawGraph | None:
-        eng = await get_graph_engine()
-        nodes, edges = await eng.get_graph_data()
+        # get_graph_engine() resolves its target database from a context
+        # variable (cognee.context_global_variables.graph_db_config), not
+        # from an argument. cognee.add()/cognify()/search() set that
+        # context internally because `dataset` is a direct parameter to
+        # each of them; get_graph_engine() has no such parameter, so
+        # calling it unscoped silently falls back to a global default
+        # store instead of this dataset's own graph file — verified: in a
+        # fresh process, this returned 0 nodes for a dataset that actually
+        # has 55. Root-caused and fixed here (found during the pre-2.2
+        # exception-taxonomy pass, not a pre-existing known limitation).
+        try:
+            user = await get_default_user()
+            async with set_database_global_context_variables(dataset, user.id):
+                eng = await get_graph_engine()
+                nodes, edges = await eng.get_graph_data()
+        except Exception as exc:
+            raise ProviderError(f"get_graph_data() failed for dataset={dataset}: {exc}") from exc
         return RawGraph(nodes=nodes, edges=edges)
 
     async def list_data(self, *, dataset: str) -> list[ProviderDataItem]:
         dataset_id = await self._resolve_dataset_id(dataset)
         if dataset_id is None:
             return []
-        items = await cognee.datasets.list_data(dataset_id)
+        try:
+            items = await cognee.datasets.list_data(dataset_id)
+        except Exception as exc:
+            raise ProviderError(f"cognee.datasets.list_data() failed: {exc}") from exc
         return [
             ProviderDataItem(
                 data_id=str(item.id),
@@ -192,7 +248,10 @@ class ModeAProvider:
         if dataset_id is None:
             return ProviderDeleteReceipt(deleted=False, already_absent=True)
 
-        items = await cognee.datasets.list_data(dataset_id)
+        try:
+            items = await cognee.datasets.list_data(dataset_id)
+        except Exception as exc:
+            raise ProviderError(f"cognee.datasets.list_data() failed: {exc}") from exc
         if not any(str(i.id) == data_id for i in items):
             return ProviderDeleteReceipt(deleted=False, already_absent=True)
 
@@ -202,13 +261,19 @@ class ModeAProvider:
         # to branch on it — graph-consistent node/edge cleanup happens
         # automatically (has_data_related_nodes check), independent of
         # this flag. Always request the sanctioned "soft" mode.
-        await cognee.datasets.delete_data(
-            dataset_id=dataset_id, data_id=uuid.UUID(data_id), mode="soft"
-        )
+        try:
+            await cognee.datasets.delete_data(
+                dataset_id=dataset_id, data_id=uuid.UUID(data_id), mode="soft"
+            )
+        except Exception as exc:
+            raise ProviderError(f"cognee.datasets.delete_data() failed: {exc}") from exc
         return ProviderDeleteReceipt(deleted=True, already_absent=False)
 
     async def reset_dataset(self, *, dataset: str) -> None:
         dataset_id = await self._resolve_dataset_id(dataset)
         if dataset_id is None:
             return  # nothing to reset — a fresh project with no dataset yet
-        await cognee.datasets.empty_dataset(dataset_id)
+        try:
+            await cognee.datasets.empty_dataset(dataset_id)
+        except Exception as exc:
+            raise ProviderError(f"cognee.datasets.empty_dataset() failed: {exc}") from exc

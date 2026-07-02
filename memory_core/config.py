@@ -19,24 +19,46 @@ from memory_core.providers.mode_b import ModeBProvider
 _MODE_ENV_VAR = "MEMORY_CORE_MODE"
 
 
+_REQUIRED_MODE_A_VARS = ("LLM_PROVIDER", "LLM_API_KEY", "EMBEDDING_PROVIDER")
+_PLACEHOLDER_MARKERS = ("PASTE_", "YOUR_", "CHANGE_ME")
+
+
 def get_provider() -> MemoryProvider:
     """Resolve the active MemoryProvider from environment configuration.
 
-    Raises ConfigurationError immediately for an unrecognized mode, rather
-    than surfacing a confusing failure deep inside ingest()/recall() later
-    — see design §6.3's rationale for why ConfigurationError is fail-fast
-    and separated from ProviderError.
+    Raises ConfigurationError immediately for an unrecognized mode, or for
+    Mode A with a missing/placeholder required env var, rather than
+    surfacing a confusing failure deep inside ingest()/recall() later —
+    see design §6.3's rationale for why ConfigurationError is fail-fast and
+    separated from ProviderError.
 
-    Milestone 2.2 TODO: validate Mode A's required env vars
-    (LLM_PROVIDER/LLM_API_KEY/EMBEDDING_PROVIDER, per ARCHITECTURE.md
-    §9.1) here too, not just the mode name — this is the exact failure
-    class Milestone 1's billing error fell into (Docs/PROGRESS.md).
+    This closes the exception-taxonomy gap named in Docs/PROJECT_HEALTH.md
+    §6 (ConfigurationError previously only fired for a bad mode name).
+    Note what it does *not* cover: Milestone 1's billing failure (a valid
+    key, insufficient credits) is not detectable at config time — that is
+    correctly a runtime ProviderError, not a configuration problem. This
+    check only catches "the env var is missing or still a placeholder,"
+    not "the credentials are valid and funded."
     """
     mode = os.environ.get(_MODE_ENV_VAR, "local").strip().lower()
     if mode in ("local", "mode_a", "a"):
+        _validate_mode_a_env()
         return ModeAProvider()
     if mode in ("cloud", "mode_b", "b"):
         return ModeBProvider()
     raise ConfigurationError(
         f"{_MODE_ENV_VAR}={mode!r} is not recognized. Expected 'local' or 'cloud'."
     )
+
+
+def _validate_mode_a_env() -> None:
+    missing = []
+    for var in _REQUIRED_MODE_A_VARS:
+        value = os.environ.get(var, "").strip()
+        if not value or any(marker in value.upper() for marker in _PLACEHOLDER_MARKERS):
+            missing.append(var)
+    if missing:
+        raise ConfigurationError(
+            f"Mode A requires {_REQUIRED_MODE_A_VARS} to be set in .env; "
+            f"missing or still a placeholder: {missing}. See .env.example."
+        )

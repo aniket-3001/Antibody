@@ -9,6 +9,39 @@ Last updated: 2026-07-02.
 
 ---
 
+## Milestone 2 — FROZEN ✅
+
+`Docs/PROJECT_HEALTH.md` (brutally-honest pre-Milestone-3 review) is
+written and committed. Its top finding: engineering effort is ~35–40%
+complete, but judge-visible product surface is ~0% — `Backend/`/`Frontend/`
+are still empty. Acted on immediately: the collapsed exception taxonomy
+(§6 of the health doc) is fixed — `ModeAProvider` now types exceptions at
+the source (`ProviderError`/`ExtractionError`/`OntologyError`), and
+`config.py` validates Mode A's required env vars.
+
+**While verifying that fix, found and fixed a more serious, previously-
+unknown bug**: `ModeAProvider.fetch_graph()` called `get_graph_engine()`
+without Cognee's per-dataset context, so `get_graph()`/`find_evidence()`/
+`recall()`'s evidence step silently returned an **empty graph in any fresh
+process** — not a multi-project conflict, a single-project read failing
+after every restart, which directly contradicted "persists across
+sessions." Root-caused (`cognee.add`/`cognify`/`search` set the context
+internally via their own `dataset` parameter; a raw `get_graph_engine()`
+call doesn't), fixed with `set_database_global_context_variables`, and
+re-verified: fresh-process reads now correctly return 55 nodes/170 edges
+and 2 `CONTRADICTS` chains, and the full `tests/reproduce_milestone_1.py`
+run still passes 10/10 after the fix.
+
+Per explicit instruction, `FakeProvider`/the Tier 1-2 test suite and real
+multi-project concurrency (locking) are **not** implemented — recorded as
+technical debt in `PROJECT_HEALTH.md` §6, items 4 and 8.
+
+All work through this point is pushed to `origin/master`. **Milestone 2 is
+frozen as of commit at the top of `git log`** — no further `memory_core`
+changes until Milestone 3 (FastAPI backend) is explicitly greenlit.
+
+---
+
 ## Milestone 2 (`memory_core` module) — COMPLETE ✅
 
 **Design → skeleton → architecture review → ModeAProvider, all done and

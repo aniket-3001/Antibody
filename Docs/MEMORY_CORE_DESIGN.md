@@ -1124,12 +1124,22 @@ implementation and documented in code where the decision lives:
   wrong. `ONTOLOGY.md` §7's target orphan-pruning semantics are honored by
   Cognee's automatic behavior, not by this flag.
 - **`get_graph_engine().get_graph_data()` has no dataset-scoping parameter**
-  found anywhere in the installed package. Mode A v1 inherits the Milestone
-  1 spike's own operating assumption — one project per configured storage
-  root (`data_root_directory`/`system_root_directory`) — rather than
-  silently claiming multi-project isolation it hasn't verified. True
-  multi-tenant graph scoping within one shared Cognee installation is
-  unverified and out of scope for this milestone.
+  found anywhere in the installed package — but it does resolve its target
+  database from a context variable
+  (`cognee.context_global_variables.graph_db_config`), which
+  `cognee.add()`/`cognify()`/`search()` set internally (they take `dataset`
+  as a direct argument) but a raw `get_graph_engine()` call does not.
+  **Update (pre-Milestone-3 review, `PROJECT_HEALTH.md`):** this was
+  originally recorded as "unverified for multiple projects." Verification
+  found it was worse — a **single** project's graph read as empty in a
+  **fresh process**, not just under concurrent multi-project access.
+  Fixed: `ModeAProvider.fetch_graph()` now wraps the read in
+  `set_database_global_context_variables(dataset, user.id)`, matching the
+  pattern Cognee's own internals use. Verified: fresh-process reads
+  correctly return the persisted graph; the full reproduction script still
+  passes 10/10 after the fix. What remains unverified and out of scope —
+  concurrent *writes* across multiple datasets/processes (locking,
+  queueing) — is real, narrower debt, tracked in `PROJECT_HEALTH.md` §6.
 - **Cold-start gap**: `cognee.add()` bootstraps the relational schema
   internally on first use, but `cognee.datasets.list_datasets()` (needed by
   `reset_project()`, `list_sources()`, `forget()`) does not — calling
