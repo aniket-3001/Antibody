@@ -48,6 +48,13 @@ class RelationshipType(str, Enum):
 
 SourceType = Literal["paper", "experiment", "research_note", "text"]
 
+RecallStrategy = Literal["relationship", "contradiction", "gap_analysis", "factual"]
+"""Mirrors ARCHITECTURE.md §6's recall router intents. Owned by
+retrieval/router.py (it decides the strategy); providers only consume the
+name to know which Cognee search call to issue. Lives here, not in
+providers/base.py, so the ownership direction (router defines, provider
+consumes) is reflected in the import direction too."""
+
 
 @dataclass
 class MemoryNode:
@@ -128,11 +135,14 @@ class Finding:
 
 @dataclass
 class Evidence:
-    """One edge of a SUPPORTS/CONTRADICTS chain."""
+    """One edge of an evidence chain (typically SUPPORTS/CONTRADICTS, but
+    typed as RelationshipType | str — matching MemoryEdge.relationship —
+    since find_evidence() (design review, pre-2.2) is general-purpose, not
+    hardcoded to those two relationships)."""
 
     evidence_node: MemoryNode
     hypothesis: Hypothesis
-    relationship: Literal["SUPPORTS", "CONTRADICTS"]
+    relationship: RelationshipType | str
     source: SourceRecord | None = None
 
 
@@ -161,6 +171,12 @@ class RecallResult:
     degraded: bool
     strategy_used: str
     duration_ms: int
+    raw_llm_context: str | None = None
+    """The raw graph context the LLM was given (Cognee's only_context=True
+    equivalent), captured for transparency/demo purposes — architecture
+    review, pre-2.2. Not used to compute evidence/evidence_graph, which are
+    always deterministic traversal (design §1.1); this is purely
+    "show your work" for judges/debugging."""
 
 
 @dataclass

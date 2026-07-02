@@ -7,7 +7,7 @@ contradiction, gap-analysis, factual).
 
 from __future__ import annotations
 
-from memory_core.providers.base import RecallStrategy
+from memory_core.models import RecallStrategy
 
 
 def classify_intent(query: str) -> RecallStrategy:

@@ -97,3 +97,15 @@ async def forget_source(
     via provider.list_data() that list_sources() already owns.
     """
     raise NotImplementedError("Milestone 2.2: wire list_data() lookup + provider.delete_source()")
+
+
+async def reset_project(*, project_id: str, provider: MemoryProvider) -> None:
+    """Wipe one project's memory. Added in the pre-2.2 architecture review —
+    the Milestone 1 spike's reset() step had no public-API equivalent.
+
+    Deliberately scoped to one project's dataset (provider.reset_dataset()),
+    not a global wipe — an intentional improvement over the spike, which
+    used cognee.prune.prune_data()/prune_system(), both global with no
+    dataset argument. See design review notes for the verification.
+    """
+    raise NotImplementedError("Milestone 2.2: wire provider.reset_dataset()")

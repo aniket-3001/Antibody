@@ -1,13 +1,15 @@
 # `memory_core` — Design Document
 
-Version: 1.1 (approved, incorporates review feedback)
-Status: **Approved.** Revised from v1.0 per reviewer request:
-`improve()` promoted to a stable public function (§2.2, §10.2); Cognee
-Cloud capability claims made explicitly version-scoped rather than
-permanent (§4); Performance Budget section added (§8). **No implementation
-code exists yet by design** — this document is the spec Milestone 2.1
-(module skeleton) implements against.
-Precedes: Milestone 2 implementation.
+Version: 1.2 (approved; extended by a pre-2.2 architecture review — §11)
+Status: **Approved.** v1.1 revised v1.0 per reviewer request: `improve()`
+promoted to a stable public function (§2.2, §10.2); Cognee Cloud
+capability claims made explicitly version-scoped rather than permanent
+(§4); Performance Budget section added (§8). v1.2 adds §11, recording two
+new public functions and three type adjustments found by a pre-2.2
+architecture review that traced the Milestone 1 spike's steps against the
+API. Milestone 2.1 (module skeleton) is implemented; this document is the
+spec Milestone 2.2 (ModeAProvider) implements against.
+Precedes: Milestone 2.2 implementation.
 Depends on: `Docs/ONTOLOGY.md` (schema, source of truth), `Docs/ARCHITECTURE.md`
 (system context), `Docs/MILESTONE_1_REPORT.md` (validated evidence that the
 patterns this design formalizes actually work against real Cognee 1.2.2).
@@ -1033,3 +1035,66 @@ This document is the contract Milestone 2 implements against. Where
 implementation reveals one of these assumptions is wrong, the fix is to
 update this document and explain the conflict — the same rule §0 followed
 — not to silently drift the code away from what's written here.
+
+---
+
+## 11. Addendum — pre-2.2 architecture review
+
+Performed after the Milestone 2.1 skeleton existed, by tracing the
+Milestone 1 spike's 7 steps against the then-current public API and asking
+whether each was reproducible. Two real gaps were found; four cheap,
+additive interface changes were applied in response. Nothing in
+`ingest`/`improve`/`recall`/`forget`'s signatures changed.
+
+**Gap 1 — no LLM-free evidence lookup.** The spike's
+`find_contradiction_evidence()` step is pure graph traversal, zero LLM
+calls. The v1.1 public API only exposed evidence bundled inside `recall()`,
+which always requires a query and always calls the LLM — undercutting
+design §1.1's own trust principle (structural claims must be verifiable
+without an LLM) and blocking spike reproducibility outright. **Added:**
+`find_evidence(*, project_id, relationship=CONTRADICTS, hypothesis_id=None)
+-> list[Evidence]` (§2.5-adjacent; lives next to the read-only accessors
+conceptually, implemented in `retrieval/evidence.py` since it composes
+`graph.query.get_graph()` with `retrieval.evidence.build_evidence()`).
+Defaults reproduce the spike's exact behavior.
+
+**Gap 2 — no project reset.** The spike's `reset()` step has no public-API
+equivalent; `forget()` only removes one source at a time. Investigating the
+fix surfaced a real correctness finding, not just a gap: the spike's own
+`reset()` calls `cognee.prune.prune_data()`/`prune_system()`, both
+**global** (verified by signature inspection — no dataset argument) — more
+destructive than the spike needed. `cognee.datasets.empty_dataset(dataset_id)`
+is properly project-scoped. **Added:** `reset_project(*, project_id) -> None`,
+specified to use the scoped call — an improvement over the spike's
+behavior, not just a port of it.
+
+**Three type adjustments**, applied because `find_evidence()` exposed them:
+
+- `Evidence.relationship` widened from `Literal["SUPPORTS", "CONTRADICTS"]`
+  to `RelationshipType | str` — the narrower type only made sense while
+  evidence was reachable solely through the two-relationship
+  `SUPPORTS`/`CONTRADICTS` path inside `recall()`; a general-purpose
+  `find_evidence()` needs the same width `MemoryEdge.relationship` already has.
+- `RecallStrategy` moved from `providers/base.py` to `models.py`. It was
+  originally placed in `providers/base.py` because `MemoryProvider.query()`
+  needed the type; per §3's own module responsibilities, `retrieval/router.py`
+  *owns* strategy selection and `providers/` should only consume the type.
+  The import direction had it backwards. Fixed while the fix was five lines;
+  would have been a real refactor later.
+- `RecallResult` gained `raw_llm_context: str | None = None`. The provider
+  Protocol already had a place for this (`ProviderQueryResult.raw_context`,
+  mirroring the spike's `only_context=True` capture) but nothing in the
+  public model surfaced it — it would have been captured and silently
+  dropped. Kept for the transparency/demo value of "show exactly what the
+  LLM saw," consistent with the project's memory-transparency thesis; not
+  used to compute `evidence`/`evidence_graph`, which remain strictly
+  deterministic per §1.1.
+
+**Findings surfaced but deliberately not acted on** (named for the record,
+not fixed — no current requirement forces them, per the project's own
+YAGNI discipline): `project_id: str` may need to become a richer type if
+project metadata is ever needed; `SourceInput.content: str | bytes` may
+need to become stream-based for large files; `active_hypotheses: list[str]`
+and the module-level-function/no-`MemoryCore`-class design were already
+named as breaking-change risks in §10.1/§10.7 and are reaffirmed, not
+re-litigated.

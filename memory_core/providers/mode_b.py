@@ -72,3 +72,6 @@ class ModeBProvider:
         hard: bool,
     ) -> ProviderDeleteReceipt:
         raise NotImplementedError("Mode B is not implemented — Docs/MEMORY_CORE_DESIGN.md §4.4")
+
+    async def reset_dataset(self, *, dataset: str) -> None:
+        raise NotImplementedError("Mode B is not implemented — Docs/MEMORY_CORE_DESIGN.md §4.4")

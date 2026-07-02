@@ -22,13 +22,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, Protocol
+from typing import Any, Protocol
 
-
-RecallStrategy = Literal["relationship", "contradiction", "gap_analysis", "factual"]
-"""Mirrors ARCHITECTURE.md §6's recall router intents. Owned/selected by
-retrieval/router.py; providers only need to know the strategy name, not
-how it was chosen."""
+from memory_core.models import RecallStrategy
 
 
 @dataclass
@@ -128,3 +124,12 @@ class MemoryProvider(Protocol):
         data_id: str,
         hard: bool,
     ) -> ProviderDeleteReceipt: ...
+
+    async def reset_dataset(self, *, dataset: str) -> None:
+        """Wipe one project's dataset only — added in the pre-2.2 architecture
+        review. Must be dataset-scoped (e.g. cognee.datasets.empty_dataset()),
+        never a global wipe (e.g. cognee.prune.prune_data(), which takes no
+        dataset argument and clears every project — confirmed by signature
+        inspection, and what the Milestone 1 spike used, more destructively
+        than it needed to)."""
+        ...

@@ -69,3 +69,6 @@ class ModeAProvider:
         hard: bool,
     ) -> ProviderDeleteReceipt:
         raise NotImplementedError("Milestone 2.2: wire cognee.datasets.delete_data()")
+
+    async def reset_dataset(self, *, dataset: str) -> None:
+        raise NotImplementedError("Milestone 2.2: wire cognee.datasets.empty_dataset() (dataset-scoped)")
