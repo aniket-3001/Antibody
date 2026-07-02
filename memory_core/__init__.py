@@ -26,6 +26,18 @@ from __future__ import annotations
 import asyncio
 import time
 
+# LadybugDB (Cognee's graph store) supports only ONE concurrent reader/writer.
+# This lock serializes all graph-touching operations so that concurrent HTTP
+# requests (e.g., GET /graph and POST /recall arriving simultaneously) never
+# compete for the same .lbug file and produce a "Lock is held by PID" error.
+_GRAPH_LOCK: asyncio.Lock | None = None
+
+def _get_graph_lock() -> asyncio.Lock:
+    global _GRAPH_LOCK
+    if _GRAPH_LOCK is None:
+        _GRAPH_LOCK = asyncio.Lock()
+    return _GRAPH_LOCK
+
 from memory_core.config import get_provider
 from memory_core.errors import (
     CapabilityUnavailableError,
@@ -130,16 +142,17 @@ async def recall(
     started = time.monotonic()
     try:
         degraded_check = not provider.capabilities().supports_deterministic_evidence
-        
-        if not degraded_check:
-            # Parallelize LLM query and graph fetch
-            result, graph = await asyncio.gather(
-                provider.query(query, dataset=project_id, strategy=resolved_strategy),
-                _get_graph(project_id=project_id, provider=provider)
-            )
-        else:
-            result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
-            graph = None
+
+        # Acquire the graph lock to serialize LadybugDB access.
+        async with _get_graph_lock():
+            if not degraded_check:
+                # Run query first, then fetch graph sequentially.
+                # LadybugDB supports only ONE concurrent reader/writer.
+                result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
+                graph = await _get_graph(project_id=project_id, provider=provider)
+            else:
+                result = await provider.query(query, dataset=project_id, strategy=resolved_strategy)
+                graph = None
 
         degraded = degraded_check
         evidence: list[Evidence] = []
@@ -195,7 +208,8 @@ async def forget(
 async def get_graph(*, project_id: str) -> MemoryGraph:
     """Design §2.5."""
     provider = get_provider()
-    return await _get_graph(project_id=project_id, provider=provider)
+    async with _get_graph_lock():
+        return await _get_graph(project_id=project_id, provider=provider)
 
 
 async def get_stats(*, project_id: str) -> MemoryStats:

@@ -12,7 +12,7 @@ Copy `.env.example` to `.env` and fill in your NVIDIA NIM API key from
 LLM_PROVIDER=custom
 NVIDIA_NIM_API_KEY=your-nvapi-key-here
 LLM_API_KEY=your-nvapi-key-here
-LLM_MODEL=nvidia_nim/meta/llama-3.3-70b-instruct
+LLM_MODEL=nvidia_nim/meta/llama-4-maverick-17b-128e-instruct
 EMBEDDING_PROVIDER=litellm
 EMBEDDING_MODEL=nvidia_nim/nvidia/nv-embedqa-e5-v5
 EMBEDDING_DIMENSIONS=1024

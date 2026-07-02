@@ -11,7 +11,7 @@ headers = {
 }
 
 payload = {
-    "model": "meta/llama-3.3-70b-instruct",
+    "model": "meta/llama3-8b-instruct",
     "messages": [{"role": "user", "content": "Hello"}],
     "max_tokens": 100
 }

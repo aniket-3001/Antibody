@@ -221,7 +221,7 @@ class ModeAProvider:
         raw_context_str = _extract_search_text(context)
         
         # Add an LLM generation step after retrieval to convert the JSON into a proper natural-language response
-        model = os.getenv("LLM_MODEL", "nvidia_nim/meta/llama-3.3-70b-instruct")
+        model = os.getenv("LLM_MODEL", "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct")
         api_key = os.getenv("NVIDIA_NIM_API_KEY") or os.getenv("LLM_API_KEY")
         
         prompt = f"""

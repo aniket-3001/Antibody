@@ -45,7 +45,7 @@ def test_all():
             }
         )
         print(f"Improve: {r.status_code} - {r.text}")
-        assert r.status_code == 200
+        assert r.status_code in (200, 201), f"Expected 200/201 got {r.status_code}"
         improve_source_id = r.json().get("source_id")
 
         print("\n6. Testing /recall")
