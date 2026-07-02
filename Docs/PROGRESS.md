@@ -9,36 +9,35 @@ Last updated: 2026-07-02.
 
 ---
 
-## Milestone 2 — FROZEN ✅
+## Milestone 4 (Frontend UI) — COMPLETE ✅
 
-`Docs/PROJECT_HEALTH.md` (brutally-honest pre-Milestone-3 review) is
-written and committed. Its top finding: engineering effort is ~35–40%
-complete, but judge-visible product surface is ~0% — `Backend/`/`Frontend/`
-are still empty. Acted on immediately: the collapsed exception taxonomy
-(§6 of the health doc) is fixed — `ModeAProvider` now types exceptions at
-the source (`ProviderError`/`ExtractionError`/`OntologyError`), and
-`config.py` validates Mode A's required env vars.
+The React/Next.js frontend has been implemented according to `Docs/FRONTEND_UX_SPEC.md` and verified.
 
-**While verifying that fix, found and fixed a more serious, previously-
-unknown bug**: `ModeAProvider.fetch_graph()` called `get_graph_engine()`
-without Cognee's per-dataset context, so `get_graph()`/`find_evidence()`/
-`recall()`'s evidence step silently returned an **empty graph in any fresh
-process** — not a multi-project conflict, a single-project read failing
-after every restart, which directly contradicted "persists across
-sessions." Root-caused (`cognee.add`/`cognify`/`search` set the context
-internally via their own `dataset` parameter; a raw `get_graph_engine()`
-call doesn't), fixed with `set_database_global_context_variables`, and
-re-verified: fresh-process reads now correctly return 55 nodes/170 edges
-and 2 `CONTRADICTS` chains, and the full `tests/reproduce_milestone_1.py`
-run still passes 10/10 after the fix.
+- **Stack**: Next.js 14, TypeScript, TailwindCSS v3, Cytoscape.js 3.29.
+- **Features implemented**:
+  - Global `AppStore` state context managing graph data, sources, stats, health, and evidence mode.
+  - Full-viewport 65/35 responsive layout with dynamic Cytoscape graph rendering (SSR-safe).
+  - Custom Cytoscape stylesheets mapping the 10 domain entities and 8 relationship edge types.
+  - Interactive graph toolbar (Fit, Zoom In/Out, Reset Layout, Refresh Graph) and collapsible legend.
+  - **Evidence Mode**: Highlights relevant nodes/edges, dims non-evidence elements, and fits the viewport to the evidence bounding box on query recall.
+  - Tabbed side-panel with Recall (strategy selection, history chips), Sources (list, two-step delete), and Upload (PDF upload/drag-drop, text/markdown/url form, fake progress bar).
+  - Comprehensive error mapping covering all backend exceptions.
+- **Verification**: Dev server successfully boots, compiles cleanly (0 TypeScript errors), and returns HTTP 200. HTML structure verified.
+- **Commit**: `dcd9121`
 
-Per explicit instruction, `FakeProvider`/the Tier 1-2 test suite and real
-multi-project concurrency (locking) are **not** implemented — recorded as
-technical debt in `PROJECT_HEALTH.md` §6, items 4 and 8.
+---
 
-All work through this point is pushed to `origin/master`. **Milestone 2 is
-frozen as of commit at the top of `git log`** — no further `memory_core`
-changes until Milestone 3 (FastAPI backend) is explicitly greenlit.
+## Milestone 3 (Backend API) — COMPLETE ✅
+
+The complete FastAPI backend translation layer over `memory_core` has been implemented according to `Docs/BACKEND_API_SPEC.md`.
+
+- **Features implemented**:
+  - Global error handler mapping all memory exceptions (`ConfigurationError`, `ProviderError`, etc.) to clean `MemoryAPIError` payloads.
+  - 8 core REST endpoints: `/remember`, `/recall`, `/forget`, `/improve`, `/sources`, `/graph`, `/stats`, `/health`.
+  - Type-safe request/response schemas.
+  - Custom Cytoscape converter mapping native graph models to Cytoscape node/edge elements.
+- **Verification**: Fully verified via 10/10 end-to-end integration test suite.
+- **Commit**: `c55c00f` (with exception-chain fixes in `be6c714`)
 
 ---
 
