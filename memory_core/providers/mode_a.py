@@ -124,8 +124,8 @@ class ModeAProvider:
                 return None
             raise
         for d in datasets:
-            if d.name == dataset:
-                return d.id
+            if d.name == dataset:  # type: ignore
+                return d.id  # type: ignore
         return None
 
     async def ingest_source(
@@ -198,7 +198,7 @@ class ModeAProvider:
                 raise ProviderError(
                     f"cognee.datasets.list_data() failed: {exc}"
                 ) from exc
-            matches = [i for i in items if json.loads(i.node_set or "[]") == node_set]
+            matches = [i for i in items if json.loads(i.node_set or "[]") == node_set]  # type: ignore
             if matches:
                 data_id = str(max(matches, key=lambda i: i.created_at).id)
 
@@ -260,7 +260,7 @@ Retrieved Graph Information (Structured):
                 messages=[{"role": "user", "content": prompt}],
                 api_key=api_key,
             )
-            return llm_res.choices[0].message.content
+            return str(llm_res.choices[0].message.content)  # type: ignore
         except Exception:
             # Fallback to the raw string if the LLM generation fails
             return raw_context
@@ -309,9 +309,9 @@ Retrieved Graph Information (Structured):
         return [
             ProviderDataItem(
                 data_id=str(item.id),
-                node_set=(json.loads(item.node_set)[0] if item.node_set else item.name),
-                title=item.name,
-                ingested_at=item.created_at,
+                node_set=(json.loads(item.node_set)[0] if item.node_set else item.name),  # type: ignore
+                title=item.name,  # type: ignore
+                ingested_at=item.created_at,  # type: ignore
                 raw={"name": item.name},
             )
             for item in items
