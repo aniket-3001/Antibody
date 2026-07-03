@@ -31,7 +31,7 @@ this layer should never need to catch a raw Cognee exception.
 
 from __future__ import annotations
 
-import asyncio
+
 import json
 import pathlib
 import uuid
@@ -117,7 +117,10 @@ class ModeAProvider:
             # databases/ subdirectory does not yet exist.  Treat the same
             # as DatabaseNotCreatedError — the schema will be bootstrapped
             # by cognee.add() on the first ingest call.
-            if "unable to open database file" in str(exc) or "DatabaseNotCreated" in type(exc).__name__:
+            if (
+                "unable to open database file" in str(exc)
+                or "DatabaseNotCreated" in type(exc).__name__
+            ):
                 return None
             raise
         for d in datasets:
@@ -142,13 +145,24 @@ class ModeAProvider:
         try:
             if title:
                 from cognee.tasks.ingestion.data_item import DataItem
-                await cognee.add(DataItem(data=text, label=title), dataset_name=dataset, node_set=node_set)
+
+                await cognee.add(
+                    DataItem(data=text, label=title),
+                    dataset_name=dataset,
+                    node_set=node_set,
+                )
             else:
                 await cognee.add(text, dataset_name=dataset, node_set=node_set)
         except Exception as exc:
-            raise ProviderError(f"cognee.add() failed for dataset={dataset}: {exc}") from exc
+            raise ProviderError(
+                f"cognee.add() failed for dataset={dataset}: {exc}"
+            ) from exc
 
-        cognify_kwargs: dict = {"datasets": dataset, "chunk_size": 256, "chunks_per_batch": 1}
+        cognify_kwargs: dict = {
+            "datasets": dataset,
+            "chunk_size": 256,
+            "chunks_per_batch": 1,
+        }
         if custom_prompt:
             cognify_kwargs["custom_prompt"] = custom_prompt
         if ontology.owl_path:
@@ -158,14 +172,18 @@ class ModeAProvider:
                 raise OntologyError(
                     f"failed to load ontology file {ontology.owl_path!r}: {exc}"
                 ) from exc
-            cognify_kwargs["config"] = {"ontology_config": {"ontology_resolver": resolver}}
+            cognify_kwargs["config"] = {
+                "ontology_config": {"ontology_resolver": resolver}
+            }
 
         try:
             await cognee.cognify(**cognify_kwargs)
         except Exception as exc:
             # The one exception type this class treats as a hard pipeline
             # fault rather than a generic provider error — design §6.3.
-            raise ExtractionError(f"cognee.cognify() failed for dataset={dataset}: {exc}") from exc
+            raise ExtractionError(
+                f"cognee.cognify() failed for dataset={dataset}: {exc}"
+            ) from exc
 
         after = await self.fetch_graph(dataset=dataset)
         after_nodes = len(after.nodes) if after else 0
@@ -177,7 +195,9 @@ class ModeAProvider:
             try:
                 items = await cognee.datasets.list_data(dataset_id)
             except Exception as exc:
-                raise ProviderError(f"cognee.datasets.list_data() failed: {exc}") from exc
+                raise ProviderError(
+                    f"cognee.datasets.list_data() failed: {exc}"
+                ) from exc
             matches = [i for i in items if json.loads(i.node_set or "[]") == node_set]
             if matches:
                 data_id = str(max(matches, key=lambda i: i.created_at).id)
@@ -198,7 +218,7 @@ class ModeAProvider:
         # Deliberately unwrapped, unlike ingest_source(): the design's error
         # model (§6) gives recall() a single failure type — RecallError.
         search_type = _STRATEGY_TO_SEARCH_TYPE[strategy]
-        
+
         # ONLY call only_context=True, which is lightning fast and does not invoke the LLM!
         context = await cognee.search(
             query_text=query_text,
@@ -206,10 +226,10 @@ class ModeAProvider:
             datasets=dataset,
             only_context=True,
         )
-        
+
         raw_context_str = _extract_search_text(context)
-        
-        # We deliberately return a blank answer. 
+
+        # We deliberately return a blank answer.
         # The LLM synthesis will be done after the LadybugDB graph lock is released.
         return ProviderQueryResult(
             answer="",
@@ -219,10 +239,12 @@ class ModeAProvider:
     async def synthesize_answer(self, query_text: str, raw_context: str) -> str:
         import os
         from litellm import acompletion
-        
-        model = os.getenv("LLM_MODEL", "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct")
+
+        model = os.getenv(
+            "LLM_MODEL", "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct"
+        )
         api_key = os.getenv("NVIDIA_NIM_API_KEY") or os.getenv("LLM_API_KEY")
-        
+
         prompt = f"""
 You are a helpful AI assistant. Answer the user's query based on the retrieved graph context.
 Always respond in a natural, conversational manner. Do NOT return raw JSON.
@@ -236,10 +258,10 @@ Retrieved Graph Information (Structured):
             llm_res = await acompletion(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
-                api_key=api_key
+                api_key=api_key,
             )
             return llm_res.choices[0].message.content
-        except Exception as e:
+        except Exception:
             # Fallback to the raw string if the LLM generation fails
             return raw_context
 
@@ -271,7 +293,9 @@ Retrieved Graph Information (Structured):
                 or "database has not been created" in err_str.lower()
             ):
                 return RawGraph(nodes=[], edges=[])
-            raise ProviderError(f"get_graph_data() failed for dataset={dataset}: {exc}") from exc
+            raise ProviderError(
+                f"get_graph_data() failed for dataset={dataset}: {exc}"
+            ) from exc
         return RawGraph(nodes=nodes, edges=edges)
 
     async def list_data(self, *, dataset: str) -> list[ProviderDataItem]:
@@ -332,4 +356,6 @@ Retrieved Graph Information (Structured):
         try:
             await cognee.datasets.empty_dataset(dataset_id)
         except Exception as exc:
-            raise ProviderError(f"cognee.datasets.empty_dataset() failed: {exc}") from exc
+            raise ProviderError(
+                f"cognee.datasets.empty_dataset() failed: {exc}"
+            ) from exc
