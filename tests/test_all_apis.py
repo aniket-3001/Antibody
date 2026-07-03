@@ -1,8 +1,7 @@
 import httpx
-import json
-import time
 
 BASE = "http://127.0.0.1:8000/api/v1"
+
 
 def test_all():
     with httpx.Client(timeout=300.0) as client:
@@ -12,18 +11,21 @@ def test_all():
         assert r.status_code == 200
 
         print("\n2. Testing /remember")
-        doc = "Transformers are better than RNNs for NLP tasks because they handle long-range dependencies using self-attention."
+        doc = (
+            "Transformers are better than RNNs for NLP tasks "
+            "because they handle long-range dependencies using self-attention."
+        )
         r = client.post(
             f"{BASE}/remember",
             data={
                 "content_type": "text",
                 "content": doc,
                 "title": "NLP Note",
-            }
+            },
         )
         print(f"Remember: {r.status_code} - {r.text}")
-        assert r.status_code == 200
-        source_id = r.json().get("source_id")
+        assert r.status_code in (200, 201), f"Expected 200/201 got {r.status_code}"
+        # source_id is returned but we don't explicitly test it here
 
         print("\n3. Testing /sources")
         r = client.get(f"{BASE}/sources")
@@ -32,7 +34,8 @@ def test_all():
 
         print("\n4. Testing /graph")
         r = client.get(f"{BASE}/graph")
-        print(f"Graph: {r.status_code} - {len(r.json().get('nodes', []))} nodes")
+        nodes_count = len(r.json().get("nodes", []))
+        print(f"Graph: {r.status_code} - {nodes_count} nodes")
         assert r.status_code == 200
 
         print("\n5. Testing /improve")
@@ -42,7 +45,7 @@ def test_all():
                 "content_type": "text",
                 "content": "Transformers use multi-head attention.",
                 "title": "NLP Note Addendum",
-            }
+            },
         )
         print(f"Improve: {r.status_code} - {r.text}")
         assert r.status_code in (200, 201), f"Expected 200/201 got {r.status_code}"
@@ -51,7 +54,10 @@ def test_all():
         print("\n6. Testing /recall")
         r = client.post(
             f"{BASE}/recall",
-            json={"query": "What do transformers use for attention?", "strategy": "factual"}
+            json={
+                "query": "What do transformers use for attention?",
+                "strategy": "factual",
+            },
         )
         print(f"Recall: {r.status_code} - {r.text}")
         assert r.status_code == 200
@@ -63,11 +69,12 @@ def test_all():
 
         print("\n8. Testing /forget")
         if improve_source_id:
-            r = client.delete(f"{BASE}/forget/{improve_source_id}")
+            r = client.post(f"{BASE}/forget", json={"source_id": improve_source_id})
             print(f"Forget: {r.status_code} - {r.text}")
             assert r.status_code == 200
 
     print("\n✅ All APIs tested successfully!")
+
 
 if __name__ == "__main__":
     test_all()

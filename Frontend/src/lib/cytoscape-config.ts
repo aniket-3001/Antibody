@@ -5,7 +5,7 @@
  * This file is imported only by GraphCanvas (client-side).
  */
 
-import type { Stylesheet, LayoutOptions } from 'cytoscape'
+import type { StylesheetStyle, LayoutOptions } from 'cytoscape'
 
 // ── Node colours (spec §7.2) ──────────────────────────────────────────────────
 const NODE_COLORS: Record<string, { bg: string; border: string }> = {
@@ -50,8 +50,8 @@ const NODE_SHAPES: Record<string, string> = {
 }
 
 // ── Build stylesheet ──────────────────────────────────────────────────────────
-export function buildCytoscapeStylesheet(): Stylesheet[] {
-  const styles: Stylesheet[] = [
+export function buildCytoscapeStylesheet(): StylesheetStyle[] {
+  const styles: StylesheetStyle[] = [
     // ── Base node style ────────────────────────────────────────────────────────
     {
       selector: 'node',

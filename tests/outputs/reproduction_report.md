@@ -17,34 +17,39 @@
 
 ## Graph
 
-nodes=58, edges=156
+nodes=81, edges=242
 
 ### Relationship counts
 
-- `ABOUT`: 4
-- `BELONGS_TO_SET`: 48
-- `CONTAINS`: 36
-- `CONTRADICTS`: 1
-- `DERIVED_FROM`: 2
+- `ABOUT`: 8
+- `BELONGS_TO_SET`: 73
+- `CONTAINS`: 55
+- `CONTRADICTS`: 2
+- `DERIVED_FROM`: 5
 - `EVALUATES`: 3
-- `IS_A`: 33
-- `IS_PART_OF`: 4
-- `MADE_FROM`: 4
-- `REFERENCES`: 2
-- `SUPPORTS`: 3
-- `USES`: 5
-- `WRITTEN_BY`: 11
+- `IS_A`: 50
+- `IS_PART_OF`: 7
+- `MADE_FROM`: 7
+- `REFERENCES`: 3
+- `SUPPORTS`: 6
+- `USES`: 10
+- `WRITTEN_BY`: 13
 
 ## CONTRADICTS evidence (find_evidence(), zero LLM calls)
 
-- **rt-detr exceeds yolo11 in accuracy** --CONTRADICTS--> **yolo11 is the best object detector for our real-time use case.**
+- **rt-detr: transformers beat yolo on accuracy** --CONTRADICTS--> **yolo11 is the best object detector for our real-time use case.**
+- **rt-detr exceeds yolo11 in accuracy** --CONTRADICTS--> **yolo11 is the best object detector for real-time use cases**
 
 ## recall() natural-language answer
 
-{'dataset_id': UUID('81a1198f-dffb-5094-8242-2619e071fdb5'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': ['Based on the context, the papers that contradict our current hypothesis are not explicitly stated. However, we can infer potential contradictions from papers that discuss alternative approaches or findings. \n\nOne potential contradictory paper is "rt-detr" which is about a real-time detection transformer, implying a different approach to real-time object detection. Another potential contradictory paper is "latency-first detection in production" which discusses object detection under strict production latency budgets, potentially contradicting the findings of "yolo11 meets real-time budget". \n\nHowever, without more information on the current hypothesis, it\'s difficult to determine which papers directly contradict it.']}
+The paper "Latency-First Detection in Production" contradicts the current hypothesis. It references "YOLO11: Real-Time Detection at 2ms," suggesting that YOLO11 is a viable option for real-time object detection. This could be a contradiction if your hypothesis is against using YOLO11. 
+
+The graph context provides more information about the relationships between different nodes, including papers, authors, and topics. For instance, "Latency-First Detection in Production" cites "YOLO11: Real-Time Detection at 2ms," and "YOLO11: Real-Time Detection at 2ms" is categorized as a paper related to real-time object detection. 
+
+To better understand the contradiction, it would be helpful to know more about your current hypothesis. Is it related to the suitability of YOLO11 for real-time object detection or perhaps another aspect of object detection?
 
 ## recall() raw_llm_context (transparency field)
 
 ```
-{'dataset_id': UUID('81a1198f-dffb-5094-8242-2619e071fdb5'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': 'Nodes:\nNode: real-time object detection\n__node_content_start__\nTopic of the paper.\n__node_content_end__\n\nNode: topic\n__node_content_start__\ntopic\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nTopic of the paper\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nTopic of the paper\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__node_content_start__\nA real-time object detector.\n__node_content_end__\n\nNode: detector choice for real-time pipeline\n__node_content_start__\nResearch note on detector choice for real-time pipeline\n__node_content_end__\n\nNode: researchnote\n__node_content_start__\nresearchnote\n__node_content_end__\n\nNode: map@0.5\n__node_content_start__\nA benchmark for object detection accuracy\n__node_content_end__\n\nNode: latency-first detection in production\n__node_content_start__\nA paper about object detection under strict production latency budgets.\n__node_content_end__\n\nNode: yolo11 meets real-time budget\n__node_content_start__\nKey finding of the paper.\n__node_content_end__\n\nNode: finding\n__node_content_start__\nfinding\n__node_content_end__\n\nNode: yolo11 real-time performance\n__node_content_start__\nYOLO11 achieves state-of-the-art real-time performance\n__node_content_end__\n\nNode: paper\n__node_content_start__\npaper\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__node_content_start__\nPaper cited in the paper.\n__node_content_end__\n\nNode: benchmark\n__node_content_start__\nbenchmark\n__node_content_end__\n\nNode: map@0.5\n__node_content_start__\nA benchmark for object detection\n__node_content_end__\n\nNode: rt-detr\n__node_content_start__\nA real-time detection transformer paper\n__node_content_end__\n\n\nConnections:\nreal-time object detection --[is_a]--> topic
+{'dataset_id': UUID('052f9982-ffcb-58d6-9f8b-11b423ce71d3'), 'dataset_name': 'memoryos_spike_repro', 'dataset_tenant_id': None, 'search_result': "Nodes:\nNode: internal research team\n__node_content_start__\nInternal Research Team\n__node_content_end__\n\nNode: author\n__node_content_start__\nauthor\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nTopic of real-time object detection\n__node_content_end__\n\nNode: topic\n__node_content_start__\ntopic\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nThe topic area of the research paper.\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nA topic related to object detection\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nThe topic of real-time object detection.\n__node_content_end__\n\nNode: real-time object detection\n__node_content_start__\nTopic related to object detection in real-time applications.\n__node_content_end__\n\nNode: transformer-based detectors\n__node_content_start__\nA type of object detection method\n__node_content_end__\n\nNode: method\n__node_content_start__\nmethod\n__node_content_end__\n\nNode: detector choice for real-time pipeline\n__node_content_start__\nResearch note on detector choice for real-time pipeline\n__node_content_end__\n\nNode: researchnote\n__node_content_start__\nresearchnote\n__node_content_end__\n\nNode: latency-first detection in production\n__node_content_start__\nA paper on object detection under strict production latency budgets\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__node_content_start__\nA paper on YOLO11 object detection\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__node_content_start__\nA research paper presenting YOLO11, a real-time object detector.\n__node_content_end__\n\nNode: paper\n__node_content_start__\npaper\n__node_content_end__\n\nNode: yolo11: real-time detection at 2ms\n__no
 ```
