@@ -112,6 +112,10 @@ class MemoryProvider(Protocol):
         strategy: RecallStrategy,
     ) -> ProviderQueryResult: ...
 
+    async def synthesize_answer(self, query_text: str, raw_context: str) -> str:
+        """Synthesize a natural language answer from raw_context (optional, if query() didn't do it)."""
+        ...
+
     async def fetch_graph(self, *, dataset: str) -> RawGraph | None:
         """None if this provider cannot produce a local graph (see capabilities())."""
         ...

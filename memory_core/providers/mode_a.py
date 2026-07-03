@@ -196,34 +196,30 @@ class ModeAProvider:
         strategy: RecallStrategy,
     ) -> ProviderQueryResult:
         # Deliberately unwrapped, unlike ingest_source(): the design's error
-        # model (§6) gives recall() a single failure type — RecallError,
-        # "the recall pipeline itself failed" — rather than the three-way
-        # split ingest gets. memory_core.recall() already converts any
-        # exception raised here into RecallError; adding a ProviderError
-        # wrapper in between would just be re-typed twice for no benefit.
+        # model (§6) gives recall() a single failure type — RecallError.
         search_type = _STRATEGY_TO_SEARCH_TYPE[strategy]
         
-        # Parallelize the two search calls to cut latency in half.
-        # `only_context=True` skips the LLM generation step.
-        answers, context = await asyncio.gather(
-            cognee.search(
-                query_text=query_text, query_type=search_type, datasets=dataset
-            ),
-            cognee.search(
-                query_text=query_text,
-                query_type=search_type,
-                datasets=dataset,
-                only_context=True,
-            )
+        # ONLY call only_context=True, which is lightning fast and does not invoke the LLM!
+        context = await cognee.search(
+            query_text=query_text,
+            query_type=search_type,
+            datasets=dataset,
+            only_context=True,
         )
         
+        raw_context_str = _extract_search_text(context)
+        
+        # We deliberately return a blank answer. 
+        # The LLM synthesis will be done after the LadybugDB graph lock is released.
+        return ProviderQueryResult(
+            answer="",
+            raw_context=raw_context_str,
+        )
+
+    async def synthesize_answer(self, query_text: str, raw_context: str) -> str:
         import os
         from litellm import acompletion
         
-        raw_answer_str = _extract_search_text(answers)
-        raw_context_str = _extract_search_text(context)
-        
-        # Add an LLM generation step after retrieval to convert the JSON into a proper natural-language response
         model = os.getenv("LLM_MODEL", "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct")
         api_key = os.getenv("NVIDIA_NIM_API_KEY") or os.getenv("LLM_API_KEY")
         
@@ -234,8 +230,7 @@ Always respond in a natural, conversational manner. Do NOT return raw JSON.
 User Query: {query_text}
 
 Retrieved Graph Information (Structured):
-{raw_answer_str}
-{raw_context_str}
+{raw_context}
 """
         try:
             llm_res = await acompletion(
@@ -243,15 +238,10 @@ Retrieved Graph Information (Structured):
                 messages=[{"role": "user", "content": prompt}],
                 api_key=api_key
             )
-            final_answer = llm_res.choices[0].message.content
+            return llm_res.choices[0].message.content
         except Exception as e:
             # Fallback to the raw string if the LLM generation fails
-            final_answer = raw_answer_str
-
-        return ProviderQueryResult(
-            answer=final_answer,
-            raw_context=raw_context_str,
-        )
+            return raw_context
 
     async def fetch_graph(self, *, dataset: str) -> RawGraph | None:
         # get_graph_engine() resolves its target database from a context

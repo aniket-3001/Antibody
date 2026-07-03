@@ -58,6 +58,9 @@ class ModeBProvider:
     ) -> ProviderQueryResult:
         raise NotImplementedError("Mode B is not implemented — Docs/MEMORY_CORE_DESIGN.md §4.4")
 
+    async def synthesize_answer(self, query_text: str, raw_context: str) -> str:
+        raise NotImplementedError("Mode B is not implemented — Docs/MEMORY_CORE_DESIGN.md §4.4")
+
     async def fetch_graph(self, *, dataset: str) -> RawGraph | None:
         return None  # honest per capabilities(); never fabricate an empty graph elsewhere
 

@@ -155,6 +155,12 @@ async def recall(
                 graph = None
 
         degraded = degraded_check
+        
+        # LLM Synthesis (Phase 1 Fix): We've released the lock!
+        # Now we can safely spend 35 seconds talking to the LLM without blocking the database.
+        if not result.answer and result.raw_context:
+            result.answer = await provider.synthesize_answer(query, result.raw_context)
+
         evidence: list[Evidence] = []
         evidence_graph: MemoryGraph | None = None
         if not degraded and graph is not None:
