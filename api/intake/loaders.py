@@ -39,6 +39,19 @@ def extract_from_audio(path: str) -> str:
         return ""
 
 
+def extract_from_pdf(path: str) -> str:
+    """Pull text out of a PDF (fake invoice, forwarded phishing chain saved as a
+    doc, etc). Uses PyMuPDF if installed; else empty."""
+    try:
+        import fitz  # type: ignore  # PyMuPDF
+
+        with fitz.open(path) as doc:
+            return "\n".join(page.get_text() for page in doc).strip()
+    except Exception:
+        log.debug("PDF text extraction unavailable for %s", path, exc_info=True)
+        return ""
+
+
 def extract_text(path: str, content_type: str | None) -> str:
     """Dispatch on content type / extension. Reads a plain sidecar if present."""
     p = Path(path)
@@ -57,6 +70,8 @@ def extract_text(path: str, content_type: str | None) -> str:
         return extract_from_image(path)
     if ct.startswith("audio/") or ext in {".wav", ".mp3", ".m4a", ".ogg", ".flac"}:
         return extract_from_audio(path)
+    if ct == "application/pdf" or ext == ".pdf":
+        return extract_from_pdf(path)
     if ext in {".txt", ".md", ".eml"}:
         try:
             return p.read_text(encoding="utf-8", errors="ignore").strip()

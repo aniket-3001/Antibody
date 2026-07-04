@@ -59,7 +59,7 @@ async def health() -> dict:
 # run Vite separately (npm run dev) — it proxies the API paths back here.
 from pathlib import Path  # noqa: E402
 
-_dist = Path(__file__).resolve().parent.parent / "Frontend" / "dist"
+_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if _dist.exists():
     from fastapi.staticfiles import StaticFiles  # noqa: E402
 

@@ -29,6 +29,33 @@ function fmtDate(iso) {
 const SpeechRec =
   typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+const HL_LEGEND = [
+  ["indicator", "Known-bad link/phone/wallet"],
+  ["tactic", "Manipulation tactic"],
+  ["lure", "Scam pretext"],
+];
+
+// Underlines the exact words that drove the verdict (indicators/tactics/lures)
+// instead of only listing them separately. Spans are character offsets into `text`.
+function renderHighlighted(text, highlights) {
+  if (!highlights?.length) return text;
+  const spans = [...highlights].sort((a, b) => a.start - b.start);
+  const nodes = [];
+  let pos = 0;
+  for (const s of spans) {
+    if (s.start < pos || s.end <= s.start) continue; // skip overlaps/invalid
+    if (s.start > pos) nodes.push(text.slice(pos, s.start));
+    nodes.push(
+      <mark key={`${s.start}-${s.end}`} className={`hl-${s.kind}`} title={s.label}>
+        {text.slice(s.start, s.end)}
+      </mark>
+    );
+    pos = s.end;
+  }
+  if (pos < text.length) nodes.push(text.slice(pos));
+  return nodes;
+}
+
 export default function CheckView() {
   const [text, setText] = useState("");
   const [channel, setChannel] = useState("sms");
@@ -46,9 +73,11 @@ export default function CheckView() {
   const run = async () => {
     if (!text.trim()) return;
     stopMic();
+    const sent = text;
     setLoading(true); setErr(""); setV(null); setOutcome(null);
     try {
-      setV(await checkMessage(text, channel));
+      const res = await checkMessage(sent, channel);
+      setV({ ...res, checked_text: sent });
     } catch (e) { setErr(String(e.message || e)); }
     setLoading(false);
   };
@@ -86,7 +115,7 @@ export default function CheckView() {
     setUploading(true); setErr(""); setV(null); setOutcome(null); setText("");
     try {
       const res = await uploadFile(f, channel);
-      setV(res);
+      setV({ ...res, checked_text: res.transcript || "" });
       if (res.transcript) setText(res.transcript);
     } catch (er) { setErr(String(er.message || er)); }
     setUploading(false);
@@ -101,7 +130,7 @@ export default function CheckView() {
   return (
     <>
       <p className="tagline">
-        Got a text, email, or call that feels off? <b>Paste it, say it, or upload a recording.</b> We'll tell you
+        Got a text, email, or call that feels off? <b>Paste it, say it, or upload a recording, screenshot, or PDF.</b> We'll tell you
         if it's a known scam, how to spot it, and what to do — and your report protects the next person.
       </p>
 
@@ -119,10 +148,10 @@ export default function CheckView() {
             </button>
           )}
           <button className="voice-btn" onClick={() => fileRef.current?.click()} type="button" disabled={uploading}>
-            <span className="ico">📎</span>{uploading ? "Reading…" : "Upload a recording or screenshot"}
+            <span className="ico">📎</span>{uploading ? "Reading…" : "Upload a recording, screenshot, or PDF"}
           </button>
           <input
-            ref={fileRef} type="file" accept="audio/*,image/*"
+            ref={fileRef} type="file" accept="audio/*,image/*,application/pdf,.pdf"
             onChange={onFile} style={{ display: "none" }}
           />
           {listening && <span className="voice-hint"><span className="rec-dot" />recording your voice</span>}
@@ -175,10 +204,24 @@ function Verdict({ v, outcome, onOutcome }) {
         </div>
       </div>
 
-      {v.transcript && (
+      {v.checked_text && (
         <>
-          <div className="section-label">{v.input_kind === "audio" ? "🎙️ What we heard" : "🖼️ What we read"}</div>
-          <div className="transcript">{v.transcript}</div>
+          <div className="section-label">
+            {v.input_kind === "audio" ? "🎙️ What we heard"
+              : v.input_kind === "document" ? "📄 What we read"
+              : v.input_kind === "image" ? "🖼️ What we read"
+              : "Message checked"}
+          </div>
+          <div className="transcript">{renderHighlighted(v.checked_text, v.highlights)}</div>
+          {v.highlights?.length > 0 && (
+            <div className="hl-legend">
+              {HL_LEGEND.map(([kind, label]) => (
+                <span className="litem" key={kind}>
+                  <span className={`ldot hl-${kind}`} />{label}
+                </span>
+              ))}
+            </div>
+          )}
         </>
       )}
 
