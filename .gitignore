@@ -5,3 +5,6 @@ __pycache__/
 .env
 .claude/
 .tokensave/
+
+.next/
+tsconfig.tsbuildinfo
