@@ -78,27 +78,69 @@ async def families() -> dict:
     return {"families": out}
 
 
+_TYPE_COLOR = {"family": "#6b5cf0", "tactic_shared": "#ef4d63", "tactic": "#f2971b", "lure": "#14b083"}
+
+
 @router.get("/graph")
 async def graph() -> dict:
-    """Nodes = families + shared tactics; edges = family→tactic (for the viz)."""
+    """Single shared-tactic knowledge graph: family + tactic + lure nodes.
+
+    Node shape: {id, label, type, props, color} — edge shape: {id, from, to,
+    label, props}. `Tactic`/`Lure` nodes are de-duped so the same string is one
+    node shared across families — that's the traversal the graph beat proves.
+    """
     fams = store.all_families()
-    shared = {e["tactic"] for e in store.shared_tactic_map()}
+    tactic_families: dict[str, set[str]] = {}
+    lure_families: dict[str, set[str]] = {}
+    for f in fams:
+        for t in f.get("tactics") or []:
+            tactic_families.setdefault(t, set()).add(f["name"])
+        for l in f.get("lures") or []:
+            lure_families.setdefault(l, set()).add(f["name"])
+
     nodes = []
     edges = []
+    edge_id = 0
+
     for f in fams:
-        nodes.append({"id": f"family:{f['name']}", "label": f["name"].replace("_", " ").title(),
-                      "type": "family", "count": store.family_report_count(f["name"])})
-        for t in f.get("tactics", []):
-            tid = f"tactic:{t}"
-            nodes.append({"id": tid, "label": t.replace("_", " "), "type": "tactic",
-                          "shared": t in shared})
-            edges.append({"source": f"family:{f['name']}", "target": tid})
-    # de-dup tactic nodes
-    seen = set()
-    uniq = []
-    for n in nodes:
-        if n["id"] in seen:
-            continue
-        seen.add(n["id"])
-        uniq.append(n)
-    return {"nodes": uniq, "edges": edges}
+        fid = f"family:{f['name']}"
+        nodes.append({
+            "id": fid,
+            "label": f["name"].replace("_", " ").title(),
+            "type": "family",
+            "color": _TYPE_COLOR["family"],
+            "props": {
+                "summary": f.get("summary") or "",
+                "report_count": store.family_report_count(f["name"]),
+                "first_seen": f.get("first_seen"),
+                "last_seen": f.get("last_seen"),
+                "channels": ", ".join(f.get("channels") or []),
+            },
+        })
+        for t in f.get("tactics") or []:
+            edge_id += 1
+            edges.append({"id": edge_id, "from": fid, "to": f"tactic:{t}", "label": "uses", "props": {}})
+        for l in f.get("lures") or []:
+            edge_id += 1
+            edges.append({"id": edge_id, "from": fid, "to": f"lure:{l}", "label": "lures_with", "props": {}})
+
+    for t, fams_using in tactic_families.items():
+        shared = len(fams_using) >= 2
+        nodes.append({
+            "id": f"tactic:{t}",
+            "label": t.replace("_", " "),
+            "type": "tactic",
+            "color": _TYPE_COLOR["tactic_shared" if shared else "tactic"],
+            "props": {"shared": shared, "used_by": ", ".join(sorted(fams_using))},
+        })
+
+    for l, fams_using in lure_families.items():
+        nodes.append({
+            "id": f"lure:{l}",
+            "label": l.replace("_", " "),
+            "type": "lure",
+            "color": _TYPE_COLOR["lure"],
+            "props": {"used_by": ", ".join(sorted(fams_using))},
+        })
+
+    return {"nodes": nodes, "edges": edges}
