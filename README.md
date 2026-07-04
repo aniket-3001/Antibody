@@ -1,5 +1,7 @@
 # Antibody
 
+[![CI](https://github.com/aniket-3001/Antibody/actions/workflows/ci.yml/badge.svg)](https://github.com/aniket-3001/Antibody/actions/workflows/ci.yml)
+
 A collective immune system against scams. People forward a text, screenshot, or
 voice-call recording; Antibody matches it against a shared memory graph of known
 scam campaigns and gives back a verdict, an explanation, and what to do next.
