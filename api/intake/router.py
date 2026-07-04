@@ -52,7 +52,7 @@ async def _process(text: str, channel: str | None, reporter_id: str | None,
     # 3) strengthen the graph in the background (add + cognify)
     background.add_task(
         ingest.remember_in_cognee, text,
-        channel=channel, family=verdict.get("family"),
+        report_id=report_id, channel=channel, family=verdict.get("family"),
     )
     return verdict
 
@@ -155,12 +155,15 @@ async def forget_report(report_id: str, background: BackgroundTasks) -> dict:
 
 
 async def _forget_in_cognee(report_id: str) -> None:
+    report = store.get_report(report_id)
+    data_id = report.get("cognee_data_id") if report else None
+    if not data_id:
+        # Cognee was unavailable/still processing when this report was added,
+        # or it predates data_id capture — nothing to scope a forget() to.
+        log.info("no cognee data_id for report %s, skipping graph-side forget", report_id)
+        return
     try:
-        # Best-effort: dataset-level forget is the supported deletion API; a
-        # targeted node forget would go here if exposed by the installed build.
-        await memory_service.forget(dataset=None)
-    except TypeError:
-        pass
+        await memory_service.forget(data_id=data_id)
     except MemoryUnavailable:
         pass
     except Exception:

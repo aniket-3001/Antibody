@@ -19,7 +19,6 @@ Pinned cognee==1.2.2 (verified locally against tag v1.2.2).
 """
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 from datetime import datetime, timezone
@@ -84,20 +83,19 @@ class MemoryService:
     # ----- remember -----
 
     async def add(self, data: Any, *, channel: str | None = None,
-                  family: str | None = None) -> str:
+                  family: str | None = None) -> str | None:
         """Ingest text OR a list of raw files (multimodal, native loaders §11).
 
-        Returns the cognee doc key (text_<md5>) for text ingests, used to link
-        citations back to a report; empty string for file ingests.
+        Returns Cognee's own per-document data_id (UUID string) so callers can
+        later scope a forget() to exactly this document; None if Cognee's
+        result didn't report one (e.g. some file-ingest builds).
         """
         await self._ensure_ready()
         import cognee
 
         date_iso = datetime.now(timezone.utc).date().isoformat()
-        doc_key = ""
         if isinstance(data, str):
             doc = doc_header(channel, family, date_iso) + "\n" + data
-            doc_key = "text_" + hashlib.md5(doc.encode("utf-8")).hexdigest()
             payload: Any = doc
         else:
             # list of raw file paths (image/audio) — let native loaders extract
@@ -106,13 +104,13 @@ class MemoryService:
         node_set = [f"channel:{channel}"] if channel else None
         try:
             if node_set:
-                await cognee.add(payload, dataset_name=settings.dataset_name, node_set=node_set)
+                result = await cognee.add(payload, dataset_name=settings.dataset_name, node_set=node_set)
             else:
-                await cognee.add(payload, dataset_name=settings.dataset_name)
+                result = await cognee.add(payload, dataset_name=settings.dataset_name)
         except TypeError:
             # older/newer signature without node_set kwarg
-            await cognee.add(payload, dataset_name=settings.dataset_name)
-        return doc_key
+            result = await cognee.add(payload, dataset_name=settings.dataset_name)
+        return _extract_data_id(result)
 
     async def cognify(self) -> None:
         await self._ensure_ready()
@@ -183,11 +181,20 @@ class MemoryService:
         elif hasattr(cognee, "improve"):
             await cognee.improve()
 
-    async def forget(self, **kwargs) -> None:
+    async def forget(self, *, data_id: str | None = None, everything: bool = False) -> dict:
+        """Scoped delete (spec §10). Cognee requires data_id to be paired with
+        a dataset — always scope to Antibody's single shared dataset so a
+        forget() never risks touching another dataset's data."""
         await self._ensure_ready()
         import cognee
 
-        await cognee.forget(**kwargs)
+        if everything:
+            return await cognee.forget(everything=True)
+        if not data_id:
+            raise ValueError("forget() requires data_id (or everything=True)")
+        import uuid
+
+        return await cognee.forget(data_id=uuid.UUID(str(data_id)), dataset=settings.dataset_name)
 
     # ----- helpers -----
 
@@ -228,6 +235,16 @@ class MemoryService:
             "citations": citations,
             "raw": raw,
         }
+
+
+def _extract_data_id(result: Any) -> str | None:
+    """Pull the real per-document data_id out of cognee.add()'s pipeline
+    result (result.data_ingestion_info[0]["data_id"]) — the id forget()
+    needs to scope a deletion to exactly one document."""
+    info = getattr(result, "data_ingestion_info", None) or []
+    if info and isinstance(info[0], dict) and info[0].get("data_id"):
+        return str(info[0]["data_id"])
+    return None
 
 
 def _parse_citations(evidence: str) -> list[dict]:
