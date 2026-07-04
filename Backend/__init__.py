@@ -1,1 +1,0 @@
-"""MemoryOS FastAPI Backend package."""
