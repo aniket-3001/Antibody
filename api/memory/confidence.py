@@ -21,7 +21,6 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-
 # Per-signal weights (importance of each channel of evidence)
 WEIGHTS = {
     "indicator": 0.98,   # a known-bad IOC is nearly decisive

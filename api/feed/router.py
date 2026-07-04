@@ -95,8 +95,8 @@ async def graph() -> dict:
     for f in fams:
         for t in f.get("tactics") or []:
             tactic_families.setdefault(t, set()).add(f["name"])
-        for l in f.get("lures") or []:
-            lure_families.setdefault(l, set()).add(f["name"])
+        for lure in f.get("lures") or []:
+            lure_families.setdefault(lure, set()).add(f["name"])
 
     nodes = []
     edges = []
@@ -120,9 +120,9 @@ async def graph() -> dict:
         for t in f.get("tactics") or []:
             edge_id += 1
             edges.append({"id": edge_id, "from": fid, "to": f"tactic:{t}", "label": "uses", "props": {}})
-        for l in f.get("lures") or []:
+        for lure in f.get("lures") or []:
             edge_id += 1
-            edges.append({"id": edge_id, "from": fid, "to": f"lure:{l}", "label": "lures_with", "props": {}})
+            edges.append({"id": edge_id, "from": fid, "to": f"lure:{lure}", "label": "lures_with", "props": {}})
 
     for t, fams_using in tactic_families.items():
         shared = len(fams_using) >= 2
@@ -134,10 +134,10 @@ async def graph() -> dict:
             "props": {"shared": shared, "used_by": ", ".join(sorted(fams_using))},
         })
 
-    for l, fams_using in lure_families.items():
+    for lure, fams_using in lure_families.items():
         nodes.append({
-            "id": f"lure:{l}",
-            "label": l.replace("_", " "),
+            "id": f"lure:{lure}",
+            "label": lure.replace("_", " "),
             "type": "lure",
             "color": _TYPE_COLOR["lure"],
             "props": {"used_by": ", ".join(sorted(fams_using))},

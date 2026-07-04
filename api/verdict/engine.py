@@ -13,7 +13,6 @@ LLM key is present; otherwise a graph-grounded template keeps the demo alive.
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from datetime import datetime, timezone
 
 from api.config import settings
