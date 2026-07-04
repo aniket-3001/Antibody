@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     embedding_provider: str = "fastembed"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_dimensions: int = 384
+    embedding_endpoint: str = ""
+    embedding_api_key: str = ""
 
     # Confidence band thresholds (spec §6)
     band_confirmed: float = 0.85
@@ -74,6 +76,10 @@ class Settings(BaseSettings):
         }
         if self.llm_endpoint:
             env["LLM_ENDPOINT"] = self.llm_endpoint
+        if self.embedding_endpoint:
+            env["EMBEDDING_ENDPOINT"] = self.embedding_endpoint
+        if self.embedding_api_key:
+            env["EMBEDDING_API_KEY"] = self.embedding_api_key
         for k, v in env.items():
             if v:
                 os.environ.setdefault(k, v)
