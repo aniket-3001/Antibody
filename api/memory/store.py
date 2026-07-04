@@ -61,7 +61,8 @@ def init_db(data_dir: Path) -> None:
                 tactics_json TEXT DEFAULT '[]',
                 lures_json TEXT DEFAULT '[]',
                 is_control INTEGER NOT NULL DEFAULT 0,
-                pruned INTEGER NOT NULL DEFAULT 0
+                pruned INTEGER NOT NULL DEFAULT 0,
+                cognee_data_id TEXT
             );
             CREATE TABLE IF NOT EXISTS indicators (
                 value TEXT NOT NULL,
@@ -79,6 +80,11 @@ def init_db(data_dir: Path) -> None:
             CREATE INDEX IF NOT EXISTS idx_reports_time ON reports(reported_at);
             """
         )
+        # Migration for DBs created before cognee_data_id existed.
+        cols = {r["name"] for r in _conn.execute("PRAGMA table_info(reports)").fetchall()}
+        if "cognee_data_id" not in cols:
+            with _lock, _conn:
+                _conn.execute("ALTER TABLE reports ADD COLUMN cognee_data_id TEXT")
 
 
 def _c() -> sqlite3.Connection:
@@ -218,6 +224,13 @@ def set_report_family(report_id: str, family_name: str) -> None:
         c.execute("UPDATE reports SET family_name=? WHERE id=?", (family_name, report_id))
 
 
+def set_cognee_data_id(report_id: str, data_id: str) -> None:
+    """Record the real Cognee data_id for this report so forget() can later
+    scope a deletion to exactly this document (spec §10)."""
+    with _lock, _c() as c:
+        c.execute("UPDATE reports SET cognee_data_id=? WHERE id=?", (data_id, report_id))
+
+
 def prune_report(report_id: str) -> None:
     """Soft-delete for the forget() false-positive path (§10) — stops it
     poisoning semantic matches while leaving an audit trail."""
@@ -244,6 +257,7 @@ def _report_row(r: sqlite3.Row) -> dict:
         "tactics": json.loads(r["tactics_json"] or "[]"),
         "lures": json.loads(r["lures_json"] or "[]"),
         "is_control": bool(r["is_control"]),
+        "cognee_data_id": r["cognee_data_id"],
     }
 
 

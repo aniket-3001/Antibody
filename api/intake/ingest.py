@@ -113,11 +113,16 @@ def promote_to_family(report_id: str) -> str | None:
     return fam
 
 
-async def remember_in_cognee(text: str, *, channel: str | None, family: str | None,
-                             cognify: bool = True) -> None:
-    """Slow path: hand the report to Cognee's graph. Safe to call in background."""
+async def remember_in_cognee(text: str, *, report_id: str, channel: str | None,
+                             family: str | None, cognify: bool = True) -> None:
+    """Slow path: hand the report to Cognee's graph. Safe to call in background.
+
+    Persists the returned data_id back onto the report row so a later
+    forget() can scope its delete to exactly this document (spec §10)."""
     try:
-        await memory_service.add(text, channel=channel, family=family)
+        data_id = await memory_service.add(text, channel=channel, family=family)
+        if data_id:
+            store.set_cognee_data_id(report_id, data_id)
         if cognify:
             await memory_service.cognify()
     except MemoryUnavailable as exc:
