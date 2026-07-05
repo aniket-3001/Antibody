@@ -9,7 +9,9 @@ POST /reporter/forget     → hard-delete a reporter's own data (real erasure §
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 import tempfile
 import uuid
 from pathlib import Path
@@ -52,7 +54,8 @@ async def _process(text: str, channel: str | None, reporter_id: str | None,
 
     # 2) record the report (contributes back — spec §3 step 4)
     report_id = ingest.record_report(
-        text, channel=channel, family=verdict.get("family"), reporter_id=reporter_id
+        text, channel=channel, family=verdict.get("family"), reporter_id=reporter_id,
+        verdict_json=json.dumps(verdict)
     )
     verdict["report_id"] = report_id
 
@@ -96,7 +99,12 @@ async def get_report(report_id: str) -> dict:
     report = store.get_report(report_id)
     if not report or report["pruned"]:
         raise HTTPException(404, "report not found")
-    verdict = await assess(report["normalized_text"], channel=report["channel"])
+        
+    if report.get("verdict_json"):
+        verdict = json.loads(report["verdict_json"])
+    else:
+        verdict = await assess(report["normalized_text"], channel=report["channel"])
+        
     verdict["report_id"] = report_id
     verdict["transcript"] = report["normalized_text"]
     verdict["input_kind"] = "text"
@@ -157,6 +165,11 @@ async def _remember_raw_file(path: str, channel: str | None, extracted: str) -> 
         pass
     except Exception:
         log.exception("raw-file remember failed (non-fatal)")
+    finally:
+        try:
+            os.remove(path)
+        except OSError:
+            log.warning("failed to remove temporary file %s", path)
 
 
 @router.post("/report/{report_id}/outcome")

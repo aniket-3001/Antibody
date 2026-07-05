@@ -35,6 +35,7 @@ def record_report(
     outcome: str | None = None,
     is_control: bool = False,
     reported_at: str | None = None,
+    verdict_json: str | None = None,
 ) -> str:
     """Fast path: write to ops store + semantic index. Returns report_id."""
     report_id = "rep_" + uuid.uuid4().hex[:12]
@@ -57,6 +58,7 @@ def record_report(
         outcome=outcome,
         is_control=is_control,
         reported_at=reported_at,
+        verdict_json=verdict_json,
     )
     # Known-bad indicators become fast-path CONFIRMED keys for their family.
     if family and not is_control:
