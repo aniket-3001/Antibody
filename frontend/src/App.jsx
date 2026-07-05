@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw } from "lucide-react";
+import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw, Info, GitBranch } from "lucide-react";
 import { motion } from "framer-motion";
 import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
@@ -49,8 +49,12 @@ function ReporterIdPanel() {
 
   return (
     <div className="hidden md:flex flex-col gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-3 text-xs">
-      <div className="flex items-center gap-1.5 font-bold text-[var(--color-ink)]">
+      <div className="relative group flex items-center gap-1.5 font-bold text-[var(--color-ink)] cursor-help w-max">
         <Fingerprint size={14} className="text-[var(--color-brand)]" /> Your anonymous id
+        <Info size={12} className="text-[var(--color-body)] group-hover:text-[var(--color-ink)] transition-colors" />
+        <div className="absolute bottom-full left-0 mb-2 w-56 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] font-normal text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+          A random id tied to this browser, used to track your reports and leaderboard score while keeping you completely anonymous.
+        </div>
       </div>
       <div className="truncate font-mono text-[var(--color-muted)]" title={id}>{id}</div>
       <div className="flex gap-2">
@@ -61,12 +65,18 @@ function ReporterIdPanel() {
           {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
           {copied ? "Copied" : "Copy"}
         </button>
-        <button
-          onClick={() => setConfirming(true)}
-          className="flex items-center gap-1 font-bold text-[var(--color-danger)] hover:underline"
-        >
-          <RotateCcw size={12} /> Forget me
-        </button>
+        <div className="relative group flex items-center cursor-help">
+          <button
+            onClick={() => setConfirming(true)}
+            className="flex items-center gap-1 font-bold text-[var(--color-danger)] hover:underline"
+          >
+            <RotateCcw size={12} /> Forget me
+          </button>
+          <Info size={12} className="ml-1 text-[var(--color-body)] group-hover:text-[var(--color-ink)] transition-colors" />
+          <div className="absolute bottom-full right-0 md:left-0 mb-2 w-56 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] font-normal text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+            Hard-deletes your id and every report tied to it from our server, then gives this browser a fresh id.
+          </div>
+        </div>
       </div>
 
       <Modal isOpen={confirming} onClose={() => setConfirming(false)} title="Forget this id?">
@@ -228,13 +238,26 @@ function MainApp() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(30,58,138,0.6)]">
             <ShieldCheck size={26} strokeWidth={2.5} />
           </div>
-          <div className="text-left">
-            <h1 className="m-0 text-xl font-extrabold tracking-tight text-[var(--color-ink)]">
+          <div className="text-left flex flex-col items-start">
+            <a
+              href="https://github.com/aniket-3001/Antibody"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="m-0 text-xl font-extrabold tracking-tight text-[var(--color-ink)] hover:text-[var(--color-brand)] transition-colors flex items-center gap-1.5"
+            >
               Antibody
-            </h1>
+            </a>
             <p className="m-0 mt-0.5 text-xs text-[var(--color-muted)] leading-tight">
               your collective immune system
             </p>
+            <a
+              href="https://github.com/aniket-3001/Antibody"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[var(--color-ink)] bg-[var(--color-surface-2)] hover:bg-[var(--color-line)] border border-[var(--color-line)] px-2 py-1 rounded-md transition-colors w-max"
+            >
+              <GitBranch size={12} /> GitHub
+            </a>
           </div>
         </div>
 
@@ -264,7 +287,7 @@ function MainApp() {
         <div className="mt-auto pt-8 flex flex-col gap-4">
           <div className="text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
             Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
-            Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+            Every report helps protect the next person. Powered by <a href="https://www.cognee.ai/" target="_blank" rel="noopener noreferrer" className="text-[var(--color-ink)] hover:text-[var(--color-brand)] font-bold transition-colors">Cognee</a>.
           </div>
           <ReporterIdPanel />
         </div>
