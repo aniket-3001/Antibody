@@ -11,9 +11,10 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, Form, UploadFile
 from pydantic import BaseModel
 
+from api.core.exceptions import EmptyReportError, ReportNotFoundError
 from api.intake import ingest
 from api.intake.loaders import extract_text
 from api.memory import store
@@ -38,7 +39,7 @@ async def _process(text: str, channel: str | None, reporter_id: str | None,
                    background: BackgroundTasks) -> dict:
     text = (text or "").strip()
     if not text:
-        raise HTTPException(400, "empty report — nothing to assess")
+        raise EmptyReportError()
 
     # 1) verdict from current memory (fast, deterministic + semantic)
     verdict = await assess(text, channel=channel, reporter_id=reporter_id)
@@ -121,7 +122,7 @@ async def report_outcome(report_id: str, body: OutcomeIn,
                          background: BackgroundTasks) -> dict:
     found, family = store.set_outcome(report_id, body.outcome)
     if not found:
-        raise HTTPException(404, "report not found")
+        raise ReportNotFoundError()
 
     # A user confirming an UNRECOGNIZED report is how a novel scam enters the
     # shared memory — promote it to a family so the next person is warned (§9).

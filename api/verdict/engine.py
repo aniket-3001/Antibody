@@ -13,7 +13,7 @@ LLM key is present; otherwise a graph-grounded template keeps the demo alive.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from api.config import settings
 from api.memory import indicators as ind
@@ -44,8 +44,8 @@ def _days_since(iso: str | None) -> float | None:
     try:
         dt = datetime.fromisoformat(iso)
         if not dt.tzinfo:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return max(0.0, (datetime.now(timezone.utc) - dt).total_seconds() / 86400.0)
+            dt = dt.replace(tzinfo=UTC)
+        return max(0.0, (datetime.now(UTC) - dt).total_seconds() / 86400.0)
     except ValueError:
         return None
 

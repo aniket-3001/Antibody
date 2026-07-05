@@ -14,6 +14,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
+from typing import Any
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -24,7 +25,7 @@ def _features(text: str) -> Counter:
     feats: Counter = Counter()
     # unigrams + bigrams
     feats.update(words)
-    feats.update(f"{a}_{b}" for a, b in zip(words, words[1:]))
+    feats.update(f"{a}_{b}" for a, b in zip(words, words[1:], strict=False))
     # char trigrams on the collapsed string (robust to spacing/rewording)
     collapsed = " ".join(words)
     feats.update(collapsed[i : i + 3] for i in range(max(0, len(collapsed) - 2)))
@@ -72,7 +73,7 @@ class SemanticIndex:
 
     def best(self, text: str, top_k: int = 5) -> list[dict]:
         q = _features(text)
-        scored = [
+        scored: list[dict[str, Any]] = [
             {"report_id": rid, "family": fam or None, "is_control": ctrl,
              "cosine": _cosine(q, feats)}
             for rid, fam, ctrl, feats in self._items
@@ -93,9 +94,8 @@ class SemanticIndex:
         for h in hits:
             if h["is_control"]:
                 best_control_cos = max(best_control_cos, h["cosine"])
-            elif h["family"]:
-                if h["cosine"] > best_family_cos:
-                    best_family_cos, best_family = h["cosine"], h["family"]
+            elif h["family"] and h["cosine"] > best_family_cos:
+                best_family_cos, best_family = h["cosine"], h["family"]
 
         if best_control_cos >= legit_floor and best_control_cos >= best_family_cos:
             return {"family": None, "cosine": best_control_cos, "strength": 0.0,

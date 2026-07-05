@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from api.config import settings
@@ -93,7 +93,7 @@ class MemoryService:
         await self._ensure_ready()
         import cognee
 
-        date_iso = datetime.now(timezone.utc).date().isoformat()
+        date_iso = datetime.now(UTC).date().isoformat()
         if isinstance(data, str):
             doc = doc_header(channel, family, date_iso) + "\n" + data
             payload: Any = doc

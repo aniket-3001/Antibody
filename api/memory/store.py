@@ -15,16 +15,16 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-_conn: Optional[sqlite3.Connection] = None
+_conn: sqlite3.Connection | None = None
 _lock = threading.RLock()
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def init_db(data_dir: Path) -> None:
@@ -120,10 +120,10 @@ def bump_trust(reporter_id: str, delta: float) -> None:
 def upsert_family(
     name: str,
     summary: str = "",
-    tactics: Optional[list] = None,
-    lures: Optional[list] = None,
-    channels: Optional[list] = None,
-    seen_at: Optional[str] = None,
+    tactics: list | None = None,
+    lures: list | None = None,
+    channels: list | None = None,
+    seen_at: str | None = None,
 ) -> None:
     seen = seen_at or _now()
     with _lock, _c() as c:
@@ -149,7 +149,7 @@ def upsert_family(
             )
 
 
-def get_family(name: str) -> Optional[dict]:
+def get_family(name: str) -> dict | None:
     with _lock, _c() as c:
         row = c.execute("SELECT * FROM families WHERE name=?", (name,)).fetchone()
     if not row:
@@ -168,7 +168,9 @@ def get_family(name: str) -> Optional[dict]:
 def all_families() -> list[dict]:
     with _lock, _c() as c:
         rows = c.execute("SELECT name FROM families ORDER BY name").fetchall()
-    return [get_family(r["name"]) for r in rows]
+    # A row could vanish between the name query and get_family() (concurrent
+    # prune); drop the None rather than returning holes.
+    return [fam for r in rows if (fam := get_family(r["name"])) is not None]
 
 
 # ----- reports -----
@@ -176,15 +178,15 @@ def all_families() -> list[dict]:
 def add_report(
     report_id: str,
     normalized_text: str,
-    channel: Optional[str],
-    family_name: Optional[str],
-    reporter_id: Optional[str],
-    indicators: Optional[list] = None,
-    tactics: Optional[list] = None,
-    lures: Optional[list] = None,
-    outcome: Optional[str] = None,
+    channel: str | None,
+    family_name: str | None,
+    reporter_id: str | None,
+    indicators: list | None = None,
+    tactics: list | None = None,
+    lures: list | None = None,
+    outcome: str | None = None,
     is_control: bool = False,
-    reported_at: Optional[str] = None,
+    reported_at: str | None = None,
 ) -> None:
     with _lock, _c() as c:
         c.execute(
@@ -199,7 +201,7 @@ def add_report(
         )
 
 
-def set_outcome(report_id: str, outcome: str) -> tuple[bool, Optional[str]]:
+def set_outcome(report_id: str, outcome: str) -> tuple[bool, str | None]:
     """Record an outcome. Returns (found, family_name).
 
     family_name is legitimately None for unrecognized reports that exist but
@@ -213,7 +215,7 @@ def set_outcome(report_id: str, outcome: str) -> tuple[bool, Optional[str]]:
         return True, row["family_name"]
 
 
-def get_report(report_id: str) -> Optional[dict]:
+def get_report(report_id: str) -> dict | None:
     with _lock, _c() as c:
         row = c.execute("SELECT * FROM reports WHERE id=?", (report_id,)).fetchone()
     return _report_row(row) if row else None
@@ -329,7 +331,7 @@ def trust_weighted_reporters(name: str) -> float:
     return total
 
 
-def family_first_seen(name: str) -> Optional[str]:
+def family_first_seen(name: str) -> str | None:
     with _lock, _c() as c:
         row = c.execute(
             "SELECT MIN(reported_at) m FROM reports WHERE family_name=? AND pruned=0", (name,)
@@ -339,7 +341,7 @@ def family_first_seen(name: str) -> Optional[str]:
 
 # ----- indicators (known-bad IOC lookup — the CONFIRMED fast path) -----
 
-def upsert_indicator(value: str, kind: str, family_name: Optional[str]) -> None:
+def upsert_indicator(value: str, kind: str, family_name: str | None) -> None:
     with _lock, _c() as c:
         c.execute(
             "INSERT OR REPLACE INTO indicators (value, kind, family_name) VALUES (?,?,?)",
@@ -347,7 +349,7 @@ def upsert_indicator(value: str, kind: str, family_name: Optional[str]) -> None:
         )
 
 
-def lookup_indicator(value: str) -> Optional[dict]:
+def lookup_indicator(value: str) -> dict | None:
     with _lock, _c() as c:
         row = c.execute(
             "SELECT value, kind, family_name FROM indicators WHERE value=?",
@@ -373,7 +375,7 @@ def set_guidance(family_name: str, do_now: list, report_to: list, recovery: list
         )
 
 
-def get_guidance(family_name: str) -> Optional[dict]:
+def get_guidance(family_name: str) -> dict | None:
     with _lock, _c() as c:
         row = c.execute("SELECT * FROM guidance WHERE family_name=?", (family_name,)).fetchone()
     if not row:

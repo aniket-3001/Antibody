@@ -1,6 +1,9 @@
 # Dev/test/lint tooling — not needed to run the app itself.
+# Mirrors pyproject.toml [project.optional-dependencies].dev
 -r api/requirements.txt
 
-pytest
-httpx
-ruff
+pytest==9.1.1
+pytest-cov==7.0.0
+httpx==0.28.1
+ruff==0.15.20
+mypy==1.14.1

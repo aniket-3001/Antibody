@@ -173,9 +173,9 @@ def find_highlight_spans(text: str, tactics: list[str] | None = None,
         spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
                       "label": _INDICATOR_LABEL["crypto_wallet"]})
 
-    m = _GIFT_CARD_RE.search(text)
-    if m:
-        spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+    gift = _GIFT_CARD_RE.search(text)
+    if gift:
+        spans.append({"start": gift.start(), "end": gift.end(), "kind": "indicator",
                       "label": _INDICATOR_LABEL["gift_card_ask"]})
 
     low = text.lower()

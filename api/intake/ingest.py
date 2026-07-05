@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from api.memory import indicators as ind
 from api.memory import store
@@ -140,4 +140,4 @@ def rebuild_semantic_index() -> None:
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()

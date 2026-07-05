@@ -21,7 +21,6 @@ from functools import lru_cache
 @lru_cache(maxsize=1)
 def build_graph_model():
     """Return the root DataPoint model for cognify(graph_model=...)."""
-    from typing import List, Optional
 
     from cognee.low_level import DataPoint
 
@@ -29,7 +28,7 @@ def build_graph_model():
         """A reusable manipulation technique. SHARED across families."""
 
         label: str  # "fake_delivery_fee", "urgency_pressure", "spoofed_sender", ...
-        category: Optional[str] = None  # social_engineering | payment | impersonation
+        category: str | None = None  # social_engineering | payment | impersonation
         metadata: dict = {"index_fields": ["label"]}
 
     class Lure(DataPoint):
@@ -54,23 +53,23 @@ def build_graph_model():
 
         name: str
         summary: str
-        first_seen: Optional[str] = None
-        last_seen: Optional[str] = None
-        tactics: List[Tactic] = []
-        lures: List[Lure] = []
+        first_seen: str | None = None
+        last_seen: str | None = None
+        tactics: list[Tactic] = []
+        lures: list[Lure] = []
         metadata: dict = {"index_fields": ["name", "summary"]}
 
     class ScamReport(DataPoint):
         """One submission — the atom that accumulates. Root of the graph_model."""
 
         normalized_text: str
-        channel: Optional[Channel] = None
-        family: Optional[ScamFamily] = None
-        tactics: List[Tactic] = []
-        lures: List[Lure] = []
-        indicators: List[Indicator] = []
-        reported_at: Optional[str] = None
-        outcome: Optional[str] = None  # confirmed_scam | i_got_scammed | actually_legit
+        channel: Channel | None = None
+        family: ScamFamily | None = None
+        tactics: list[Tactic] = []
+        lures: list[Lure] = []
+        indicators: list[Indicator] = []
+        reported_at: str | None = None
+        outcome: str | None = None  # confirmed_scam | i_got_scammed | actually_legit
         metadata: dict = {"index_fields": ["normalized_text"]}
 
     return ScamReport

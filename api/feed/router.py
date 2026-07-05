@@ -6,7 +6,7 @@ GET /graph     → shared-tactic map (tactics used across ≥2 families)
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -21,8 +21,8 @@ def _hours_since(iso: str | None) -> float | None:
     try:
         dt = datetime.fromisoformat(iso)
         if not dt.tzinfo:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+            dt = dt.replace(tzinfo=UTC)
+        return (datetime.now(UTC) - dt).total_seconds() / 3600.0
     except ValueError:
         return None
 

@@ -51,11 +51,9 @@ def family_prior(report_count: int, days_since_last: float | None) -> float:
     """S_fam = prevalence × recency. A dormant campaign shouldn't fire at full
     strength on a lookalike (spec §6 recency prior, fed by memify decay §9)."""
     prevalence = 1.0 - math.exp(-0.15 * max(0, report_count))
-    if days_since_last is None:
-        recency = 0.6
-    else:
-        # half-life ~30 days
-        recency = 0.5 ** (days_since_last / 30.0)
+    # Fresh sightings fire near full strength; a dormant campaign decays on a
+    # ~30-day half-life. Unknown recency gets a neutral 0.6.
+    recency = 0.6 if days_since_last is None else 0.5 ** (days_since_last / 30.0)
     return prevalence * max(0.15, recency)
 
 

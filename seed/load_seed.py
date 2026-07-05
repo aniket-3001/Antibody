@@ -4,7 +4,7 @@ demos against an empty graph (spec §14). Idempotent: no-op if already seeded.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from api.intake.ingest import record_report
 from api.memory import store
@@ -14,7 +14,7 @@ log = logging.getLogger("antibody.seed")
 
 
 def _ts(days_ago: float) -> str:
-    return (datetime.now(timezone.utc) - timedelta(days=days_ago)).isoformat()
+    return (datetime.now(UTC) - timedelta(days=days_ago)).isoformat()
 
 
 def load_seed_if_empty() -> int:
@@ -88,7 +88,7 @@ async def cognify_seed() -> int:
     reports = [r for r in store.active_reports() if not r["is_control"]]
     for r in reports:
         await remember_in_cognee(
-            r["normalized_text"], channel=r["channel"],
+            r["normalized_text"], report_id=r["id"], channel=r["channel"],
             family=r["family_name"], cognify=False,  # batch: cognify once at the end
         )
     await memory_service.cognify()

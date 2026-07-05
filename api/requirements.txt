@@ -1,18 +1,22 @@
 # Antibody API — Python 3.11+
-fastapi
-uvicorn[standard]
-pydantic
-pydantic-settings
-python-multipart
+# Pinned runtime deps for the Docker image (installed from this flat file so the
+# pip layer caches cleanly). Canonical source is pyproject.toml [project]; keep
+# the two in sync when bumping a version.
 
-# Memory — the star. Pinned to the version verified locally.
+fastapi==0.139.0
+uvicorn[standard]==0.49.0
+pydantic==2.13.4
+pydantic-settings==2.14.2
+python-multipart==0.0.32
+
+# Memory — the star. Pinned to the version verified locally (tag v1.2.2).
 cognee[fastembed]==1.2.2
 
 # Multimodal intake (spec §11). Intake still degrades gracefully if these are
 # absent, but they're installed by default so screenshot/PDF/audio uploads work
 # out of the box.
-faster-whisper            # scam-call / voicemail audio transcription (CPU, no key)
-pytesseract               # SMS/email screenshot OCR — needs the Tesseract binary
+faster-whisper==1.2.1     # scam-call / voicemail audio transcription (CPU, no key)
+pytesseract==0.3.10       # SMS/email screenshot OCR — needs the Tesseract binary
                           # on PATH too, e.g. `brew install tesseract`
-pillow                    # image loading for pytesseract
-pymupdf                   # PDF text extraction (fitz) — doc/invoice-style reports
+pillow==12.3.0            # image loading for pytesseract
+pymupdf==1.27.2           # PDF text extraction (fitz) — doc/invoice-style reports

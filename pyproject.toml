@@ -1,11 +1,81 @@
+[project]
+name = "antibody"
+version = "0.1.0"
+description = "A collective immune system against scams — a shared Cognee memory graph that matches a forwarded message against known scam campaigns and returns a verdict, an explanation, and what to do next."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Aniket Gupta" }]
+keywords = ["scam-detection", "cognee", "knowledge-graph", "fastapi", "fraud"]
+
+# Canonical runtime dependencies. api/requirements.txt mirrors these pins for the
+# Docker image (it installs from the flat file so the pip layer caches cleanly);
+# keep the two in sync when bumping a version.
+dependencies = [
+  "fastapi==0.139.0",
+  "uvicorn[standard]==0.49.0",
+  "pydantic==2.13.4",
+  "pydantic-settings==2.14.2",
+  "python-multipart==0.0.32",
+  "cognee[fastembed]==1.2.2",
+]
+
+[project.optional-dependencies]
+# Multimodal intake (SMS screenshots, scam-call audio, PDF reports). Intake
+# degrades gracefully without these, but they ship in the image by default.
+multimodal = [
+  "faster-whisper==1.2.1",
+  "pytesseract==0.3.10",
+  "pillow==12.3.0",
+  "pymupdf==1.27.2",
+]
+# Dev/test/lint toolchain — not needed to run the app.
+dev = [
+  "pytest==9.1.1",
+  "pytest-cov==7.0.0",
+  "httpx==0.28.1",
+  "ruff==0.15.20",
+  "mypy==1.14.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/aniket-3001/Antibody"
+"Live demo" = "https://antibody-251148844884.asia-south1.run.app"
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = [
+  # Third-party deprecations we don't control (Cognee/Pydantic/HF) — keep the
+  # test output readable without hiding warnings from our own code.
+  "ignore::DeprecationWarning:pydantic.*",
+  "ignore::UserWarning:huggingface_hub.*",
+]
+
+[tool.coverage.run]
+source = ["api", "seed"]
+omit = ["*/__pycache__/*", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-ignore = ["E501"]
+# E/W pycodestyle, F pyflakes, I import order, B bugbear, C4 comprehensions,
+# UP pyupgrade, SIM simplify — the same rigor RealtyRecall runs, tuned for Antibody.
+select = ["E", "W", "F", "I", "B", "C4", "UP", "SIM"]
+ignore = ["E501", "B008"]  # line length handled by formatter; B008 = FastAPI Depends/File defaults
+
+[tool.mypy]
+python_version = "3.11"
+files = ["api", "seed"]
+ignore_missing_imports = true       # cognee/fastembed/whisper ship no stubs
+warn_unused_configs = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
