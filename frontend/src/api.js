@@ -16,13 +16,24 @@ export const checkMessage = (text, channel, reporterId) =>
     body: JSON.stringify({ text, channel, reporter_id: reporterId }),
   }).then(j);
 
+// Extract text from a file without evaluating it — powers the upload preview,
+// so the user can see/edit the OCR'd or transcribed text before checking it.
+export const extractText = (file) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return fetch(`${API_BASE}/report/extract`, { method: "POST", body: fd }).then(j);
+};
+
 // Multimodal intake: a recorded scam-call clip or an SMS screenshot.
 // The server transcribes/OCRs it, then returns the verdict + the transcript.
-export const uploadFile = (file, channel, reporterId) => {
+// transcriptOverride lets the caller submit user-edited preview text instead
+// of re-running OCR/transcription server-side.
+export const uploadFile = (file, channel, reporterId, transcriptOverride = null) => {
   const fd = new FormData();
   fd.append("file", file);
   if (channel) fd.append("channel", channel);
   if (reporterId) fd.append("reporter_id", reporterId);
+  if (transcriptOverride !== null) fd.append("transcript_override", transcriptOverride);
   return fetch(`${API_BASE}/report/upload`, { method: "POST", body: fd }).then(j);
 };
 

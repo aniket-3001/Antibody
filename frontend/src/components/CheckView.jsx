@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud, Share2, Copy, CheckCircle2 } from "lucide-react";
-import { checkMessage, submitOutcome, uploadFile } from "../api.js";
+import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud, Share2, Copy, CheckCircle2, X } from "lucide-react";
+import { checkMessage, submitOutcome, uploadFile, extractText } from "../api.js";
 import { getClientId } from "../lib/identity.js";
 import { Button } from "./ui/button.jsx";
 import { Card, CardContent } from "./ui/card.jsx";
@@ -76,19 +76,30 @@ export default function CheckView() {
   const [v, setV] = useState(null);
   const [err, setErr] = useState("");
   const [outcome, setOutcome] = useState(null);
+  const [stagedFile, setStagedFile] = useState(null);
+  const [stagedUrl, setStagedUrl] = useState(null);
 
   const recogRef = useRef(null);
   const finalRef = useRef("");
   const fileRef = useRef(null);
 
+  const clearStaged = () => {
+    if (stagedUrl) URL.revokeObjectURL(stagedUrl);
+    setStagedFile(null);
+    setStagedUrl(null);
+  };
+
   const run = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() && !stagedFile) return;
     stopMic();
     const sent = text;
     setLoading(true); setErr(""); setV(null); setOutcome(null);
     try {
-      const res = await checkMessage(sent, channel, getClientId());
-      setV({ ...res, checked_text: sent });
+      const res = stagedFile
+        ? await uploadFile(stagedFile, channel, getClientId(), sent)
+        : await checkMessage(sent, channel, getClientId());
+      setV({ ...res, checked_text: res.transcript || sent });
+      clearStaged();
     } catch (e) { setErr(String(e.message || e)); }
     setLoading(false);
   };
@@ -121,11 +132,15 @@ export default function CheckView() {
     const f = e.target.files?.[0];
     if (!f) return;
     stopMic();
-    setUploading(true); setErr(""); setV(null); setOutcome(null); setText("");
+    setErr(""); setV(null); setOutcome(null); setText("");
+    clearStaged();
+    setStagedFile(f);
+    setStagedUrl(URL.createObjectURL(f));
+    setUploading(true);
     try {
-      const res = await uploadFile(f, channel, getClientId());
-      setV({ ...res, checked_text: res.transcript || "" });
+      const res = await extractText(f);
       if (res.transcript) setText(res.transcript);
+      else setErr("Couldn't extract text automatically. You can type it out below, or just \"Check it\" anyway.");
     } catch (er) { setErr(String(er.message || er)); }
     setUploading(false);
     e.target.value = "";
@@ -145,6 +160,35 @@ export default function CheckView() {
 
       <Card>
         <CardContent className="pt-6 flex flex-col gap-4">
+          {stagedFile && stagedUrl && (
+            <div className="relative flex flex-col items-center justify-center gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-4">
+              <button
+                onClick={clearStaged}
+                title="Remove file"
+                className="absolute top-2 right-2 rounded-full p-1 text-[var(--color-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-danger)]"
+              >
+                <X size={16} />
+              </button>
+              {stagedFile.type.startsWith("image/") ? (
+                <img src={stagedUrl} alt="Upload preview" className="max-h-48 rounded object-contain" />
+              ) : stagedFile.type.startsWith("audio/") || /\.(mp3|m4a|wav|mpeg|ogg)$/i.test(stagedFile.name) ? (
+                <div className="flex w-full flex-col items-center gap-2">
+                  <div className="text-3xl">🎙️</div>
+                  <span className="text-sm font-medium text-[var(--color-ink)]">{stagedFile.name}</span>
+                  <audio controls src={stagedUrl} className="mt-1 w-full max-w-sm" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <div className="text-3xl">📄</div>
+                  <span className="text-sm font-medium text-[var(--color-ink)]">{stagedFile.name}</span>
+                </div>
+              )}
+              <span className="text-xs text-[var(--color-muted)]">
+                {uploading ? "Extracting text…" : "Edit the extracted text below if needed, then Check it."}
+              </span>
+            </div>
+          )}
+
           <Textarea
             placeholder="Paste the suspicious message here… or tap the mic and read it out."
             value={text}
@@ -165,9 +209,9 @@ export default function CheckView() {
             )}
             <Button variant="secondary" size="sm" className="gap-2" onClick={() => fileRef.current?.click()} disabled={uploading}>
               {uploading ? <UploadCloud size={16} className="animate-bounce" /> : <Paperclip size={16} />}
-              {uploading ? "Reading…" : "Upload file"}
+              {uploading ? "Extracting…" : "Upload file"}
             </Button>
-            <input ref={fileRef} type="file" accept="audio/*,image/*,application/pdf,.pdf" onChange={onFile} className="hidden" />
+            <input ref={fileRef} type="file" accept="audio/*,image/*,application/pdf,.pdf,.mpeg,.mp3,.m4a" onChange={onFile} className="hidden" />
           </div>
 
           <div className="flex items-center gap-3 mt-2">
@@ -181,7 +225,7 @@ export default function CheckView() {
               <option value="voice_call">Phone call</option>
               <option value="whatsapp">WhatsApp</option>
             </select>
-            <Button onClick={run} disabled={loading || uploading || !text.trim()} className="flex-1">
+            <Button onClick={run} disabled={loading || uploading || (!text.trim() && !stagedFile)} className="flex-1">
               {loading ? "Checking…" : "Check it"}
             </Button>
           </div>

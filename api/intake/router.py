@@ -114,29 +114,56 @@ async def get_report(report_id: str) -> dict:
     return verdict
 
 
+def _infer_kind(content_type: str | None, suffix: str) -> str:
+    ctype = (content_type or "").lower()
+    if ctype.startswith("audio/") or suffix.lower() in {".mp3", ".m4a", ".wav", ".ogg", ".flac", ".mpeg"}:
+        return "audio"
+    if ctype == "application/pdf" or suffix.lower() == ".pdf":
+        return "document"
+    return "image"
+
+
+@router.post("/report/extract")
+async def extract_preview(file: UploadFile = File(...)) -> dict:
+    """Extract text from an upload without evaluating it — powers the "preview
+    and edit before checking" step in the UI, so a bad OCR/transcription can be
+    corrected before it's submitted."""
+    suffix = Path(file.filename or "upload").suffix or ".bin"
+    tmp = Path(tempfile.gettempdir()) / f"antibody_extract_{uuid.uuid4().hex}{suffix}"
+    tmp.write_bytes(await file.read())
+    try:
+        text = extract_text(str(tmp), file.content_type)
+    finally:
+        try:
+            os.remove(str(tmp))
+        except OSError:
+            log.warning("failed to remove temporary extract upload %s", tmp)
+    return {"transcript": text, "input_kind": _infer_kind(file.content_type, suffix)}
+
+
 @router.post("/report/upload")
 async def submit_upload(
     background: BackgroundTasks,
     file: UploadFile = File(...),
     channel: str | None = Form(None),
     reporter_id: str | None = Form(None),
+    transcript_override: str | None = Form(None),
 ) -> dict:
-    """Multimodal intake: SMS screenshot / scam-call audio / PDF document (spec §11)."""
+    """Multimodal intake: SMS screenshot / scam-call audio / PDF document (spec §11).
+
+    ``transcript_override`` lets the UI submit text the user edited after
+    previewing the raw extraction (via /report/extract) instead of re-running
+    OCR/transcription here.
+    """
     suffix = Path(file.filename or "upload").suffix or ".bin"
     tmp = Path(tempfile.gettempdir()) / f"antibody_{uuid.uuid4().hex}{suffix}"
     tmp.write_bytes(await file.read())
 
-    text = extract_text(str(tmp), file.content_type)
+    kind = _infer_kind(file.content_type, suffix)
+    text = transcript_override if transcript_override is not None else extract_text(str(tmp), file.content_type)
     # Hand the RAW file to Cognee's native loaders regardless (graph-layer multimodal).
     background.add_task(_remember_raw_file, str(tmp), channel, text)
 
-    ctype = (file.content_type or "").lower()
-    if ctype.startswith("audio/"):
-        kind = "audio"
-    elif ctype == "application/pdf" or suffix.lower() == ".pdf":
-        kind = "document"
-    else:
-        kind = "image"
     if not text:
         return {
             "band": "unrecognized",

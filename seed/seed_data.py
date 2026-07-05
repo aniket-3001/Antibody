@@ -178,6 +178,39 @@ FAMILIES: dict = {
             "I care about you so much. Let's build our future — just start with a small deposit into the investment account I set up for us.",
         ],
     },
+    "upi_collect_fraud": {
+        "summary": "Fake UPI 'collect request' / cashback scams (India). The victim is "
+                   "told to enter their UPI PIN to *receive* money — entering a PIN "
+                   "always authorizes an outgoing payment, so this pays the scammer.",
+        "tactics": ["fake_cashback", "urgency_pressure", "credential_harvest"],
+        "lures": ["cashback_reward", "refund_pending"],
+        "channels": ["sms", "whatsapp"],
+        "indicators": [("secure-check.example", "url_domain"),
+                       ("parcel-update.example", "url_domain")],
+        "guidance": {
+            "do_now": [
+                "Never enter your UPI PIN to *receive* money — a PIN only authorizes "
+                "an outgoing payment, never an incoming one.",
+                "Decline any unexpected 'collect request' rather than approving it.",
+            ],
+            "report_to": [
+                "India: report at cybercrime.gov.in or call the 1930 helpline.",
+                "Report the UPI handle to your bank's fraud line.",
+            ],
+            "recovery": [
+                "If you approved a collect request, contact your bank immediately — "
+                "UPI transfers settle in seconds, so speed matters.",
+                "File a complaint at cybercrime.gov.in with the transaction reference.",
+            ],
+        },
+        "reports": [
+            "Congratulations! Aapko ₹2,500 cashback mila hai. Collect karne ke liye link open karke UPI PIN confirm karein: https://secure-check.example",
+            "₹50,000 refund pending. Open https://parcel-update.example and enter your UPI PIN to receive the amount.",
+            "A payment dispute requires immediate validation. Approve the collect request and share the confirmation code to release your refund.",
+            "Aapka ₹1,00,000 ka reward pending hai. UPI collect request accept karke PIN daalein, paisa turant account mein aa jayega.",
+        ],
+        "emerging": True,
+    },
 }
 
 # Legit control messages — the gate must NOT flag these (spec §7/§14).

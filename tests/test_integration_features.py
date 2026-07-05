@@ -78,3 +78,27 @@ def test_reporter_forget_erases_own_reports(client):
 
     after = client.get("/reports/mine", params={"reporter_id": rid}).json()["reports"]
     assert after == []
+
+
+def test_extract_preview_does_not_record_a_report(client):
+    files = {"file": ("scam.txt", b"pay a small redelivery fee at scam-site.biz", "text/plain")}
+    r = client.post("/report/extract", files=files)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["transcript"] == "pay a small redelivery fee at scam-site.biz"
+    assert body["input_kind"] == "image"  # .txt has no dedicated kind; falls back to the generic preview
+
+
+def test_upload_honours_transcript_override(client):
+    # The bytes are irrelevant here — transcript_override skips server-side
+    # extraction entirely, letting the UI submit user-edited preview text.
+    files = {"file": ("note.png", b"not a real image", "image/png")}
+    r = client.post(
+        "/report/upload",
+        files=files,
+        data={"channel": "sms", "transcript_override": "URGENT verify your account now"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["transcript"] == "URGENT verify your account now"
+    assert body["input_kind"] == "image"

@@ -68,7 +68,7 @@ def extract_text(path: str, content_type: str | None) -> str:
 
     if ct.startswith("image/") or ext in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
         return extract_from_image(path)
-    if ct.startswith("audio/") or ext in {".wav", ".mp3", ".m4a", ".ogg", ".flac"}:
+    if ct.startswith("audio/") or ext in {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".mpeg"}:
         return extract_from_audio(path)
     if ct == "application/pdf" or ext == ".pdf":
         return extract_from_pdf(path)
