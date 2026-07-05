@@ -88,7 +88,7 @@ additionally light up Cognee's cited graph explanations and the
 | `WEB_ORIGIN` | No | `http://localhost:5173` | added to the CORS allowlist |
 | `DATA_DIR` | No | `./.antibody_data` | ops DB + Cognee's embedded kuzu/lancedb stores + model cache |
 | `LLM_PROVIDER` / `LLM_MODEL` / `LLM_ENDPOINT` / `LLM_API_KEY` | No | — | OpenAI-compatible; read directly by Cognee |
-| `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_DIMENSIONS` | No | `fastembed` / `all-MiniLM-L6-v2` / `384` | local, no API key needed |
+| `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_DIMENSIONS` | No | `fastembed` / `sentence-transformers/all-MiniLM-L6-v2` / `384` | local, no API key needed |
 | `EMBEDDING_ENDPOINT` / `EMBEDDING_API_KEY` | No | — | only needed for a remote embedding provider (see below) |
 
 Both `LLM_*` and `EMBEDDING_*` follow Cognee's own "custom OpenAI-compatible
