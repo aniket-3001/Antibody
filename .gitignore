@@ -1,4 +1,5 @@
 .antibody_data/
+.antibody_help_data/
 .cognee_system/
 .cognee_data/
 node_modules/
