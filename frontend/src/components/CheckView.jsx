@@ -214,18 +214,27 @@ export default function CheckView() {
             <input ref={fileRef} type="file" accept="audio/*,image/*,application/pdf,.pdf,.mpeg,.mp3,.m4a" onChange={onFile} className="hidden" />
           </div>
 
-          <div className="flex items-center gap-3 mt-2">
-            <select 
-              value={channel} 
-              onChange={(e) => setChannel(e.target.value)}
-              className="h-10 rounded-full border border-[var(--color-line)] bg-[var(--color-surface-2)] px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
-            >
-              <option value="sms">Text / SMS</option>
-              <option value="email">Email</option>
-              <option value="voice_call">Phone call</option>
-              <option value="whatsapp">WhatsApp</option>
-            </select>
-            <Button onClick={run} disabled={loading || uploading || (!text.trim() && !stagedFile)} className="flex-1">
+          <div className="flex items-end gap-3 mt-2 w-full">
+            <div className="flex flex-col gap-1.5 w-[45%] sm:w-[40%] md:w-[35%]">
+              <div className="flex items-center gap-1.5 px-1 text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider group relative cursor-help">
+                Source of above content
+                <Info size={12} className="text-[var(--color-body)] group-hover:text-[var(--color-ink)]" />
+                <div className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case">
+                  Where did you receive this message? We use this to check for platform-specific tactics.
+                </div>
+              </div>
+              <select
+                value={channel}
+                onChange={(e) => setChannel(e.target.value)}
+                className="h-10 rounded-full border border-[var(--color-line)] bg-[var(--color-surface-2)] px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] w-full"
+              >
+                <option value="sms">Text / SMS</option>
+                <option value="email">Email</option>
+                <option value="voice_call">Phone call</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+            </div>
+            <Button onClick={run} disabled={loading || uploading || (!text.trim() && !stagedFile)} className="flex-1 h-10">
               {loading ? "Checking…" : "Check it"}
             </Button>
           </div>

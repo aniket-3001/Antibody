@@ -1,4 +1,4 @@
-﻿const DEFAULT_WEB_PORT = 5173;
+const DEFAULT_WEB_PORT = 5173;
 const DEFAULT_API_PORT = 8000;
 
 const textEl = document.getElementById("text");
@@ -39,11 +39,11 @@ function showError(msg) {
 function runCheck(text) {
   text = (text || "").trim();
   if (!text) {
-    showError("Nothing to check ΓÇö paste some text first.");
+    showError("Nothing to check — paste some text first.");
     return;
   }
   checkBtn.disabled = true;
-  checkBtn.textContent = "CheckingΓÇª";
+  checkBtn.textContent = "Checking…";
   chrome.runtime.sendMessage({ type: "antibody-scan", text }, (res) => {
     checkBtn.disabled = false;
     checkBtn.textContent = "Check it";
@@ -52,7 +52,7 @@ function runCheck(text) {
       return;
     }
     if (res.ok) showResult(res.verdict);
-    else showError(res.error || "Couldn't reach the Antibody server ΓÇö is it running?");
+    else showError(res.error || "Couldn't reach the Antibody server — is it running?");
   });
 }
 
@@ -97,6 +97,6 @@ settingsSaveBtn.addEventListener("click", async () => {
   const apiPort = parseInt(apiPortEl.value, 10) || DEFAULT_API_PORT;
   const webPort = parseInt(webPortEl.value, 10) || DEFAULT_WEB_PORT;
   await chrome.storage.local.set({ apiPort, webPort });
-  settingsSaveBtn.textContent = "Saved Γ£ô";
+  settingsSaveBtn.textContent = "Saved ✓";
   setTimeout(() => (settingsSaveBtn.textContent = "Save"), 1200);
 });

@@ -3,10 +3,17 @@
 // grant applies — content-script fetches are still bound by the page's own
 // CORS, but background/popup fetches from a permitted origin are not.
 //
-// Defaults to the live demo so the extension works the moment it's loaded. To
-// point it at a local backend, swap in "http://127.0.0.1:8000" (already in
-// host_permissions).
-const API_BASE = "https://antibody-251148844884.asia-south1.run.app";
+// Defaults to the live demo so the extension works the moment it's loaded.
+// A custom local port (set in the popup's Ports panel) overrides this.
+const LIVE_API_BASE = "https://antibody-251148844884.asia-south1.run.app";
+
+async function getApiBase() {
+  if (chrome.storage?.local) {
+    const { apiPort } = await chrome.storage.local.get("apiPort");
+    if (apiPort) return `http://127.0.0.1:${apiPort}`;
+  }
+  return LIVE_API_BASE;
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
@@ -17,6 +24,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 async function scanText(text) {
+  const API_BASE = await getApiBase();
   const res = await fetch(`${API_BASE}/scan`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

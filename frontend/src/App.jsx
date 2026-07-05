@@ -171,13 +171,13 @@ function MainApp() {
   };
 
   const tabs = [
-    { id: "check", label: "Check a Message" },
-    { id: "feed", label: "Live Threat Feed" },
-    { id: "graph", label: "Knowledge Graph" },
-    { id: "leaderboard", label: "Community Leaderboard" },
-    { id: "reports", label: "My Reports" },
-    { id: "extension", label: "Browser Extension" },
-    { id: "help", label: "Help Center" },
+    { id: "check", label: "Check a Message", desc: "Scan a message, audio, or image for scams." },
+    { id: "feed", label: "Live Threat Feed", desc: "Watch real-time scam activity." },
+    { id: "graph", label: "Knowledge Graph", desc: "Explore the connections between scams." },
+    { id: "leaderboard", label: "Community Leaderboard", desc: "Top contributors keeping the community safe." },
+    { id: "reports", label: "My Reports", desc: "Your personal history of reported scams." },
+    { id: "extension", label: "Browser Extension", desc: "Install the Antibody extension for Chrome." },
+    { id: "help", label: "Help Center", desc: "Ask questions about Antibody, powered by a separate Cognee memory base containing all project documentation." },
   ];
 
   // Real threat ticker — polls /feed and toasts only genuinely NEW activity
@@ -267,7 +267,7 @@ function MainApp() {
               key={t.id}
               onClick={() => selectTab(t.id)}
               className={cn(
-                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left shrink-0",
+                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left shrink-0 flex items-center justify-between gap-2 group",
                 tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-line)] shadow-none"
               )}
             >
@@ -280,6 +280,12 @@ function MainApp() {
                 />
               )}
               <span className="relative z-10 block">{t.label}</span>
+              <div className="relative z-10 hidden md:flex items-center">
+                <Info size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute left-full ml-2 w-48 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] text-xs font-normal rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                  {t.desc}
+                </div>
+              </div>
             </button>
           ))}
         </nav>

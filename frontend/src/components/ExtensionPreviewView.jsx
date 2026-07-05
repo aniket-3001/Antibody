@@ -24,7 +24,7 @@ const USE_STEPS = [
   {
     icon: MousePointerClick,
     title: "Right-click any suspicious text",
-    body: "Select a message, email, or comment on any page, right-click it, and choose ΓÇ£Check with Antibody.ΓÇ¥ A notification pops up with the verdict in seconds - nothing is sent anywhere unless you do this.",
+    body: "Select a message, email, or comment on any page, right-click it, and choose “Check with Antibody.” A notification pops up with the verdict in seconds - nothing is sent anywhere unless you do this.",
   },
   {
     icon: ScanLine,
