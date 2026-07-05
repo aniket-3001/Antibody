@@ -1,9 +1,11 @@
 """Report intake + lifecycle endpoints (M1 + verdict surface).
 
 POST /report            → verdict now, graph-strengthen in background
+POST /scan              → read-only verdict, nothing recorded (browser extension)
 GET  /report/{id}        → re-fetch a prior verdict (shareable link)
 POST /report/{id}/outcome → fold the outcome back in (improve / memify)
 POST /report/{id}/forget  → prune a false positive (forget §10)
+POST /reporter/forget     → hard-delete a reporter's own data (real erasure §10)
 """
 from __future__ import annotations
 
@@ -35,6 +37,10 @@ class OutcomeIn(BaseModel):
     outcome: str  # confirmed_scam | i_got_scammed | actually_legit
 
 
+class ReporterIn(BaseModel):
+    reporter_id: str
+
+
 async def _process(text: str, channel: str | None, reporter_id: str | None,
                    background: BackgroundTasks) -> dict:
     text = (text or "").strip()
@@ -61,6 +67,22 @@ async def _process(text: str, channel: str | None, reporter_id: str | None,
 @router.post("/report")
 async def submit_report(body: ReportIn, background: BackgroundTasks) -> dict:
     return await _process(body.text, body.channel, body.reporter_id, background)
+
+
+class ScanIn(BaseModel):
+    text: str
+    channel: str | None = None
+
+
+@router.post("/scan")
+async def scan(body: ScanIn) -> dict:
+    """Read-only verdict — same engine as /report, but never records a report
+    or touches trust/leaderboard. Backs the browser extension's quick check,
+    where scanning a page shouldn't silently add it to the shared graph."""
+    text = (body.text or "").strip()
+    if not text:
+        raise HTTPException(400, "empty text — nothing to assess")
+    return await assess(text, channel=body.channel)
 
 
 @router.get("/report/{report_id}")
@@ -194,6 +216,27 @@ async def my_reports(reporter_id: str) -> dict:
             "points": points,
         })
     return {"reports": out}
+
+
+@router.post("/reporter/forget")
+async def forget_reporter(body: ReporterIn, background: BackgroundTasks) -> dict:
+    """Real erasure (§10) for a browser's own anonymous id — hard-deletes its
+    reporter row and every report it filed from the ops DB. Distinct from
+    /report/{id}/forget, which soft-prunes a single false-positive report."""
+    rid = ingest.anon_reporter(body.reporter_id)
+    deleted_count, data_ids = store.forget_reporter(rid)
+    for data_id in data_ids:
+        background.add_task(_forget_data_id, data_id)
+    return {"ok": True, "deleted_reports": deleted_count}
+
+
+async def _forget_data_id(data_id: str) -> None:
+    try:
+        await memory_service.forget(data_id=data_id)
+    except MemoryUnavailable:
+        pass
+    except Exception:
+        log.debug("cognee forget skipped for reporter erasure", exc_info=True)
 
 
 @router.get("/leaderboard")

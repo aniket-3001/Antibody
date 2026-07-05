@@ -253,6 +253,24 @@ def reports_by_reporter(reporter_id: str) -> list[dict]:
     return [_report_row(r) for r in rows]
 
 
+def forget_reporter(reporter_id: str) -> tuple[int, list[str]]:
+    """Real GDPR-style erasure (§10) — a normal DB delete, not graph surgery.
+
+    Unlike prune_report() (soft-delete for false positives, keeps an audit
+    trail), this hard-deletes the reporter's row and every report they filed.
+    Returns (reports deleted, cognee_data_ids that existed among them) so the
+    caller can also scope a forget() against Cognee's graph for each.
+    """
+    with _lock, _c() as c:
+        rows = c.execute(
+            "SELECT cognee_data_id FROM reports WHERE reporter_id=?", (reporter_id,)
+        ).fetchall()
+        data_ids = [r["cognee_data_id"] for r in rows if r["cognee_data_id"]]
+        c.execute("DELETE FROM reports WHERE reporter_id=?", (reporter_id,))
+        c.execute("DELETE FROM reporters WHERE id=?", (reporter_id,))
+    return len(rows), data_ids
+
+
 def leaderboard(limit: int = 20) -> list[dict]:
     """Rank reporters by verified reports then trust (spec §9 anti-poisoning:
     scoring rewards confirmed hits, not raw submission volume)."""
