@@ -222,6 +222,7 @@ async def assess(
         "indicators": indicators,
         "tactics": tactics,
         "lures": lures,
+        "highlights": ind.find_highlight_spans(text, tactics=tactics, lures=lures),
         "explanation": explanation["text"],
         "explanation_source": explanation["source"],
         "citations": explanation["citations"],

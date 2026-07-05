@@ -69,7 +69,7 @@ async def submit_upload(
     channel: str | None = Form(None),
     reporter_id: str | None = Form(None),
 ) -> dict:
-    """Multimodal intake: SMS screenshot / scam-call audio (spec §11)."""
+    """Multimodal intake: SMS screenshot / scam-call audio / PDF document (spec §11)."""
     suffix = Path(file.filename or "upload").suffix or ".bin"
     tmp = Path(tempfile.gettempdir()) / f"antibody_{uuid.uuid4().hex}{suffix}"
     tmp.write_bytes(await file.read())
@@ -78,7 +78,13 @@ async def submit_upload(
     # Hand the RAW file to Cognee's native loaders regardless (graph-layer multimodal).
     background.add_task(_remember_raw_file, str(tmp), channel, text)
 
-    kind = "audio" if (file.content_type or "").startswith("audio/") else "image"
+    ctype = (file.content_type or "").lower()
+    if ctype.startswith("audio/"):
+        kind = "audio"
+    elif ctype == "application/pdf" or suffix.lower() == ".pdf":
+        kind = "document"
+    else:
+        kind = "image"
     if not text:
         return {
             "band": "unrecognized",
@@ -86,9 +92,9 @@ async def submit_upload(
             "band_emoji": "⚪",
             "confidence": 0.0,
             "explanation": (
-                "We couldn't extract text from this file locally (OCR/transcription "
-                "not installed), but the raw file was still added to the shared graph. "
-                "Paste the message text for an instant verdict."
+                "We couldn't extract text from this file locally (OCR/transcription/"
+                "PDF-reading not installed), but the raw file was still added to the "
+                "shared graph. Paste the message text for an instant verdict."
             ),
             "guidance": None, "transcript": "", "input_kind": kind,
             "citations": [], "signals": {}, "indicators": [], "shared_tactics": [],

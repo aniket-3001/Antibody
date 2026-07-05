@@ -112,7 +112,7 @@ def decide(
     corr_reporters = sig.detail.get("reporter_weight", 0.0)
 
     # Asymmetric gate
-    if conf >= confirmed_th and has_hard and corr_reporters >= 0 and (
+    if conf >= confirmed_th and has_hard and (
         sig.indicator >= 0.9 or corr_reporters >= min_corroboration_reporters
     ):
         band = "confirmed"

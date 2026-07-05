@@ -131,3 +131,66 @@ def tag_tactics(text: str) -> list[str]:
 
 def tag_lures(text: str) -> list[str]:
     return _match_keywords(text, _LURE_KEYWORDS)
+
+
+# --- Highlight spans (UI-only: where each already-tagged signal sits in the text) ---
+
+_INDICATOR_LABEL = {
+    "url_domain": "link", "sender": "sender", "phone": "phone",
+    "crypto_wallet": "crypto wallet", "gift_card_ask": "gift card",
+}
+
+
+def find_highlight_spans(text: str, tactics: list[str] | None = None,
+                          lures: list[str] | None = None) -> list[dict]:
+    """Character spans for indicators/tactics/lures so the UI can underline the
+    exact words that drove the verdict, instead of just listing them separately.
+
+    Re-locates the same matches extract_indicators()/tag_tactics()/tag_lures()
+    already found (rather than re-deciding what counts) so highlights never
+    drift from the actual verdict reasons."""
+    spans: list[dict] = []
+
+    for m in _URL_RE.finditer(text):
+        host = re.sub(r"^www\.", "", m.group(1).lower().strip("."))
+        if host and host not in _SAFE_HOSTS and "." in host:
+            spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+                          "label": _INDICATOR_LABEL["url_domain"]})
+
+    for m in _EMAIL_RE.finditer(text):
+        if m.group(1).lower() not in _SAFE_HOSTS:
+            spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+                          "label": _INDICATOR_LABEL["sender"]})
+
+    for m in _PHONE_RE.finditer(text):
+        spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+                      "label": _INDICATOR_LABEL["phone"]})
+
+    for m in _BTC_RE.finditer(text):
+        spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+                      "label": _INDICATOR_LABEL["crypto_wallet"]})
+    for m in _ETH_RE.finditer(text):
+        spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+                      "label": _INDICATOR_LABEL["crypto_wallet"]})
+
+    m = _GIFT_CARD_RE.search(text)
+    if m:
+        spans.append({"start": m.start(), "end": m.end(), "kind": "indicator",
+                      "label": _INDICATOR_LABEL["gift_card_ask"]})
+
+    low = text.lower()
+    for label in tactics or []:
+        for kw in _TACTIC_KEYWORDS.get(label, []):
+            idx = low.find(kw)
+            if idx != -1:
+                spans.append({"start": idx, "end": idx + len(kw), "kind": "tactic", "label": label})
+                break
+    for label in lures or []:
+        for kw in _LURE_KEYWORDS.get(label, []):
+            idx = low.find(kw)
+            if idx != -1:
+                spans.append({"start": idx, "end": idx + len(kw), "kind": "lure", "label": label})
+                break
+
+    spans.sort(key=lambda s: s["start"])
+    return spans

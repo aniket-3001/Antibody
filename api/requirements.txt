@@ -8,8 +8,11 @@ python-multipart
 # Memory — the star. Pinned to the version verified locally.
 cognee[fastembed]==1.2.2
 
-# Multimodal intake (spec §11). Voice→transcript for scam-call clips is enabled
-# by default; intake still degrades gracefully if these are absent.
+# Multimodal intake (spec §11). Intake still degrades gracefully if these are
+# absent, but they're installed by default so screenshot/PDF/audio uploads work
+# out of the box.
 faster-whisper            # scam-call / voicemail audio transcription (CPU, no key)
-# Optional, needs the Tesseract binary on PATH:
-#   pip install pytesseract pillow      # SMS screenshot OCR
+pytesseract               # SMS/email screenshot OCR — needs the Tesseract binary
+                          # on PATH too, e.g. `brew install tesseract`
+pillow                    # image loading for pytesseract
+pymupdf                   # PDF text extraction (fitz) — doc/invoice-style reports
