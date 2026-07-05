@@ -1,10 +1,18 @@
 import { useRef, useState } from "react";
+import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud, Share2, Copy, CheckCircle2 } from "lucide-react";
 import { checkMessage, submitOutcome, uploadFile } from "../api.js";
+import { getClientId } from "../lib/identity.js";
+import { Button } from "./ui/button.jsx";
+import { Card, CardContent } from "./ui/card.jsx";
+import { Textarea } from "./ui/textarea.jsx";
+import { Badge } from "./ui/badge.jsx";
+import { Modal } from "./ui/modal.jsx";
+import { cn } from "../lib/utils.js";
 
 const EXAMPLES = [
-  ["📦 Fake delivery fee", "USPS: Your package is on hold. A $2.99 redelivery fee is required. Pay now at http://usps-redelivery.com to reschedule delivery."],
-  ["🏦 Bank OTP scam", "Your bank: suspicious login detected. Reply with the 6-digit code we just sent to confirm it's you, or your account will be suspended."],
-  ["✅ A real 2FA code", "Your verification code is 448291. Do not share this code with anyone. — Google"],
+  ["Fake delivery fee", "USPS: Your package is on hold. A $2.99 redelivery fee is required. Pay now at http://usps-redelivery.com to reschedule delivery."],
+  ["Bank OTP scam", "Your bank: suspicious login detected. Reply with the 6-digit code we just sent to confirm it's you, or your account will be suspended."],
+  ["A real 2FA code", "Your verification code is 448291. Do not share this code with anyone. — Google"],
 ];
 
 const SIGNAL_LABELS = {
@@ -30,23 +38,26 @@ const SpeechRec =
   typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
 const HL_LEGEND = [
-  ["indicator", "Known-bad link/phone/wallet"],
-  ["tactic", "Manipulation tactic"],
-  ["lure", "Scam pretext"],
+  ["indicator", "Known-bad link/phone/wallet", "bg-[var(--color-danger-line)]"],
+  ["tactic", "Manipulation tactic", "bg-[var(--color-warn-line)]"],
+  ["lure", "Scam pretext", "bg-[var(--color-calm-line)]"],
 ];
 
-// Underlines the exact words that drove the verdict (indicators/tactics/lures)
-// instead of only listing them separately. Spans are character offsets into `text`.
 function renderHighlighted(text, highlights) {
   if (!highlights?.length) return text;
   const spans = [...highlights].sort((a, b) => a.start - b.start);
   const nodes = [];
   let pos = 0;
   for (const s of spans) {
-    if (s.start < pos || s.end <= s.start) continue; // skip overlaps/invalid
+    if (s.start < pos || s.end <= s.start) continue; 
     if (s.start > pos) nodes.push(text.slice(pos, s.start));
+    
+    let hlClass = "bg-[var(--color-warn-line)]";
+    if (s.kind === "indicator") hlClass = "bg-[var(--color-danger-line)]";
+    if (s.kind === "lure") hlClass = "bg-[var(--color-calm-line)]";
+    
     nodes.push(
-      <mark key={`${s.start}-${s.end}`} className={`hl-${s.kind}`} title={s.label}>
+      <mark key={`${s.start}-${s.end}`} className={cn("rounded-sm px-1 py-0.5", hlClass)} title={s.label}>
         {text.slice(s.start, s.end)}
       </mark>
     );
@@ -76,13 +87,12 @@ export default function CheckView() {
     const sent = text;
     setLoading(true); setErr(""); setV(null); setOutcome(null);
     try {
-      const res = await checkMessage(sent, channel);
+      const res = await checkMessage(sent, channel, getClientId());
       setV({ ...res, checked_text: sent });
     } catch (e) { setErr(String(e.message || e)); }
     setLoading(false);
   };
 
-  // ---- live mic (browser Web Speech API — no keys, no install) ----
   const stopMic = () => { try { recogRef.current?.stop(); } catch {} };
   const toggleMic = () => {
     if (!SpeechRec) return;
@@ -107,14 +117,13 @@ export default function CheckView() {
     setListening(true);
   };
 
-  // ---- upload a recorded call clip / screenshot → server transcribes/OCRs ----
   const onFile = async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
     stopMic();
     setUploading(true); setErr(""); setV(null); setOutcome(null); setText("");
     try {
-      const res = await uploadFile(f, channel);
+      const res = await uploadFile(f, channel, getClientId());
       setV({ ...res, checked_text: res.transcript || "" });
       if (res.transcript) setText(res.transcript);
     } catch (er) { setErr(String(er.message || er)); }
@@ -128,184 +137,282 @@ export default function CheckView() {
   };
 
   return (
-    <>
-      <p className="tagline">
-        Got a text, email, or call that feels off? <b>Paste it, say it, or upload a recording, screenshot, or PDF.</b> We'll tell you
+    <div className="flex flex-col gap-6">
+      <p className="text-center text-[15px] leading-relaxed text-[var(--color-body)] px-2">
+        Got a text, email, or call that feels off? <b className="text-[var(--color-ink)]">Paste it, say it, or upload a recording, screenshot, or PDF.</b> We'll tell you
         if it's a known scam, how to spot it, and what to do — and your report protects the next person.
       </p>
 
-      <div className="card">
-        <textarea
-          placeholder="Paste the suspicious message here… or tap the mic and read it out."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-
-        <div className="voice-row">
-          {SpeechRec && (
-            <button className={`voice-btn ${listening ? "listening" : ""}`} onClick={toggleMic} type="button">
-              <span className="ico">🎙️</span>{listening ? "Listening… tap to stop" : "Speak it"}
-            </button>
-          )}
-          <button className="voice-btn" onClick={() => fileRef.current?.click()} type="button" disabled={uploading}>
-            <span className="ico">📎</span>{uploading ? "Reading…" : "Upload a recording, screenshot, or PDF"}
-          </button>
-          <input
-            ref={fileRef} type="file" accept="audio/*,image/*,application/pdf,.pdf"
-            onChange={onFile} style={{ display: "none" }}
+      <Card>
+        <CardContent className="pt-6 flex flex-col gap-4">
+          <Textarea
+            placeholder="Paste the suspicious message here… or tap the mic and read it out."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
           />
-          {listening && <span className="voice-hint"><span className="rec-dot" />recording your voice</span>}
-          {uploading && <span className="voice-hint">transcribing… first run downloads the model, give it a moment</span>}
-        </div>
 
-        <div className="row">
-          <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-            <option value="sms">Text / SMS</option>
-            <option value="email">Email</option>
-            <option value="voice_call">Phone call</option>
-            <option value="whatsapp">WhatsApp</option>
-          </select>
-          <button className="btn btn-primary" onClick={run} disabled={loading || uploading || !text.trim()}>
-            {loading ? "Checking…" : "Check it"}
-          </button>
-        </div>
-
-        <div className="examples">
-          <span className="try">Try one:</span>
-          {EXAMPLES.map(([label, ex]) => (
-            <span key={label} className="chip" onClick={() => { stopMic(); setText(ex); }}>{label}</span>
-          ))}
-        </div>
-        {err && <div className="err">⚠ {err}</div>}
-      </div>
-
-      {v && <Verdict v={v} outcome={outcome} onOutcome={record} />}
-    </>
-  );
-}
-
-function Verdict({ v, outcome, onOutcome }) {
-  const seen = fmtDate(v.first_seen);
-  return (
-    <div className={`verdict ${v.band}`}>
-      <div className="verdict-head">
-        <span className="verdict-emoji">{v.band_emoji}</span>
-        <div>
-          <div className="verdict-title">{v.band_label}</div>
-          <div className="verdict-sub">
-            {v.family_display ? (
-              <>{v.family_display}{v.report_count ? ` · reported ${v.report_count}×` : ""}{seen ? ` · first seen ${seen}` : ""}</>
-            ) : "We don't recognize this one yet — stay cautious and trust your gut."}
+          <div className="flex flex-wrap items-center gap-3">
+            {SpeechRec && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className={cn("gap-2", listening && "bg-[var(--color-danger-bg)] text-[var(--color-danger)] hover:bg-[var(--color-danger-line)]")}
+                onClick={toggleMic}
+              >
+                <Mic size={16} className={listening ? "animate-pulse" : ""} />
+                {listening ? "Listening… tap to stop" : "Speak it"}
+              </Button>
+            )}
+            <Button variant="secondary" size="sm" className="gap-2" onClick={() => fileRef.current?.click()} disabled={uploading}>
+              {uploading ? <UploadCloud size={16} className="animate-bounce" /> : <Paperclip size={16} />}
+              {uploading ? "Reading…" : "Upload file"}
+            </Button>
+            <input ref={fileRef} type="file" accept="audio/*,image/*,application/pdf,.pdf" onChange={onFile} className="hidden" />
           </div>
-        </div>
-        <div className="conf-pill">
-          <div className="n">{Math.round((v.confidence || 0) * 100)}%</div>
-          <div className="l">sure</div>
-        </div>
-      </div>
 
-      {v.checked_text && (
-        <>
-          <div className="section-label">
-            {v.input_kind === "audio" ? "🎙️ What we heard"
-              : v.input_kind === "document" ? "📄 What we read"
-              : v.input_kind === "image" ? "🖼️ What we read"
-              : "Message checked"}
+          <div className="flex items-center gap-3 mt-2">
+            <select 
+              value={channel} 
+              onChange={(e) => setChannel(e.target.value)}
+              className="h-10 rounded-full border border-[var(--color-line)] bg-[var(--color-surface-2)] px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
+            >
+              <option value="sms">Text / SMS</option>
+              <option value="email">Email</option>
+              <option value="voice_call">Phone call</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+            <Button onClick={run} disabled={loading || uploading || !text.trim()} className="flex-1">
+              {loading ? "Checking…" : "Check it"}
+            </Button>
           </div>
-          <div className="transcript">{renderHighlighted(v.checked_text, v.highlights)}</div>
-          {v.highlights?.length > 0 && (
-            <div className="hl-legend">
-              {HL_LEGEND.map(([kind, label]) => (
-                <span className="litem" key={kind}>
-                  <span className={`ldot hl-${kind}`} />{label}
-                </span>
-              ))}
-            </div>
-          )}
-        </>
-      )}
 
-      {v.explanation && (
-        <>
-          <div className="section-label">
-            What it is
-            <span className={`source-tag ${v.explanation_source === "cognee_graph" ? "cognee" : ""}`}>
-              {v.explanation_source === "cognee_graph" ? "from memory, cited" : "from our playbook"}
-            </span>
-          </div>
-          <div className="explain">{v.explanation}</div>
-          {v.citations?.length > 0 && (
-            <div className="citations">
-              {v.citations.slice(0, 3).map((c, i) => (
-                <div key={i} className="cite">"{c.snippet}"</div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {v.signals && Object.keys(v.signals).length > 0 && (v.band !== "unrecognized") && (
-        <>
-          <div className="section-label">Why we think so</div>
-          <div className="signals">
-            {Object.entries(v.signals).map(([k, val]) => (
-              <div className="signal" key={k}>
-                <div className="top">
-                  <span className="name">{SIGNAL_LABELS[k] || k}</span>
-                  <span className="val">{Math.round(val * 100)}%</span>
-                </div>
-                <div className="bar"><span style={{ width: `${Math.round(val * 100)}%` }} /></div>
-              </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
+            <span className="font-medium">Try one:</span>
+            {EXAMPLES.map(([label, ex]) => (
+              <Badge 
+                key={label} 
+                variant="secondary" 
+                className="cursor-pointer font-normal" 
+                onClick={() => { stopMic(); setText(ex); }}
+              >
+                {label}
+              </Badge>
             ))}
           </div>
-        </>
-      )}
-
-      {v.shared_tactics?.length > 0 && (
-        <>
-          <div className="section-label">Seen elsewhere too</div>
-          {v.shared_tactics.map((s, i) => (
-            <div className="shared-item" key={i}>
-              The <b>{s.tactic.replace(/_/g, " ")}</b> trick here also shows up in{" "}
-              {s.also_used_by.map((f) => f.replace(/_/g, " ")).join(", ")}.
+          {err && (
+            <div className="mt-2 flex items-center gap-2 rounded-lg bg-[var(--color-danger-bg)] p-3 text-sm text-[var(--color-danger)]">
+              <AlertTriangle size={16} /> {err}
             </div>
-          ))}
-        </>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
-      {v.guidance && (
-        <>
-          <div className="section-label">What to do now</div>
-          <div className="guidance">
-            <GBlock cls="do" title="🛑 Do this" items={v.guidance.do_now} />
-            <GBlock cls="report" title="📣 Report it" items={v.guidance.report_to} />
-            <GBlock cls="recover" title="💜 If you already replied" items={v.guidance.recovery} />
-          </div>
-        </>
-      )}
-
-      <div className="outcome-row">
-        {outcome ? (
-          <span className="thanks">💜 Thank you — you just helped protect the next person.</span>
-        ) : (
-          <>
-            <span className="lbl">Help others — what happened?</span>
-            <button className="btn btn-ghost" onClick={() => onOutcome("confirmed_scam")}>It was a scam</button>
-            <button className="btn btn-ghost" onClick={() => onOutcome("i_got_scammed")}>I got scammed</button>
-            <button className="btn btn-ghost" onClick={() => onOutcome("actually_legit")}>It was legit</button>
-          </>
-        )}
-      </div>
+      {v && <Verdict v={v} outcome={outcome} onOutcome={record} />}
     </div>
   );
 }
 
-function GBlock({ cls, title, items }) {
+function Verdict({ v, outcome, onOutcome }) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const seen = fmtDate(v.first_seen);
+  
+  let bandColorClass = "bg-[var(--color-surface-2)] border-[var(--color-line)] text-[var(--color-ink)]";
+  if (v.band === "confirmed") bandColorClass = "bg-[var(--color-danger-bg)] border-[var(--color-danger-line)] text-[var(--color-danger)]";
+  if (v.band === "likely" || v.band === "suspicious") bandColorClass = "bg-[var(--color-warn-bg)] border-[var(--color-warn-line)] text-[var(--color-warn)]";
+  if (v.band === "unrecognized") bandColorClass = "bg-[var(--color-calm-bg)] border-[var(--color-calm-line)] text-[var(--color-calm)]";
+  if (v.band === "safe") bandColorClass = "bg-[var(--color-safe-bg)] border-[var(--color-safe-line)] text-[var(--color-safe)]";
+
+  return (
+    <Card className={cn("overflow-hidden border-2", bandColorClass.split(" ")[1])}>
+      <div className={cn("p-6 pb-4", bandColorClass)}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">{v.band_emoji}</div>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">{v.band_label}</h2>
+              <div className="mt-1 text-sm opacity-90">
+                {v.family_display ? (
+                  <>{v.family_display}{v.report_count ? ` · reported ${v.report_count}×` : ""}{seen ? ` · first seen ${seen}` : ""}</>
+                ) : "We don't recognize this one yet — stay cautious and trust your gut."}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 items-end">
+            <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--color-surface-2)]/60 px-3 py-1.5 backdrop-blur-md">
+              <span className="text-2xl font-black leading-none">{Math.round((v.confidence || 0) * 100)}%</span>
+              <span className="text-xs font-bold uppercase tracking-wider opacity-80">sure</span>
+            </div>
+            {v.band !== "safe" && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="gap-1.5 mt-1 border-[var(--color-line)] bg-[var(--color-surface-2)]/50 hover:bg-[var(--color-surface-2)] backdrop-blur-sm"
+                onClick={() => setIsShareModalOpen(true)}
+              >
+                <Share2 size={14} /> Warn Others
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 p-6">
+        {v.checked_text && (
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">
+              {v.input_kind === "audio" ? "🎙️ What we heard"
+                : v.input_kind === "document" ? "📄 What we read"
+                : v.input_kind === "image" ? "🖼️ What we read"
+                : "Message checked"}
+            </div>
+            <div className="rounded-lg bg-[var(--color-surface-2)] p-4 text-[15px] leading-relaxed text-[var(--color-ink)]">
+              {renderHighlighted(v.checked_text, v.highlights)}
+            </div>
+            {v.highlights?.length > 0 && (
+              <div className="flex gap-4 text-xs font-medium text-[var(--color-muted)]">
+                {HL_LEGEND.map(([kind, label, color]) => (
+                  <div className="flex items-center gap-1.5" key={kind}>
+                    <div className={cn("h-2.5 w-2.5 rounded-full", color)} />{label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {v.explanation && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">
+              What it is
+              <Badge variant="outline" className="text-[10px] uppercase">
+                {v.explanation_source === "cognee_graph" ? "from memory" : "from playbook"}
+              </Badge>
+            </div>
+            <div className="text-[15px] leading-relaxed text-[var(--color-ink)]">{v.explanation}</div>
+            {v.citations?.length > 0 && (
+              <div className="mt-2 flex flex-col gap-2 border-l-2 border-[var(--color-line)] pl-3">
+                {v.citations.slice(0, 3).map((c, i) => (
+                  <div key={i} className="text-sm italic text-[var(--color-muted)]">"{c.snippet}"</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {v.signals && Object.keys(v.signals).length > 0 && (v.band !== "unrecognized") && (
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">Why we think so</div>
+            <div className="flex flex-col gap-3">
+              {Object.entries(v.signals).map(([k, val]) => (
+                <div className="flex flex-col gap-1" key={k}>
+                  <div className="flex justify-between text-sm font-medium">
+                    <span className="text-[var(--color-ink)]">{SIGNAL_LABELS[k] || k}</span>
+                    <span className="text-[var(--color-muted)]">{Math.round(val * 100)}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-line)]">
+                    <div className="h-full bg-[var(--color-brand)] transition-all" style={{ width: `${Math.round(val * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {v.shared_tactics?.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">Seen elsewhere too</div>
+            {v.shared_tactics.map((s, i) => (
+              <div className="rounded-lg bg-[var(--color-surface-2)] p-3 text-sm text-[var(--color-ink)]" key={i}>
+                The <b className="font-semibold">{s.tactic.replace(/_/g, " ")}</b> trick here also shows up in{" "}
+                {s.also_used_by.map((f) => f.replace(/_/g, " ")).join(", ")}.
+              </div>
+            ))}
+          </div>
+        )}
+
+        {v.guidance && (
+          <div className="flex flex-col gap-3">
+            <div className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">What to do now</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <GBlock icon="🛑" title="Do this" items={v.guidance.do_now} />
+              <GBlock icon="📣" title="Report it" items={v.guidance.report_to} />
+              <GBlock icon="💜" title="If you already replied" items={v.guidance.recovery} cls="sm:col-span-2" />
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 rounded-xl bg-[var(--color-surface-2)] p-4 text-center">
+          {outcome ? (
+            <span className="font-semibold text-[var(--color-brand)]">💜 Thank you — you just helped protect the next person.</span>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <span className="text-sm font-semibold text-[var(--color-muted)]">Help others — what happened?</span>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => onOutcome("confirmed_scam")}>It was a scam</Button>
+                <Button variant="ghost" size="sm" onClick={() => onOutcome("i_got_scammed")}>I got scammed</Button>
+                <Button variant="ghost" size="sm" onClick={() => onOutcome("actually_legit")}>It was legit</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Modal isOpen={isShareModalOpen} onClose={() => { setIsShareModalOpen(false); setCopied(false); }} title="Share Scam Warning">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--color-body)]">
+            Copy this summary and send it to your friends and family to keep them safe.
+          </p>
+          <div className="relative rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-line)] p-4 text-sm font-mono text-[var(--color-ink)] leading-relaxed">
+            ⚠️ <b>WARNING: Active Scam Detected</b> ⚠️<br/><br/>
+            <b>Type:</b> {v.family_display || "Suspicious Message"}<br/>
+            <b>Threat Level:</b> {v.band_label.toUpperCase()}<br/><br/>
+            <b>Tactics used:</b><br/>
+            {v.highlights?.filter(h => h.kind === "tactic" || h.kind === "indicator").map(h => `- ${h.label}`).join("\n") || "- Manipulation tactics"}<br/><br/>
+            <i>"Stay cautious and verify any unexpected requests directly!"</i><br/><br/>
+            🛡️ <i>Checked via Antibody</i>
+            
+            <button 
+              onClick={() => {
+                const textToCopy = `⚠️ WARNING: Active Scam Detected ⚠️\n\nType: ${v.family_display || "Suspicious Message"}\nThreat Level: ${v.band_label.toUpperCase()}\n\nTactics used:\n${v.highlights?.filter(h => h.kind === "tactic" || h.kind === "indicator").map(h => `- ${h.label}`).join("\n") || "- Manipulation tactics"}\n\n"Stay cautious and verify any unexpected requests directly!"\n\n🛡️ Checked via Antibody`;
+                navigator.clipboard.writeText(textToCopy);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="absolute top-3 right-3 rounded-md p-1.5 bg-[var(--color-surface-2)] text-[var(--color-ink)] hover:text-[var(--color-brand)] transition-colors border border-[var(--color-line)] shadow-sm"
+              title="Copy to clipboard"
+            >
+              {copied ? <CheckCircle2 size={16} className="text-[var(--color-brand)]" /> : <Copy size={16} />}
+            </button>
+          </div>
+          <Button 
+            className="w-full mt-2" 
+            onClick={() => setIsShareModalOpen(false)}
+          >
+            Done
+          </Button>
+        </div>
+      </Modal>
+    </Card>
+  );
+}
+
+function GBlock({ icon, title, items, cls }) {
   if (!items?.length) return null;
   return (
-    <div className={`g-block ${cls}`}>
-      <h4>{title}</h4>
-      <ul>{items.map((it, i) => <li key={i}>{it}</li>)}</ul>
+    <div className={cn("rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4", cls)}>
+      <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--color-ink)]">
+        <span>{icon}</span> {title}
+      </h4>
+      <ul className="m-0 flex flex-col gap-1.5 pl-0 text-sm text-[var(--color-body)]">
+        {items.map((it, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-brand)]" />
+            <span>{it}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
