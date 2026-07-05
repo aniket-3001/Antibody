@@ -28,7 +28,7 @@ function Bubble({ turn }) {
           <div className="mt-3 flex flex-col gap-2 border-l-2 border-[var(--color-line)] pl-3">
             {turn.citations.slice(0, 3).map((c, i) => (
               <div key={i} className="text-sm italic text-[var(--color-muted)]">
-                "{c.snippet}"{c.doc ? <span className="not-italic opacity-70"> — {c.doc}</span> : null}
+                "{c.snippet}"{c.doc ? <span className="not-italic opacity-70"> - {c.doc}</span> : null}
               </div>
             ))}
           </div>
@@ -63,7 +63,7 @@ export default function HelpView() {
         ...t,
         {
           role: "assistant",
-          content: res.answer || "I don't have anything on that yet — try rephrasing, or check the docs directly.",
+          content: res.answer || "I don't have anything on that yet - try rephrasing, or check the docs directly.",
           citations: res.citations,
         },
       ]);
@@ -118,7 +118,7 @@ export default function HelpView() {
 
       {err && (
         <div className="flex items-center gap-2 rounded-lg bg-[var(--color-danger-bg)] p-3 text-sm text-[var(--color-danger)]">
-          <AlertTriangle size={16} /> Couldn't reach the Help service — is it running? ({err})
+          <AlertTriangle size={16} /> Couldn't reach the Help service - is it running? ({err})
         </div>
       )}
 

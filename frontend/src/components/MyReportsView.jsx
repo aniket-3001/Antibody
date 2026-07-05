@@ -38,11 +38,11 @@ function KbStatus({ dataId }) {
       <Database size={16} className={dataId ? "text-[var(--color-safe)]" : "text-[var(--color-muted)]"} />
       {dataId ? (
         <span className="text-[var(--color-ink)]">
-          Stored in the knowledge graph <span className="text-[var(--color-muted)] font-mono text-xs">({dataId})</span> — future checks can draw on this report.
+          Stored in the knowledge graph <span className="text-[var(--color-muted)] font-mono text-xs">({dataId})</span> - future checks can draw on this report.
         </span>
       ) : (
         <span className="text-[var(--color-muted)]">
-          Not yet in the knowledge graph — still processing in the background, or Cognee is unavailable right now (the verdict above still stands on its own).
+          Not yet in the knowledge graph - still processing in the background, or Cognee is unavailable right now (the verdict above still stands on its own).
         </span>
       )}
     </div>
@@ -127,7 +127,7 @@ export default function MyReportsView() {
 
       {reports?.length === 0 && (
         <div className="text-center text-sm text-[var(--color-muted)]">
-          You haven't submitted anything from this browser yet — check a message to get started.
+          You haven't submitted anything from this browser yet - check a message to get started.
         </div>
       )}
 

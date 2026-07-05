@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw } from "lucide-react";
+import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
@@ -122,7 +122,7 @@ function SharedVerdictView({ reportId, onBack }) {
 
       {err && (
         <div className="rounded-lg border border-[var(--color-danger-line)] bg-[var(--color-danger-bg)] p-4 text-sm text-[var(--color-danger)]">
-          Couldn't load this report — it may have been removed. ({err})
+          Couldn't load this report, it may have been removed. ({err})
         </div>
       )}
       {!err && !v && <div className="text-sm text-[var(--color-muted)]">Loading…</div>}
@@ -157,13 +157,13 @@ function MainApp() {
   };
 
   const tabs = [
-    { id: "check", label: "Check a Message" },
-    { id: "feed", label: "Live Threat Feed" },
-    { id: "graph", label: "Knowledge Graph" },
-    { id: "leaderboard", label: "Community Leaderboard" },
-    { id: "reports", label: "My Reports" },
-    { id: "extension", label: "Browser Extension" },
-    { id: "help", label: "Help Center" },
+    { id: "check", label: "Scam Detector", desc: "Scan a message, audio, or image for scams." },
+    { id: "feed", label: "Live Threat Feed", desc: "Watch real-time scam activity." },
+    { id: "graph", label: "Cognee Memory Base", desc: "Explore the connections between scams." },
+    { id: "leaderboard", label: "Community Leaderboard", desc: "Top contributors keeping the community safe." },
+    { id: "reports", label: "My Reports", desc: "Your personal history of reported scams." },
+    { id: "extension", label: "Browser Extension", desc: "Get real-time browser protection." },
+    { id: "help", label: "Help Center", desc: "Chat with the Antibody assistant." },
   ];
 
   // Real threat ticker — polls /feed and toasts only genuinely NEW activity
@@ -205,7 +205,7 @@ function MainApp() {
         if (seenEmerging.has(e.name)) continue;
         seenEmerging.add(e.name);
         showToast(
-          `${e.display || e.name} is picking up — ${e.count} reports in the last ${e.emerged_hours_ago}h.`,
+          `${e.display || e.name} is picking up, ${e.count} reports in the last ${e.emerged_hours_ago}h.`,
           { title: "Emerging threat", variant: "warn" }
         );
       }
@@ -219,7 +219,7 @@ function MainApp() {
   return (
     <div className="mx-auto flex flex-col md:flex-row max-w-[1200px] gap-6 md:gap-10 px-4 md:px-6 pt-6 md:pt-10 pb-20 items-start min-h-screen">
       {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 shrink-0 md:sticky top-10 flex flex-col gap-6 md:gap-10">
+      <aside className="w-full md:w-64 shrink-0 md:sticky top-10 flex flex-col gap-6 md:gap-10 z-40">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(30,58,138,0.6)]">
             <ShieldCheck size={26} strokeWidth={2.5} />
@@ -229,18 +229,18 @@ function MainApp() {
               Antibody
             </h1>
             <p className="m-0 mt-0.5 text-xs text-[var(--color-muted)] leading-tight">
-              your collective immune system
+              Catch scams before they catch you
             </p>
           </div>
         </div>
 
-        <nav className="flex flex-row overflow-x-auto md:flex-col gap-2 pb-2 md:pb-0 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+        <nav className="flex flex-row overflow-x-auto md:overflow-visible md:flex-col gap-2 pb-2 md:pb-0 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => selectTab(t.id)}
               className={cn(
-                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left shrink-0",
+                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left shrink-0 flex items-center justify-between gap-2 group",
                 tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-line)] shadow-none"
               )}
             >
@@ -253,14 +253,21 @@ function MainApp() {
                 />
               )}
               <span className="relative z-10 block">{t.label}</span>
+              <div className="relative z-10 hidden md:flex items-center">
+                <Info size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute left-full ml-2 w-48 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                  {t.desc}
+                </div>
+              </div>
             </button>
           ))}
         </nav>
 
         <div className="mt-auto pt-8 flex flex-col gap-4">
-          <div className="text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
-            Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
-            Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+          <div className="text-[13px] leading-normal text-[var(--color-muted)] hidden md:block">
+            <p className="mb-3">Got something suspicious? Check it here and if it was a scam, tell us.</p>
+            <p className="mb-3">Every report helps protect the next person.</p>
+            <p>Powered by <b className="text-[var(--color-ink)]">Cognee</b>.</p>
           </div>
           <ReporterIdPanel />
         </div>

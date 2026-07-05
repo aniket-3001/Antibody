@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Network, Activity, TrendingUp, AlertTriangle } from "lucide-react";
+import { Network, Activity } from "lucide-react";
 import { getGraph } from "../api.js";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.jsx";
 import { Badge } from "./ui/badge.jsx";
-import { cn } from "../lib/utils.js";
 
 const TYPE_LABEL = { family: "Scam family", tactic: "Tactic", lure: "Lure" };
 const DEF_COLOR = "#948fab";
@@ -237,14 +236,6 @@ export default function GraphView() {
   const outE = selected ? edges.filter((e) => e.from === selected.id) : [];
   const inE = selected ? edges.filter((e) => e.to === selected.id) : [];
 
-  const getMockAnalytics = (id) => {
-    const hash = Math.abs(id.split("").reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0));
-    const threatLevel = hash % 3 === 0 ? "Critical" : hash % 2 === 0 ? "High" : "Medium";
-    const trend = (hash % 45) + 5; 
-    const color = threatLevel === "Critical" ? "text-[var(--color-danger)]" : threatLevel === "High" ? "text-[var(--color-warn)]" : "text-[var(--color-safe)]";
-    return { threatLevel, trend, color };
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <p className="px-2 text-center text-[15px] leading-relaxed text-[var(--color-body)]">
@@ -296,29 +287,6 @@ export default function GraphView() {
                   </div>
                 ))}
               </div>
-
-              {selected.type === "tactic" && (
-                <div className="mt-2 flex flex-col gap-3 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-4 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-brand)] opacity-50" />
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
-                    <Activity size={14} className="text-[var(--color-brand)]" /> Tactic Intel
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--color-body)]">Threat Level</span>
-                      <div className={cn("flex items-center gap-1.5 font-bold", getMockAnalytics(selected.id).color)}>
-                        <AlertTriangle size={14} /> {getMockAnalytics(selected.id).threatLevel}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--color-body)]">Recent Activity</span>
-                      <div className="flex items-center gap-1.5 font-bold text-[var(--color-brand)]">
-                        <TrendingUp size={14} /> +{getMockAnalytics(selected.id).trend}% (7d)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {outE.length > 0 && (
                 <div className="flex flex-col gap-2">

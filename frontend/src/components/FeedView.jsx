@@ -18,7 +18,7 @@ export default function FeedView() {
 
   useEffect(() => {
     load();
-    const t = setInterval(load, 5000); // live — polls every 5s
+    const t = setInterval(load, 5000); // live - polls every 5s
     return () => clearInterval(t);
   }, []);
 
@@ -77,7 +77,7 @@ export default function FeedView() {
             <div className="flex flex-col gap-2">
               {feed.emerging.map((e) => (
                 <div className="text-sm font-medium" key={e.name}>
-                  <b className="font-bold">{e.display}</b> — first seen {e.emerged_hours_ago}h ago, {e.count} reports and climbing.
+                  <b className="font-bold">{e.display}</b> - first seen {e.emerged_hours_ago}h ago, {e.count} reports and climbing.
                 </div>
               ))}
             </div>
@@ -107,7 +107,7 @@ export default function FeedView() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">Same tricks, different scams</CardTitle>
             <p className="mt-1 text-xs font-medium text-[var(--color-muted)]">
-              The same tactic often shows up across different scams — learn it once, spot it everywhere.
+              The same tactic often shows up across different scams - learn it once, spot it everywhere.
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">

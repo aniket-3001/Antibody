@@ -37,7 +37,7 @@ export default function LeaderboardView() {
 
       {entries?.length === 0 && (
         <div className="text-center text-sm text-[var(--color-muted)]">
-          No verified reports yet — be the first on the board.
+          No verified reports yet - be the first on the board.
         </div>
       )}
 

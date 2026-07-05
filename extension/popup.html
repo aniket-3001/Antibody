@@ -64,6 +64,21 @@
   #err.show { display: block; }
   footer { margin-top: 10px; font-size: 11px; color: #94a3b8; text-align: center; }
   footer a { color: #1e3a8a; }
+  #settingsToggle {
+    background: none; border: none; color: #94a3b8; font-size: 11px;
+    cursor: pointer; padding: 0; text-decoration: underline;
+  }
+  #settingsPanel {
+    display: none; margin-top: 8px; padding: 8px; border: 1px solid #e2e8f0;
+    border-radius: 8px; background: #fff;
+  }
+  #settingsPanel.show { display: block; }
+  .settingsRow { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; }
+  .settingsRow label { flex: 1; color: #475569; }
+  .settingsRow input {
+    width: 70px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 6px; font: inherit;
+  }
+  #settingsSave { padding: 4px 10px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -75,7 +90,21 @@
   </div>
   <div id="result"></div>
   <div id="err"></div>
-  <footer>Read-only check — nothing is saved. <a id="openApp" href="#">Open full app →</a></footer>
+  <footer>
+    Read-only check — nothing is saved. <a id="openApp" href="#">Open full app →</a>
+    <div><button id="settingsToggle">⚙ Ports</button></div>
+  </footer>
+  <div id="settingsPanel">
+    <div class="settingsRow">
+      <label for="apiPort">Backend port (uvicorn)</label>
+      <input id="apiPort" type="number" placeholder="8000" />
+    </div>
+    <div class="settingsRow">
+      <label for="webPort">Web app port (vite)</label>
+      <input id="webPort" type="number" placeholder="5173" />
+    </div>
+    <button id="settingsSave" class="secondary">Save</button>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

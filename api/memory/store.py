@@ -237,6 +237,14 @@ def set_cognee_data_id(report_id: str, data_id: str) -> None:
         c.execute("UPDATE reports SET cognee_data_id=? WHERE id=?", (data_id, report_id))
 
 
+def set_verdict_json(report_id: str, verdict_json: str) -> None:
+    """Refresh the cached verdict snapshot — call after anything that can
+    change this report's own band/family (outcome recorded, promoted to a new
+    family), so GET /report/{id} doesn't keep serving a pre-outcome verdict."""
+    with _lock, _c() as c:
+        c.execute("UPDATE reports SET verdict_json=? WHERE id=?", (verdict_json, report_id))
+
+
 def prune_report(report_id: str) -> None:
     """Soft-delete for the forget() false-positive path (§10) — stops it
     poisoning semantic matches while leaving an audit trail."""

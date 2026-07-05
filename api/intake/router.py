@@ -121,8 +121,14 @@ async def extract_preview(
     suffix = Path(file.filename or "upload").suffix or ".bin"
     tmp = Path(tempfile.gettempdir()) / f"antibody_extract_{uuid.uuid4().hex}{suffix}"
     tmp.write_bytes(await file.read())
-    
-    text = extract_text(str(tmp), file.content_type)
+
+    try:
+        text = extract_text(str(tmp), file.content_type)
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            log.warning("failed to remove temporary file %s", tmp)
     return {"transcript": text}
 
 
@@ -209,7 +215,20 @@ async def report_outcome(report_id: str, body: OutcomeIn,
 
     # Fold back in + reshape the graph (improve/memify §9).
     background.add_task(_improve_after_outcome, family or "")
+    # The cached verdict_json (set at submission) is now stale for THIS report
+    # — an outcome and/or a fresh family promotion can change its band/family/
+    # signals, and GET /report/{id} serves that cache. Refresh it so reopening
+    # this report (My Reports, a shared link) doesn't show a pre-outcome verdict.
+    background.add_task(_refresh_verdict_cache, report_id)
     return {"ok": True, "family": family, "outcome": body.outcome}
+
+
+async def _refresh_verdict_cache(report_id: str) -> None:
+    report = store.get_report(report_id)
+    if not report:
+        return
+    verdict = await assess(report["normalized_text"], channel=report["channel"])
+    store.set_verdict_json(report_id, json.dumps(verdict))
 
 
 async def _improve_after_outcome(family: str) -> None:

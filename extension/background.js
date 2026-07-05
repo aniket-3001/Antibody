@@ -2,7 +2,16 @@
 // made here (not in a content script) so Chrome's extension host_permissions
 // grant applies — content-script fetches are still bound by the page's own
 // CORS, but background/popup fetches from a permitted origin are not.
-const API_BASE = "http://127.0.0.1:8000";
+//
+// The port is stored in chrome.storage.local (see settings.js) instead of
+// hardcoded, so pointing the extension at a different `uvicorn --port` doesn't
+// require editing source + reloading the unpacked extension.
+const DEFAULT_API_PORT = 8000;
+
+async function getApiBase() {
+  const { apiPort } = await chrome.storage.local.get("apiPort");
+  return `http://127.0.0.1:${apiPort || DEFAULT_API_PORT}`;
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
@@ -13,6 +22,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 async function scanText(text) {
+  const API_BASE = await getApiBase();
   const res = await fetch(`${API_BASE}/scan`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
