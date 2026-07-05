@@ -9,7 +9,9 @@ POST /reporter/forget     → hard-delete a reporter's own data (real erasure §
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 import tempfile
 import uuid
 from pathlib import Path
@@ -56,9 +58,11 @@ async def _process(text: str, channel: str | None, reporter_id: str | None,
     # 1) verdict from current memory (fast, deterministic + semantic)
     verdict = await assess(text, channel=channel, reporter_id=reporter_id)
 
-    # 2) record the report (contributes back — spec §3 step 4)
+    # 2) record the report (contributes back — spec §3 step 4). The verdict is
+    #    cached alongside so shareable links replay it at zero LLM cost.
     report_id = ingest.record_report(
-        text, channel=channel, family=verdict.get("family"), reporter_id=reporter_id
+        text, channel=channel, family=verdict.get("family"), reporter_id=reporter_id,
+        verdict_json=json.dumps(verdict),
     )
     verdict["report_id"] = report_id
 
@@ -88,19 +92,25 @@ async def scan(body: ScanIn) -> dict:
 
 @router.get("/report/{report_id}")
 async def get_report(report_id: str) -> dict:
-    """Re-fetch a prior verdict by id (backs the "Warn Others" shareable link).
+    """Re-fetch a prior verdict by id (backs the "Warn Others" shareable link
+    and the My Reports detail view).
 
-    Re-runs assess() on the stored text rather than caching the original
-    verdict blob — so a shared link always reflects current family/corroboration
-    data, and no schema migration was needed to add this.
+    Serves the verdict cached at submit time when available — a shared link is
+    instant and costs zero LLM calls (denial-of-wallet protection). Reports
+    from before the cache existed fall back to re-running assess().
     """
     report = store.get_report(report_id)
     if not report or report["pruned"]:
         raise ReportNotFoundError()
-    verdict = await assess(report["normalized_text"], channel=report["channel"])
+    if report.get("verdict_json"):
+        verdict = json.loads(report["verdict_json"])
+    else:
+        verdict = await assess(report["normalized_text"], channel=report["channel"])
     verdict["report_id"] = report_id
     verdict["transcript"] = report["normalized_text"]
     verdict["input_kind"] = "text"
+    verdict["cognee_data_id"] = report.get("cognee_data_id")
+    verdict["outcome"] = report.get("outcome")
     return verdict
 
 
@@ -156,6 +166,11 @@ async def _remember_raw_file(path: str, channel: str | None, extracted: str) -> 
         pass
     except Exception:
         log.exception("raw-file remember failed (non-fatal)")
+    finally:
+        try:
+            os.remove(path)
+        except OSError:
+            log.warning("failed to remove temporary upload %s", path)
 
 
 @router.post("/report/{report_id}/outcome")

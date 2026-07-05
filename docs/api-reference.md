@@ -96,11 +96,13 @@ curl -s http://localhost:8000/scan -H 'Content-Type: application/json' \
 ## `GET /report/{id}`
 
 Re-fetch a prior verdict by id — backs the "Warn Others" **shareable link**
-(`?v=<id>` on the web app). It re-runs `assess()` on the stored text rather than
-caching the original verdict, so a shared link always reflects current
-family/corroboration data.
+(`?v=<id>` on the web app) and the My Reports detail view. Serves the verdict
+**cached at submit time** (stored as `verdict_json` in the ops DB), so a shared
+link is instant and never triggers another LLM call; pre-cache reports fall
+back to re-running `assess()` on the stored text.
 
-**Response `200`**: the verdict object (with `report_id`, `transcript`, `input_kind`).
+**Response `200`**: the verdict object (with `report_id`, `transcript`,
+`input_kind`, `cognee_data_id`, `outcome`).
 **Errors**: `404 report_not_found` (unknown or pruned).
 
 ## `POST /report/upload`

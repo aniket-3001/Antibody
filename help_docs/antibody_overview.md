@@ -18,10 +18,25 @@ and returns a verdict: confirmed, likely, suspicious, unrecognized, or safe.
   a scam or getting scammed raises your trust score; marking something
   "actually legit" lowers it slightly.
 - **My Reports**: a reporter's own submission history, keyed off a
-  browser-generated anonymous id (never a real identity).
+  browser-generated anonymous id (never a real identity). Click any report to
+  open its full verdict, record an outcome, and see whether it has been folded
+  into the shared knowledge graph yet.
+- **Help Center**: an interactive chatbot (this one) that answers questions
+  about Antibody from a local Markdown knowledge base (`help_docs/`), including
+  how to recover after a scam.
 - **Browser extension**: a popup + right-click "Check with Antibody" that
   calls the same read-only /scan endpoint — scanning a page never adds it to
   the shared graph, only /report does that.
+
+## Performance & caching
+
+When a report is submitted, its full verdict is cached as JSON inside the
+SQLite operational store (which runs in WAL mode so background graph writes
+never block readers). Re-opening a report — from a shareable link or the My
+Reports view — serves that cached verdict instantly, with zero additional LLM
+calls (denial-of-wallet protection). The React frontend also lazy-mounts its
+tabs and keeps them alive, so switching between checking a message and
+chatting with the Help Center never loses your place or in-progress input.
 
 ## Anonymous identity
 

@@ -33,6 +33,10 @@ def init_db(data_dir: Path) -> None:
     _conn = sqlite3.connect(str(data_dir / "antibody_ops.db"), check_same_thread=False)
     _conn.row_factory = sqlite3.Row
     with _lock, _conn:
+        # WAL lets the background cognify/seed writers coexist with read
+        # traffic without "database is locked" stalls.
+        _conn.execute("PRAGMA journal_mode=WAL;")
+        _conn.execute("PRAGMA synchronous=NORMAL;")
         _conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS reporters (
@@ -62,7 +66,8 @@ def init_db(data_dir: Path) -> None:
                 lures_json TEXT DEFAULT '[]',
                 is_control INTEGER NOT NULL DEFAULT 0,
                 pruned INTEGER NOT NULL DEFAULT 0,
-                cognee_data_id TEXT
+                cognee_data_id TEXT,
+                verdict_json TEXT
             );
             CREATE TABLE IF NOT EXISTS indicators (
                 value TEXT NOT NULL,
@@ -80,11 +85,12 @@ def init_db(data_dir: Path) -> None:
             CREATE INDEX IF NOT EXISTS idx_reports_time ON reports(reported_at);
             """
         )
-        # Migration for DBs created before cognee_data_id existed.
+        # Migration for DBs created before cognee_data_id / verdict_json existed.
         cols = {r["name"] for r in _conn.execute("PRAGMA table_info(reports)").fetchall()}
         if "cognee_data_id" not in cols:
-            with _lock, _conn:
-                _conn.execute("ALTER TABLE reports ADD COLUMN cognee_data_id TEXT")
+            _conn.execute("ALTER TABLE reports ADD COLUMN cognee_data_id TEXT")
+        if "verdict_json" not in cols:
+            _conn.execute("ALTER TABLE reports ADD COLUMN verdict_json TEXT")
 
 
 def _c() -> sqlite3.Connection:
@@ -187,17 +193,18 @@ def add_report(
     outcome: str | None = None,
     is_control: bool = False,
     reported_at: str | None = None,
+    verdict_json: str | None = None,
 ) -> None:
     with _lock, _c() as c:
         c.execute(
             "INSERT OR REPLACE INTO reports "
             "(id, normalized_text, channel, family_name, reporter_id, reported_at, outcome, "
-            " indicators_json, tactics_json, lures_json, is_control, pruned) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,0)",
+            " indicators_json, tactics_json, lures_json, is_control, pruned, verdict_json) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)",
             (report_id, normalized_text, channel, family_name, reporter_id,
              reported_at or _now(), outcome,
              json.dumps(indicators or []), json.dumps(tactics or []),
-             json.dumps(lures or []), 1 if is_control else 0),
+             json.dumps(lures or []), 1 if is_control else 0, verdict_json),
         )
 
 
@@ -320,6 +327,7 @@ def _report_row(r: sqlite3.Row) -> dict:
         "is_control": bool(r["is_control"]),
         "cognee_data_id": r["cognee_data_id"],
         "pruned": bool(r["pruned"]),
+        "verdict_json": r["verdict_json"],
     }
 
 

@@ -37,6 +37,26 @@ def test_get_report_by_id_refetches_verdict(client):
     assert body["input_kind"] == "text"
 
 
+def test_get_report_serves_cached_verdict(client):
+    submitted = client.post("/report", json={
+        "text": "Final notice: your account is suspended, verify at http://fake-bank.biz",
+        "channel": "sms",
+        "reporter_id": "cache-tester",
+    })
+    original = submitted.json()
+    report_id = original["report_id"]
+
+    r = client.get(f"/report/{report_id}")
+    assert r.status_code == 200
+    body = r.json()
+    # Served from the verdict cached at submit time — same band and confidence.
+    assert body["band"] == original["band"]
+    assert body["confidence"] == original["confidence"]
+    # The My Reports detail view fields ride along.
+    assert "cognee_data_id" in body
+    assert "outcome" in body
+
+
 def test_get_missing_report_is_404(client):
     r = client.get("/report/does_not_exist")
     assert r.status_code == 404

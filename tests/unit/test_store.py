@@ -138,6 +138,16 @@ def test_report_row_exposes_pruned_flag():
     assert store.get_report("rep_1")["pruned"] is True
 
 
+def test_verdict_json_roundtrip():
+    store.add_report("rep_1", "t1", "sms", "fam_a", "r_1",
+                     verdict_json='{"band": "scam", "confidence": 0.95}')
+    rep = store.get_report("rep_1")
+    assert rep["verdict_json"] == '{"band": "scam", "confidence": 0.95}'
+    # Reports written without a cached verdict read back as None (pre-cache rows).
+    store.add_report("rep_2", "t2", "sms", "fam_a", "r_1")
+    assert store.get_report("rep_2")["verdict_json"] is None
+
+
 def test_guidance_roundtrip():
     assert store.get_guidance("fam_a") is None
     store.set_guidance("fam_a", ["do this"], ["report here"], ["recover like this"])

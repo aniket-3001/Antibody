@@ -274,6 +274,7 @@ help_api/            # Help chatbot — separate FastAPI process, own Cognee dat
 help_docs/           # markdown docs the help chatbot is trained on
 extension/           # Chrome/Edge MV3 extension — right-click or popup, read-only /scan
 seed/                # synthetic scam families, reports, and legit controls
+api/seed.py          # optional demo seeder: `python -m api.seed` for a rich baseline
 frontend/            # React + Vite (CheckView, FeedView, GraphView, HelpView, ...)
 docs/                # full project documentation (see above)
 tests/               # unit + API smoke + error-envelope contract

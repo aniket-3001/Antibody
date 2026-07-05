@@ -46,6 +46,7 @@ erDiagram
         int  is_control "legit control message?"
         int  pruned "soft-delete for forget()"
         text cognee_data_id "scopes graph forget()"
+        text verdict_json "verdict cached at submit time"
     }
     indicators {
         text value PK "normalized IOC"
@@ -75,6 +76,9 @@ Notes:
   for DBs created before the column existed.
 - **`indicators`** is the CONFIRMED fast path: an exact `(value, kind)` lookup is the
   cheapest, strongest single signal.
+- **`reports.verdict_json`** caches the full verdict produced at submit time, so
+  `GET /report/{id}` (shareable links, My Reports) replays it instantly with zero
+  LLM cost.
 
 ## 2. Cognee graph ontology (`api/memory/ontology.py`)
 
