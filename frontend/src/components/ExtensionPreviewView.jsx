@@ -47,7 +47,7 @@ export default function ExtensionPreviewView() {
           Browser Extension
         </h2>
         <p className="mt-2 text-[15px] text-[var(--color-body)]">
-          Not on the Chrome Web Store yet - load it as an unpacked developer extension directly from your local folder.
+          Not on the Chrome Web Store yet - load it as an unpacked developer extension directly from your local folder (or <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="text-[var(--color-brand)] hover:underline">grab it from GitHub</a>).
         </p>
       </div>
 
