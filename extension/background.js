@@ -9,8 +9,12 @@
 const DEFAULT_API_PORT = 8000;
 
 async function getApiBase() {
-  const { apiPort } = await chrome.storage.local.get("apiPort");
-  return `http://127.0.0.1:${apiPort || DEFAULT_API_PORT}`;
+  let apiPort = DEFAULT_API_PORT;
+  if (chrome.storage?.local) {
+    const res = await chrome.storage.local.get("apiPort");
+    if (res.apiPort) apiPort = res.apiPort;
+  }
+  return `http://127.0.0.1:${apiPort}`;
 }
 
 chrome.runtime.onInstalled.addListener(() => {

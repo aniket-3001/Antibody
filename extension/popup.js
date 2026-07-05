@@ -78,8 +78,12 @@ scanPageBtn.addEventListener("click", async () => {
 
 document.getElementById("openApp").addEventListener("click", async (e) => {
   e.preventDefault();
-  const { webPort } = await chrome.storage.local.get("webPort");
-  chrome.tabs.create({ url: `http://localhost:${webPort || DEFAULT_WEB_PORT}` });
+  let webPort = DEFAULT_WEB_PORT;
+  if (chrome.storage?.local) {
+    const res = await chrome.storage.local.get("webPort");
+    if (res.webPort) webPort = res.webPort;
+  }
+  chrome.tabs.create({ url: `http://localhost:${webPort}` });
 });
 
 // Settings: backend/web-app ports, so switching `uvicorn --port` or
@@ -88,15 +92,22 @@ settingsToggle.addEventListener("click", () => {
   settingsPanel.classList.toggle("show");
 });
 
-chrome.storage.local.get(["apiPort", "webPort"], ({ apiPort, webPort }) => {
-  apiPortEl.value = apiPort || DEFAULT_API_PORT;
-  webPortEl.value = webPort || DEFAULT_WEB_PORT;
-});
+if (chrome.storage?.local) {
+  chrome.storage.local.get(["apiPort", "webPort"], (res) => {
+    apiPortEl.value = res.apiPort || DEFAULT_API_PORT;
+    webPortEl.value = res.webPort || DEFAULT_WEB_PORT;
+  });
+} else {
+  apiPortEl.value = DEFAULT_API_PORT;
+  webPortEl.value = DEFAULT_WEB_PORT;
+}
 
 settingsSaveBtn.addEventListener("click", async () => {
   const apiPort = parseInt(apiPortEl.value, 10) || DEFAULT_API_PORT;
   const webPort = parseInt(webPortEl.value, 10) || DEFAULT_WEB_PORT;
-  await chrome.storage.local.set({ apiPort, webPort });
+  if (chrome.storage?.local) {
+    await chrome.storage.local.set({ apiPort, webPort });
+  }
   settingsSaveBtn.textContent = "Saved ✓";
   setTimeout(() => (settingsSaveBtn.textContent = "Save"), 1200);
 });
