@@ -1,6 +1,6 @@
 // The real backend the marketing mockup only pretended to call. Requests are
 // made here (not in a content script) so Chrome's extension host_permissions
-// grant applies — content-script fetches are still bound by the page's own
+// grant applies - content-script fetches are still bound by the page's own
 // CORS, but background/popup fetches from a permitted origin are not.
 //
 // The port is stored in chrome.storage.local (see settings.js) instead of
@@ -40,14 +40,14 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
       type: "basic",
       iconUrl: "icon128.png",
       title: `${v.band_emoji || "🔍"} ${v.band_label || "Checked"}`,
-      message: v.explanation || "No further detail available — try the full app for a breakdown.",
+      message: v.explanation || "No further detail available - try the full app for a breakdown.",
       priority: v.band === "confirmed" ? 2 : 0,
     });
   } catch (e) {
     chrome.notifications.create({
       type: "basic",
       iconUrl: "icon128.png",
-      title: "Antibody — couldn't check that",
+      title: "Antibody - couldn't check that",
       message: String(e.message || e),
     });
   }

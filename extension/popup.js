@@ -39,7 +39,7 @@ function showError(msg) {
 function runCheck(text) {
   text = (text || "").trim();
   if (!text) {
-    showError("Nothing to check — paste some text first.");
+    showError("Nothing to check - paste some text first.");
     return;
   }
   checkBtn.disabled = true;
@@ -52,7 +52,7 @@ function runCheck(text) {
       return;
     }
     if (res.ok) showResult(res.verdict);
-    else showError(res.error || "Couldn't reach the Antibody server — is it running?");
+    else showError(res.error || "Couldn't reach the Antibody server - is it running?");
   });
 }
 

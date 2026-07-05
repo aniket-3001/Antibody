@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Antibody — Scam Checker",
+  "name": "Antibody - Scam Checker",
   "version": "0.1.0",
   "description": "Check suspicious text against Antibody's shared scam-pattern graph, right from your browser.",
   "action": {
