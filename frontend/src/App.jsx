@@ -290,7 +290,7 @@ function MainApp() {
           <div className="text-[13px] leading-normal text-[var(--color-muted)] hidden md:block">
             <p className="mb-3">Got something suspicious? Check it here and if it was a scam, tell us.</p>
             <p className="mb-3">Every report helps protect the next person.</p>
-            <p>Powered by <b className="text-[var(--color-ink)]">Cognee</b>.</p>
+            <p>Powered by <a href="https://www.cognee.ai/" target="_blank" rel="noopener noreferrer" className="text-[var(--color-ink)] hover:text-[var(--color-brand)] font-bold transition-colors">Cognee</a>.</p>
           </div>
           <ReporterIdPanel />
         </div>
