@@ -1,202 +1,242 @@
-# Antibody
+<div align="center">
 
-[![CI](https://github.com/aniket-3001/Antibody/actions/workflows/ci.yml/badge.svg)](https://github.com/aniket-3001/Antibody/actions/workflows/ci.yml)
+# 🛡️ Antibody
 
-A collective immune system against scams. People forward a text, screenshot, or
-voice-call recording; Antibody matches it against a shared memory graph of known
-scam campaigns and gives back a verdict, an explanation, and what to do next.
-Every report that comes in — confirmed or false-positive — makes the graph a
-little smarter for the next person.
+**A collective immune system against scams.** Forward a text, a screenshot, or a
+scam-call recording — Antibody matches it against a shared memory graph of known scam
+campaigns and hands back a **verdict**, a **cited explanation**, and **what to do next**.
+Every report, confirmed or false-positive, makes the graph a little smarter for the next
+person.
 
-**Live demo:** <https://antibody-251148844884.asia-south1.run.app> — full
-Cognee graph pipeline enabled (NVIDIA NIM Llama 3.1 for graph completion,
-local fastembed for embeddings). The first request after an idle period may
-take ~15s while the instance cold-starts.
+<p>
+  <a href="https://antibody-251148844884.asia-south1.run.app"><img src="https://img.shields.io/badge/live%20demo-online-14b083?style=for-the-badge" height="28" alt="Live demo"/></a>
+  <a href="https://github.com/aniket-3001/Antibody/actions/workflows/ci.yml"><img src="https://github.com/aniket-3001/Antibody/actions/workflows/ci.yml/badge.svg" height="28" alt="CI"/></a>
+  <img src="https://img.shields.io/badge/coverage-75%25-6b5cf0?style=for-the-badge" height="28" alt="Coverage"/>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" height="28" alt="MIT License"/></a>
+</p>
 
-Built around [Cognee](https://github.com/topoteretes/cognee) as the memory
-layer: reports are `add()`-ed and `cognify()`-ed into a shared knowledge graph,
-`search(GRAPH_COMPLETION)` finds cited matches, `improve`/`memify` strengthen a
-family after a confirmed outcome, and `forget` prunes false positives back out.
+<p>
+  <img src="https://img.shields.io/badge/Cognee-memory%20graph-ef4d63?style=flat-square" alt="Cognee"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.139-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/Python-3.11-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/quality-ruff%20%C2%B7%20mypy%20%C2%B7%20pytest-261230?style=flat-square" alt="Quality"/>
+</p>
+
+[**Live demo**](https://antibody-251148844884.asia-south1.run.app) ·
+[Quick start](#quick-start) ·
+[How it works](#how-it-works) ·
+[Architecture](#architecture) ·
+[Docs](docs/)
+
+</div>
+
+---
+
+## The problem
+
+Scams are a memory problem. The same campaign hits thousands of people with tiny
+variations — a "USPS redelivery fee" today, a reworded "unpaid toll" tomorrow, the same
+fake-fee tactic underneath. Each victim meets it cold, decides alone in ten seconds, and
+whatever they learn dies with them. The scammer, meanwhile, reuses the same playbook
+across families and channels.
+
+Antibody turns that around: it gives a whole community **one shared memory**. When you
+forward a suspicious message, you're not just asking "is this a scam?" — you're checking
+it against everything everyone else has already seen, and teaching the graph for the next
+person. The verdict is honest about its confidence, explains itself with cited evidence,
+and — critically — **never hard-accuses a legitimate message**, because a false alarm on a
+real bank alert is worse than a cautious maybe on a scam.
 
 ## How it works
 
-1. **Intake** (`api/intake/`) — text, SMS screenshots, or scam-call audio come
-   in via `POST /report` / `POST /report/upload`. Loaders OCR/transcribe raw
-   files; a deterministic pass pulls out indicators (URLs, phone numbers,
-   wallet addresses) and candidate tactics.
-2. **Memory** (`api/memory/`) — the only layer that talks to Cognee. Reports
-   are cognified against a shared ontology (`ontology.py`) where `Tactic` and
-   `Lure` nodes are shared across scam families, so the graph can answer
-   "this campaign uses the same fake-fee tactic as that one."
-3. **Verdict** (`api/verdict/`) — a transparent, rule-based confidence engine
-   (`engine.py`) fuses indicator match, semantic similarity, structural tactic
-   overlap, and community corroboration into one of four bands:
-
-   | Band | Trigger |
-   |---|---|
-   | 🔴 Confirmed | exact match on a known-bad indicator (URL/phone/wallet) |
-   | 🟠 Likely | strong semantic/structural match + ≥3 corroborating reports |
-   | 🟡 Suspicious | weak/semantic-only match |
-   | 🟢 Unrecognized | no meaningful match — safety tips only |
-
-   The gate is asymmetric by design: a legitimate message can never be
-   hard-accused, only an exact indicator match can.
-4. **Feed** (`api/feed/`) — `GET /feed`, `GET /families`, `GET /graph` surface
-   trending families and the shared-tactic graph for the live threat feed.
-
-## Project layout
-
-```
-api/
-  main.py           # FastAPI app, lifespan boot, CORS, static frontend mount
-  config.py         # env-driven settings
-  intake/           # POST /report, /report/upload — loaders + indicator extraction
-  memory/           # the only package that imports cognee: ontology + MemoryService,
-                     # ops store (SQLite), semantic index, confidence signals
-  verdict/          # 4-band confidence engine + guidance mapping
-frontend/           # React + Vite — CheckView (submit/verdict) + FeedView (live feed)
-seed/               # synthetic scam families, reports, and legit controls
+```mermaid
+flowchart LR
+    U["📩 forwarded<br/>message"] --> EX["extract<br/>indicators + tactics"]
+    EX --> M{"match against<br/>shared memory"}
+    M -->|① known-bad IOC| S1["indicator signal"]
+    M -->|② reads like| S2["semantic signal"]
+    M -->|③ shared tactics| S3["structural signal"]
+    S1 & S2 & S3 --> F["noisy-OR fusion<br/>+ asymmetric gate"]
+    F --> V["🔴🟠🟡🟢 verdict<br/>+ explanation<br/>+ guidance"]
+    U -. "strengthens" .-> G[("shared Cognee graph")]
+    M --> G
 ```
 
-## Running it
+1. **Intake** (`api/intake/`) — text, SMS screenshots, or scam-call audio arrive via
+   `POST /report` / `POST /report/upload`. Loaders OCR/transcribe raw files; a
+   deterministic pass pulls out indicators (URLs, phones, wallets) and candidate tactics.
+2. **Memory** (`api/memory/`) — the only layer that talks to Cognee. Reports are
+   cognified into a shared graph where `Tactic` and `Lure` nodes are **shared across
+   families**, so the graph can answer *"this campaign uses the same fake-fee tactic as
+   that one."*
+3. **Verdict** (`api/verdict/`) — a transparent [confidence engine](docs/confidence-engine.md)
+   fuses five signals into one of four bands.
+4. **Feed** (`api/feed/`) — `GET /feed`, `/families`, `/graph` surface trending families
+   and the shared-tactic graph for the live threat feed.
 
-Requires Python 3.11+ and Node 18+.
+### The four verdict bands
+
+| Band | | Trigger |
+|---|---|---|
+| **Confirmed** | 🔴 | Exact match on a known-bad indicator (URL / phone / wallet) |
+| **Likely** | 🟠 | Strong semantic/structural match + corroborating reports |
+| **Suspicious** | 🟡 | Weak / semantic-only match |
+| **Unrecognized** | 🟢 | No meaningful match — safety tips only |
+
+> **The gate is asymmetric by design.** Only a *hard* signal can reach 🔴 Confirmed —
+> semantic resemblance alone is capped at 🟠 Likely, so a legitimate message can never be
+> hard-accused. This is the product's core safety property, and it has a
+> [dedicated regression test](tests/unit/test_confidence.py). See
+> [the confidence engine](docs/confidence-engine.md#the-asymmetric-safety-gate).
+
+## Memory that gets smarter (Cognee)
+
+Antibody is built around [Cognee](https://github.com/topoteretes/cognee) as the memory
+layer — it's the **system of record**, not a logo. The whole product maps onto four Cognee
+verbs:
+
+- **remember** — `add()` + `cognify()` fold each report into the shared graph.
+- **recall** — `search(GRAPH_COMPLETION)` finds cited matches for the explanation.
+- **improve** — `memify()` reinforces a family after a confirmed outcome and decays stale ones.
+- **forget** — scoped `forget()` prunes a false positive back out.
+
+Take Cognee out and Antibody loses cross-family traversal and cited evidence — but it
+**still works**: with no LLM key, deterministic indicator matching and local `fastembed`
+semantic matching produce correct verdicts on their own. The demo is never dark. Details:
+[memory layer](docs/memory-layer.md).
+
+## Architecture
+
+One FastAPI process serves the API **and** the built React frontend. A report takes a
+**fast path** (verdict now, from deterministic + semantic memory) and a **slow path**
+(strengthen the Cognee graph in the background), so the user never waits on the graph.
+
+```mermaid
+flowchart TB
+    subgraph API["FastAPI · one process"]
+        MW["request-id middleware<br/>+ uniform error envelope"]
+        INTAKE["intake/"] --> VERDICT["verdict/<br/>confidence fusion"]
+        FEED["feed/"]
+    end
+    subgraph Stores["two stores, by design"]
+        OPS[("ops SQLite<br/>reports · reporters · indicators")]
+        GRAPH[("Cognee graph · de-identified<br/>shared Tactic/Lure nodes")]
+    end
+    VERDICT --> OPS
+    INTAKE -. "background: add() + cognify()" .-> GRAPH
+    VERDICT -. "GRAPH_COMPLETION (if LLM key)" .-> GRAPH
+    FEED --> OPS
+```
+
+The **ops SQLite** store holds operational rows and reporter trust (PII stays here); the
+**Cognee graph** holds de-identified scam knowledge. This split is why a privacy erasure is
+a cheap DB delete, never graph surgery. Full walkthrough: [architecture](docs/architecture.md).
+
+## Documentation
+
+Antibody ships a full [`docs/`](docs/) folder:
+
+| Doc | |
+|---|---|
+| [Architecture](docs/architecture.md) | Request lifecycle, the two-store design, package layout |
+| [Confidence engine](docs/confidence-engine.md) | Five signals, noisy-OR fusion, the asymmetric safety gate |
+| [Memory layer](docs/memory-layer.md) | The four Cognee verbs, the shared-node ontology, degradation |
+| [Data model](docs/data-model.md) | Ops schema (ER diagram), graph ontology, semantic index |
+| [API reference](docs/api-reference.md) | Every endpoint + the error envelope, with `curl` |
+| [Security & privacy](docs/security-and-privacy.md) | De-identified graph, anti-poisoning, the safety gate |
+| [Deployment](docs/deployment.md) | Docker, Cloud Run gotchas, env vars, secrets |
+| [Contributing](docs/contributing.md) | Dev setup, the quality gate, adding a scam family |
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Memory | **Cognee 1.2.2** (graph + vector), embedded Kuzu + LanceDB, local `fastembed` embeddings |
+| Backend | Python 3.11, FastAPI, pydantic-settings, SQLite (ops store) |
+| Verdict | Pure noisy-OR confidence fusion with an asymmetric safety gate |
+| Intake | pytesseract (OCR), faster-whisper (audio), PyMuPDF (PDF) — all optional, graceful |
+| Frontend | React 18, Vite, Tailwind CSS v4, framer-motion |
+| Quality | ruff · mypy · pytest (60 tests, ~75% coverage) · pre-commit · GitHub Actions CI |
+| Deploy | Single Docker image · Google Cloud Run (gen2) · Render |
+
+## Quick start
+
+Requires **Python 3.11+** and **Node 18+**.
 
 ```bash
 # Backend
-cp .env.example .env
+cp .env.example .env                 # all keys optional
 pip install -r api/requirements.txt
-# optional, for scanned-screenshot OCR (needs the Tesseract binary on PATH):
-pip install pytesseract pillow
 uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 
 # Frontend (separate terminal)
 cd frontend
 npm install
-npm run dev    # http://localhost:5173, proxies /report /feed /families /graph /health to :8000
+npm run dev    # http://localhost:5173, proxies API paths to :8000
 ```
 
-The backend seeds its own graph on first boot (synthetic reports across six
-scam families plus legit controls) — there's no empty-state demo. No LLM key
-is required: deterministic indicator matching and local `fastembed` semantic
-matching produce correct verdicts on their own. Set `LLM_*` in `.env` to
-additionally light up Cognee's cited graph explanations and the
-`improve`/`memify` feedback loop.
-
-### Environment
-
-| Variable | Required | Default | Notes |
-|---|---|---|---|
-| `API_HOST` / `API_PORT` | No | `127.0.0.1` / `8000` | |
-| `WEB_ORIGIN` | No | `http://localhost:5173` | added to the CORS allowlist |
-| `DATA_DIR` | No | `./.antibody_data` | ops DB + Cognee's embedded kuzu/lancedb stores + model cache |
-| `LLM_PROVIDER` / `LLM_MODEL` / `LLM_ENDPOINT` / `LLM_API_KEY` | No | — | OpenAI-compatible; read directly by Cognee |
-| `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_DIMENSIONS` | No | `fastembed` / `sentence-transformers/all-MiniLM-L6-v2` / `384` | local, no API key needed |
-| `EMBEDDING_ENDPOINT` / `EMBEDDING_API_KEY` | No | — | only needed for a remote embedding provider (see below) |
-
-Both `LLM_*` and `EMBEDDING_*` follow Cognee's own "custom OpenAI-compatible
-endpoint" convention (litellm-style model strings), so any such provider works:
-
-```bash
-# OpenAI
-LLM_PROVIDER=openai
-LLM_MODEL=gpt-4o-mini
-
-# DeepSeek
-LLM_PROVIDER=custom
-LLM_MODEL=deepseek/deepseek-chat
-LLM_ENDPOINT=https://api.deepseek.com/v1
-
-# NVIDIA NIM (chat)
-LLM_PROVIDER=custom
-LLM_MODEL=nvidia_nim/meta/llama-4-maverick-17b-128e-instruct
-LLM_ENDPOINT=https://integrate.api.nvidia.com/v1
-LLM_API_KEY=nvapi-...
-
-# Embeddings: keep these on local fastembed even when using NIM for chat.
-# NIM's nv-embedqa-e5-v5 is an "asymmetric" model that requires an
-# input_type param on every call; Cognee's litellm adapter doesn't send
-# one, so every embed request 400s and retries with exponential backoff
-# instead of failing outright — it silently stalls requests rather than
-# erroring. fastembed runs locally, needs no key, and is what CI/tests use.
-EMBEDDING_PROVIDER=fastembed
-```
-
-### API
-
-| Endpoint | Purpose |
-|---|---|
-| `POST /report` | Submit a text report |
-| `POST /report/upload` | Submit a screenshot or audio recording |
-| `POST /report/{id}/outcome` | Record what happened (strengthens the family) |
-| `POST /report/{id}/forget` | Prune a false positive out of the graph |
-| `GET /feed` | Trending families, live counts |
-| `GET /families` | All known scam families + guidance |
-| `GET /graph` | Shared-tactic graph for traversal/visualization |
-| `GET /health` | Liveness + whether an LLM is configured |
+The backend seeds its own graph on first boot (synthetic reports across six scam families
+plus legit controls) — there's no empty-state demo, and **no LLM key is required**. Set
+`LLM_*` in `.env` to additionally light up Cognee's cited graph explanations and the
+improve/forget loop. See [deployment](docs/deployment.md) for the full env table and
+provider examples.
 
 ## Testing
 
 ```bash
 pip install -r requirements-dev.txt
-ruff check .
-pytest
+ruff check .        # lint
+mypy                # types
+pytest              # 60 tests, no API keys needed
+pytest --cov        # with coverage
 ```
 
-The suite covers indicator/tactic extraction, the confidence-fusion asymmetric
-gate (semantic-only evidence can never reach the `confirmed` band — the core
-safety property of the app), semantic matching, the ops store, and an
-end-to-end API smoke test. It runs with no LLM key configured, the same way
-CI runs it.
+The suite covers indicator/tactic extraction, the **asymmetric gate** (semantic-only
+evidence can never reach `confirmed` — the core safety property), semantic matching, the
+ops store, multimodal loaders, the error-envelope contract, and an end-to-end API smoke
+test. It runs with no LLM key, exactly as CI does.
+
+## Project structure
+
+```text
+api/
+  main.py            # app boot, lifespan, CORS, request-id middleware, static mount
+  config.py          # typed env settings + Cognee env export
+  core/              # cross-cutting: logging (correlation ids), typed errors, handlers
+  intake/            # POST /report, /report/upload — loaders + write path
+  memory/            # indicators · semantic · confidence · store · memory_service · ontology
+  verdict/           # engine.py — signals → fusion → band → guidance
+  feed/              # live threat feed + shared-tactic graph
+seed/                # synthetic scam families, reports, and legit controls
+frontend/            # React + Vite (CheckView, FeedView, GraphView, ...)
+docs/                # full project documentation (see above)
+tests/               # unit + API smoke + error-envelope contract
+```
 
 ## Deployment
 
-Antibody ships as a single Docker container: `uvicorn api.main:app` serves
-both the API and the built frontend (`frontend/dist`) from one process, so
-there's no second service or CORS setup to run in production.
-
-**Locally:**
+Antibody ships as a **single Docker container** — `uvicorn api.main:app` serves both the
+API and the built frontend from one process.
 
 ```bash
 docker build -t antibody .
-docker run -p 8000:8000 --env-file .env antibody
-# open http://localhost:8000
+docker run -p 8000:8000 --env-file .env antibody   # http://localhost:8000
 ```
 
-**Google Cloud Run (what the live demo runs on):**
-
-```bash
-gcloud run deploy antibody --source . --region <region> \
-  --memory 1Gi --cpu 1 --max-instances 3 --allow-unauthenticated \
-  --execution-environment gen2 --no-cpu-throttling --quiet
-```
-
-Two flags matter more than they look:
-
-- `--execution-environment gen2` — the default gen1 sandbox (gVisor) breaks
-  Python's async HTTP clients (both aiohttp and httpx fail with a generic
-  "Connection error") on outbound LLM API calls, even though raw `curl` from
-  the same project works. gen2 runs a real Linux kernel and fixes it.
-- `--no-cpu-throttling` — Antibody runs `cognify()` as a background task
-  *after* responding; without this flag Cloud Run throttles CPU to ~zero
-  once the response is sent, starving the graph-enrichment step.
-
-Put the LLM key in Secret Manager and reference it with
-`--set-secrets "LLM_API_KEY=<secret-name>:latest"` — never in `--set-env-vars`
-(it would persist in revision metadata). Without a key, Antibody still runs
-correctly on its deterministic + semantic fallback path.
-
-The seed graph auto-loads on any empty boot (`load_seed_if_empty()`), so the
-demo is never empty even though Cloud Run's disk is ephemeral — a cold start
-just reloads the seed data. Render (free tier, Docker web service) also works
-with the same Dockerfile if you prefer a git-connected deploy.
+The live demo runs on Google Cloud Run. Two flags matter more than they look —
+`--execution-environment gen2` (async HTTP breaks on gen1's gVisor sandbox) and
+`--no-cpu-throttling` (background `cognify()` needs CPU after the response). Full guide:
+[deployment](docs/deployment.md).
 
 ## AI-assisted build
 
-This project was built with substantial AI assistance (Claude/Claude Code) —
-architecture drafting, code generation across the backend and frontend, and
-iterative debugging were all done in collaboration with an AI pair programmer,
-per the hackathon's disclosure requirement. The design decisions (ontology
-shape, the four-rule confidence gate, the reuse of Cognee's low-level
-`add`/`cognify`/`search`/`improve`/`forget` verbs) were directed by the human
-author.
+This project was built with substantial AI assistance (Claude / Claude Code) —
+architecture drafting, code generation, and iterative debugging — per the hackathon's
+disclosure requirement. The design decisions (the shared-node ontology, the four-rule
+confidence gate, the reuse of Cognee's `add`/`cognify`/`search`/`improve`/`forget` verbs)
+were directed by the human author.
+
+## License
+
+[MIT](LICENSE)
