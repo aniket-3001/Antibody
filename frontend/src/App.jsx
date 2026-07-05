@@ -7,6 +7,7 @@ import GraphView from "./components/GraphView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
 import MyReportsView from "./components/MyReportsView.jsx";
 import ExtensionPreviewView from "./components/ExtensionPreviewView.jsx";
+import HelpView from "./components/HelpView.jsx";
 import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
 import { Modal } from "./components/ui/modal.jsx";
 import { Button } from "./components/ui/button.jsx";
@@ -157,6 +158,7 @@ function MainApp() {
     { id: "leaderboard", label: "Leaderboard" },
     { id: "reports", label: "My Reports" },
     { id: "extension", label: "Extension Preview" },
+    { id: "help", label: "Help" },
   ];
 
   // Real threat ticker — polls /feed and toasts only genuinely NEW activity
@@ -272,6 +274,7 @@ function MainApp() {
         {tab === "leaderboard" && <LeaderboardView />}
         {tab === "reports" && <MyReportsView />}
         {tab === "extension" && <ExtensionPreviewView />}
+        {tab === "help" && <HelpView />}
       </main>
 
       <Toaster />

@@ -48,8 +48,10 @@
       .d2 { animation-delay: 1.2s } .d3 { animation-delay: 2.4s } .d4 { animation-delay: .7s } .d5 { animation-delay: 1.9s }
       @keyframes flyR { 0% { transform: translateX(0); opacity: 0 } 9% { opacity: 1 } 66% { transform: translateX(452px); opacity: 1 } 76% { transform: translateX(486px); opacity: 0 } 100% { opacity: 0 } }
       @keyframes flyL { 0% { transform: translateX(0); opacity: 0 } 9% { opacity: 1 } 66% { transform: translateX(-452px); opacity: 1 } 76% { transform: translateX(-486px); opacity: 0 } 100% { opacity: 0 } }
+      .person { animation: bob 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
       @media (prefers-reduced-motion: reduce) {
-        .node,.edge,.shield,.aura,.ripple,.dl,.dr { animation: none; }
+        .node,.edge,.shield,.aura,.ripple,.dl,.dr,.person { animation: none; }
         .dl,.dr { opacity: .85; }
       }
     </style>
@@ -108,6 +110,17 @@
             fill="url(#shieldGrad)" stroke="#c7d2fe" stroke-width="2"/>
       <path d="M-24,4 L-7,25 L29,-24" fill="none" stroke="#eafff7" stroke-width="9"
             stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- The person Antibody shields: a small figure standing in the shield's
+       glow, looking up at the protection above. -->
+  <g transform="translate(600,306)">
+    <g class="person" filter="url(#glow)">
+      <circle cx="0" cy="-25" r="5.5" fill="#c7d2fe"/>
+      <path d="M-8,0 C-8,-13 -6,-19 0,-19 C6,-19 8,-13 8,0 Z" fill="#c7d2fe" opacity="0.92"/>
+      <path d="M-8,-13 Q-15,-22 -11,-29" fill="none" stroke="#c7d2fe" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M8,-13 Q15,-22 11,-29" fill="none" stroke="#c7d2fe" stroke-width="2.4" stroke-linecap="round"/>
     </g>
   </g>
 
