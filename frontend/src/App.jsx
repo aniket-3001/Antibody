@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw, Info } from "lucide-react";
+import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw, Info, Github } from "lucide-react";
 import { motion } from "framer-motion";
 import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
@@ -234,7 +234,7 @@ function MainApp() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(30,58,138,0.6)]">
             <ShieldCheck size={26} strokeWidth={2.5} />
           </div>
-          <div className="text-left flex flex-col">
+          <div className="text-left flex flex-col items-start">
             <a 
               href="https://github.com/aniket-3001/Antibody" 
               target="_blank" 
@@ -246,6 +246,14 @@ function MainApp() {
             <p className="m-0 mt-0.5 text-xs text-[var(--color-muted)] leading-tight">
               Catch scams before they catch you
             </p>
+            <a 
+              href="https://github.com/aniket-3001/Antibody" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink)] bg-[var(--color-surface-2)] hover:bg-[var(--color-line)] border border-[var(--color-line)] px-2 py-1 rounded-md transition-colors w-max"
+            >
+              <Github size={12} /> GitHub Codebase
+            </a>
           </div>
         </div>
 
