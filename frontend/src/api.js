@@ -1,5 +1,8 @@
 // Thin API client — talks to the backend surfaces (M4 contract).
 const API_BASE = import.meta.env.VITE_API_URL || "";
+// Help chatbot is a separate process/port (see help_api/) — proxied under
+// /help by vite.config.js locally, routed to its own service in prod.
+const HELP_API_BASE = import.meta.env.VITE_HELP_API_URL || "";
 
 const j = async (r) => {
   if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
@@ -51,4 +54,11 @@ export const forgetReporter = (reporterId) =>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reporter_id: reporterId }),
+  }).then(j);
+
+export const askHelp = (question, history = []) =>
+  fetch(`${HELP_API_BASE}/help/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, history }),
   }).then(j);

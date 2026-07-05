@@ -22,6 +22,9 @@ export default defineConfig({
       "/leaderboard": "http://127.0.0.1:8000",
       "/scan": "http://127.0.0.1:8000",
       "/reporter": "http://127.0.0.1:8000",
+      // Help chatbot — separate process/port (help_api/), separate Cognee
+      // memory base from the scam graph above.
+      "/help": "http://127.0.0.1:8010",
     },
   },
 });
