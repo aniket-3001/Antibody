@@ -234,7 +234,7 @@ function Verdict({ v, outcome, onOutcome }) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center justify-center rounded-xl bg-white/40 px-3 py-1.5 backdrop-blur-md">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--color-surface-2)]/60 px-3 py-1.5 backdrop-blur-md">
             <span className="text-2xl font-black leading-none">{Math.round((v.confidence || 0) * 100)}%</span>
             <span className="text-xs font-bold uppercase tracking-wider opacity-80">sure</span>
           </div>
@@ -348,7 +348,7 @@ function Verdict({ v, outcome, onOutcome }) {
 function GBlock({ icon, title, items, cls }) {
   if (!items?.length) return null;
   return (
-    <div className={cn("rounded-lg border border-[var(--color-line)] bg-white p-4", cls)}>
+    <div className={cn("rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4", cls)}>
       <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--color-ink)]">
         <span>{icon}</span> {title}
       </h4>

@@ -19,7 +19,7 @@ export default function App() {
     <div className="mx-auto max-w-[760px] px-[18px] pt-[26px] pb-[90px]">
       <header className="mb-6 text-center">
         <div className="inline-flex items-center gap-[13px]">
-          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[18px] bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-white shadow-[0_10px_22px_-8px_rgba(107,92,240,0.6)]">
+          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[18px] bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(0,255,65,0.6)]">
             <ShieldCheck size={28} strokeWidth={2.5} />
           </div>
           <div className="text-left">
@@ -27,25 +27,25 @@ export default function App() {
               Antibody
             </h1>
             <p className="m-0 mt-[3px] text-[13px] text-[var(--color-muted)]">
-              your community shield against scams
+              your collective immune system
             </p>
           </div>
         </div>
 
-        <div className="mx-auto mt-5 inline-flex gap-1 rounded-full bg-[var(--color-surface)] p-[5px] shadow-[var(--shadow-custom-sm)]">
+        <div className="mx-auto mt-5 inline-flex gap-1 rounded-full bg-[var(--color-surface)] p-[5px] shadow-[var(--shadow-custom-sm)] border border-[var(--color-line)]">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
                 "relative rounded-full px-[22px] py-[10px] text-[14px] font-bold transition-colors",
-                tab === t.id ? "text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
               )}
             >
               {tab === t.id && (
                 <motion.div
                   layoutId="active-tab"
-                  className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(107,92,240,0.7)]"
+                  className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(0,255,65,0.6)]"
                   initial={false}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />

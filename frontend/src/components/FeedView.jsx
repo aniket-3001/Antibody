@@ -55,7 +55,7 @@ export default function FeedView() {
           { label: "shared tricks", n: feed.shared_tactics.length },
           { label: "new & rising", n: feed.emerging.length },
         ].map((s) => (
-          <Card key={s.label} className="border-none bg-white/60 shadow-sm">
+          <Card key={s.label} className="border-none bg-[var(--color-surface-2)] shadow-sm">
             <CardContent className="flex flex-col items-center justify-center p-4">
               <span className="text-3xl font-black text-[var(--color-brand)]">{s.n}</span>
               <span className="mt-1 text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">{s.label}</span>

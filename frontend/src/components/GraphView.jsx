@@ -99,8 +99,8 @@ function runGraphEngine(canvas, rawNodes, rawEdges, onSelect) {
         const mx = (e.src.x + e.dst.x) / 2, my = (e.src.y + e.dst.y) / 2;
         ctx.save(); ctx.font = "600 9px system-ui,sans-serif";
         const tw = ctx.measureText(e.label).width;
-        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(mx - tw / 2 - 3, my - 7, tw + 6, 13);
-        ctx.fillStyle = hasSel ? "#6b5cf0" : "#948fab"; ctx.globalAlpha = alpha;
+        ctx.fillStyle = "rgba(10,10,10,0.9)"; ctx.fillRect(mx - tw / 2 - 3, my - 7, tw + 6, 13);
+        ctx.fillStyle = hasSel ? "#00ff41" : "#a3a3a3"; ctx.globalAlpha = alpha;
         ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e.label, mx, my);
         ctx.restore();
       }
@@ -114,14 +114,14 @@ function runGraphEngine(canvas, rawNodes, rawEdges, onSelect) {
       if (isSel) { ctx.shadowColor = n.color || DEF_COLOR; ctx.shadowBlur = 20; }
       ctx.beginPath(); ctx.arc(n.x, n.y, NODE_R, 0, Math.PI * 2);
       ctx.fillStyle = col; ctx.fill();
-      ctx.strokeStyle = isSel ? "#241f3a" : "rgba(255,255,255,0.9)";
+      ctx.strokeStyle = isSel ? "#00ff41" : "rgba(10,10,10,0.9)";
       ctx.lineWidth = isSel ? 3 : 2; ctx.stroke(); ctx.shadowBlur = 0;
       if (scale > 0.32) {
         ctx.font = "600 11px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
         const lbl = n.label.length > 20 ? n.label.slice(0, 18) + "…" : n.label;
         const tw = ctx.measureText(lbl).width;
-        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(n.x - tw / 2 - 3, n.y + NODE_R + 3, tw + 6, 14);
-        ctx.fillStyle = active ? "#241f3a" : "#b3aec6"; ctx.fillText(lbl, n.x, n.y + NODE_R + 4);
+        ctx.fillStyle = "rgba(10,10,10,0.9)"; ctx.fillRect(n.x - tw / 2 - 3, n.y + NODE_R + 3, tw + 6, 14);
+        ctx.fillStyle = active ? "#e5e5e5" : "#737373"; ctx.fillText(lbl, n.x, n.y + NODE_R + 4);
       }
       ctx.globalAlpha = 1;
     });
@@ -259,7 +259,7 @@ export default function GraphView() {
           </div>
         </div>
         
-        <div className="relative h-[480px] w-full bg-white overflow-hidden touch-none" style={{ touchAction: 'none' }}>
+        <div className="relative h-[480px] w-full bg-[var(--color-surface)] overflow-hidden touch-none" style={{ touchAction: 'none' }}>
           <canvas ref={canvasRef} className="absolute inset-0 h-full w-full outline-none" />
         </div>
       </Card>
@@ -293,7 +293,7 @@ export default function GraphView() {
                   <div className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">Outgoing ({outE.length})</div>
                   <div className="flex flex-col gap-2">
                     {outE.map((e) => (
-                      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-line)] bg-white p-2.5 text-sm" key={`o${e.id}`}>
+                      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-2.5 text-sm" key={`o${e.id}`}>
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: nodeMap[e.to]?.color || DEF_COLOR }} />
                         <span className="font-medium text-[var(--color-muted)]">{e.label}</span>
                         <span className="truncate font-semibold text-[var(--color-ink)]">→ {nodeMap[e.to]?.label || e.to}</span>
@@ -307,7 +307,7 @@ export default function GraphView() {
                   <div className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">Incoming ({inE.length})</div>
                   <div className="flex flex-col gap-2">
                     {inE.map((e) => (
-                      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-line)] bg-white p-2.5 text-sm" key={`i${e.id}`}>
+                      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-2.5 text-sm" key={`i${e.id}`}>
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: nodeMap[e.from]?.color || DEF_COLOR }} />
                         <span className="font-medium text-[var(--color-muted)]">{e.label}</span>
                         <span className="truncate font-semibold text-[var(--color-ink)]">← {nodeMap[e.from]?.label || e.from}</span>
