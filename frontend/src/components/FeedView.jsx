@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Activity, AlertTriangle, ShieldAlert, Zap } from "lucide-react";
 import { getFeed } from "../api.js";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.jsx";
@@ -18,7 +18,7 @@ export default function FeedView() {
 
   useEffect(() => {
     load();
-    const t = setInterval(load, 5000); // live — polls every 5s
+    const t = setInterval(load, 5000); // live â€” polls every 5s
     return () => clearInterval(t);
   }, []);
 
@@ -34,7 +34,7 @@ export default function FeedView() {
     return (
       <div className="flex animate-pulse flex-col items-center gap-3 pt-12 text-[var(--color-muted)]">
         <Activity size={32} className="animate-spin opacity-50" />
-        <div className="font-medium">Loading what's going around…</div>
+        <div className="font-medium">Loading what's going aroundâ€¦</div>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function FeedView() {
             <div className="flex flex-col gap-2">
               {feed.emerging.map((e) => (
                 <div className="text-sm font-medium" key={e.name}>
-                  <b className="font-bold">{e.display}</b> — first seen {e.emerged_hours_ago}h ago, {e.count} reports and climbing.
+                  <b className="font-bold">{e.display}</b> â€” first seen {e.emerged_hours_ago}h ago, {e.count} reports and climbing.
                 </div>
               ))}
             </div>
@@ -107,7 +107,7 @@ export default function FeedView() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)]">Same tricks, different scams</CardTitle>
             <p className="mt-1 text-xs font-medium text-[var(--color-muted)]">
-              The same tactic often shows up across different scams — learn it once, spot it everywhere.
+              The same tactic often shows up across different scams â€” learn it once, spot it everywhere.
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -140,7 +140,7 @@ export default function FeedView() {
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 text-sm">
                   <span className="font-bold text-[var(--color-ink)]">{r.family ? r.family.replace(/_/g, " ") : "unrecognized"}</span>
-                  <span className="text-[var(--color-muted)]">·</span>
+                  <span className="text-[var(--color-muted)]">Â·</span>
                   <span className="uppercase text-[var(--color-muted)]">{r.channel || "sms"}</span>
                 </div>
                 <div className="mt-1 line-clamp-2 text-sm text-[var(--color-body)]">{r.preview}</div>

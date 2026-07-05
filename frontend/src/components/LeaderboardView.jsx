@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Trophy, Star } from "lucide-react";
 import { Card, CardContent } from "./ui/card.jsx";
 import { Badge } from "./ui/badge.jsx";
@@ -32,12 +32,12 @@ export default function LeaderboardView() {
       )}
 
       {entries === null && !err && (
-        <div className="text-center text-sm text-[var(--color-muted)]">Loading…</div>
+        <div className="text-center text-sm text-[var(--color-muted)]">Loadingâ€¦</div>
       )}
 
       {entries?.length === 0 && (
         <div className="text-center text-sm text-[var(--color-muted)]">
-          No verified reports yet — be the first on the board.
+          No verified reports yet â€” be the first on the board.
         </div>
       )}
 

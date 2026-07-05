@@ -1,10 +1,16 @@
-const WEB_APP_URL = "http://localhost:5173";
+﻿const DEFAULT_WEB_PORT = 5173;
+const DEFAULT_API_PORT = 8000;
 
 const textEl = document.getElementById("text");
 const resultEl = document.getElementById("result");
 const errEl = document.getElementById("err");
 const checkBtn = document.getElementById("checkBtn");
 const scanPageBtn = document.getElementById("scanPageBtn");
+const settingsToggle = document.getElementById("settingsToggle");
+const settingsPanel = document.getElementById("settingsPanel");
+const apiPortEl = document.getElementById("apiPort");
+const webPortEl = document.getElementById("webPort");
+const settingsSaveBtn = document.getElementById("settingsSave");
 
 const BAND_COLORS = {
   confirmed: "#b91c1c",
@@ -33,11 +39,11 @@ function showError(msg) {
 function runCheck(text) {
   text = (text || "").trim();
   if (!text) {
-    showError("Nothing to check — paste some text first.");
+    showError("Nothing to check ΓÇö paste some text first.");
     return;
   }
   checkBtn.disabled = true;
-  checkBtn.textContent = "Checking…";
+  checkBtn.textContent = "CheckingΓÇª";
   chrome.runtime.sendMessage({ type: "antibody-scan", text }, (res) => {
     checkBtn.disabled = false;
     checkBtn.textContent = "Check it";
@@ -46,7 +52,7 @@ function runCheck(text) {
       return;
     }
     if (res.ok) showResult(res.verdict);
-    else showError(res.error || "Couldn't reach the Antibody server — is it running?");
+    else showError(res.error || "Couldn't reach the Antibody server ΓÇö is it running?");
   });
 }
 
@@ -70,7 +76,27 @@ scanPageBtn.addEventListener("click", async () => {
   }
 });
 
-document.getElementById("openApp").addEventListener("click", (e) => {
+document.getElementById("openApp").addEventListener("click", async (e) => {
   e.preventDefault();
-  chrome.tabs.create({ url: WEB_APP_URL });
+  const { webPort } = await chrome.storage.local.get("webPort");
+  chrome.tabs.create({ url: `http://localhost:${webPort || DEFAULT_WEB_PORT}` });
+});
+
+// Settings: backend/web-app ports, so switching `uvicorn --port` or
+// `vite --port` doesn't require editing extension source + reloading it.
+settingsToggle.addEventListener("click", () => {
+  settingsPanel.classList.toggle("show");
+});
+
+chrome.storage.local.get(["apiPort", "webPort"], ({ apiPort, webPort }) => {
+  apiPortEl.value = apiPort || DEFAULT_API_PORT;
+  webPortEl.value = webPort || DEFAULT_WEB_PORT;
+});
+
+settingsSaveBtn.addEventListener("click", async () => {
+  const apiPort = parseInt(apiPortEl.value, 10) || DEFAULT_API_PORT;
+  const webPort = parseInt(webPortEl.value, 10) || DEFAULT_WEB_PORT;
+  await chrome.storage.local.set({ apiPort, webPort });
+  settingsSaveBtn.textContent = "Saved Γ£ô";
+  setTimeout(() => (settingsSaveBtn.textContent = "Save"), 1200);
 });

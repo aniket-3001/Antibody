@@ -33,6 +33,7 @@ as its shared memory graph.
 [Quick start](#quick-start) ·
 [How it works](#how-it-works) ·
 [Architecture](#architecture) ·
+[Privacy & Forget Me](#privacy--the-forget-me-button) ·
 [Browser extension](#browser-extension) ·
 [Help chatbot](#help-chatbot) ·
 [Docs](docs/) ·
@@ -141,16 +142,39 @@ The **ops SQLite** store holds operational rows and reporter trust (PII stays he
 **Cognee graph** holds de-identified scam knowledge. This split is why a privacy erasure is
 a cheap DB delete, never graph surgery. Full walkthrough: [architecture](docs/architecture.md).
 
+## Privacy & the "Forget Me" button
+
+Every report is tied to a **browser-generated anonymous id** — not your name, email, or
+real identity. The sidebar panel in the web app shows your current id and gives you two
+controls:
+
+| Action | What it does |
+|---|---|
+| **Copy** | Copy your anonymous id to the clipboard (e.g. to retrieve your reports on another device) |
+| **Forget me** | Hard-deletes the id and **every report you ever filed** from the ops store, then gives this browser a brand-new anonymous id |
+
+The "Forget me" flow hits `POST /reporter/forget`, which:
+1. Hashes the reporter id (so the server never stores the raw id)
+2. Deletes all reports filed under that hash from the SQLite ops store
+3. Queues background deletion of any corresponding Cognee graph entries via `forget()`
+4. Returns `{"ok": true, "deleted_reports": N}`
+
+This is a **hard delete** — it cannot be undone, and the old My Reports history is gone.
+It is *not* the same as `POST /report/{id}/forget`, which soft-prunes a single
+false-positive without touching the reporter's other reports.
+
 ## Browser extension
 
 Antibody ships a **Chrome/Edge MV3 browser extension** that lets you check any selected
 text on any page without leaving the tab.
 
-- **Right-click → "Check with Antibody"** — highlights suspicious text and fires a read-only
-  `/scan` call. Nothing is saved; it's purely a verdict query.
-- **Popup UI** — type or paste text directly into the extension popup for an instant check.
-- The extension talks to the **live Cloud Run demo** out of the box (no local server needed).
-  Swap `API_BASE` in `background.js` to point at a local backend during development.
+- **Right-click → "Check with Antibody"** — sends selected text to the read-only `/scan`
+  endpoint. Nothing is saved; it's purely a verdict query.
+- **Popup UI** — paste text or click **Scan this page** to extract and check visible page text.
+- **⚙ Ports settings** — configure the backend and web-app ports without editing source; useful
+  when running `uvicorn` or `vite` on a non-default port.
+- Talks to `http://127.0.0.1:8000` by default (local dev). Swap `API_BASE` in `background.js`
+  to point at the live Cloud Run URL for a self-contained extension.
 
 To install locally: load `extension/` as an unpacked extension in Chrome (`chrome://extensions`
 → Developer mode → Load unpacked). A packaged `.zip` for the Chrome Web Store is in
