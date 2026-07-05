@@ -36,12 +36,15 @@ async def lifespan(app: FastAPI):
     from api.intake.ingest import rebuild_semantic_index
     from api.memory import store
     from seed.load_seed import load_seed_if_empty
+    from help_api.main import _ensure_docs_ingested
+    import asyncio
 
     store.init_db(settings.data_dir)
     n = load_seed_if_empty()
     if n:
         log.info("seeded %d reports across the shared graph", n)
     rebuild_semantic_index()
+    asyncio.create_task(_ensure_docs_ingested())
     log.info("Antibody ready — LLM configured: %s", settings.has_llm)
     yield
 
@@ -78,9 +81,11 @@ register_error_handlers(app)
 
 from api.feed.router import router as feed_router  # noqa: E402
 from api.intake.router import router as report_router  # noqa: E402
+from help_api.main import app as help_app
 
 app.include_router(report_router)
 app.include_router(feed_router)
+app.mount("/help", help_app)
 
 
 @app.get("/health", tags=["ops"])
