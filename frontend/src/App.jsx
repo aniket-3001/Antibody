@@ -172,8 +172,8 @@ function MainApp() {
     { id: "graph", label: "Cognee Memory Base", desc: "Explore the connections between scams." },
     { id: "leaderboard", label: "Community Leaderboard", desc: "Top contributors keeping the community safe." },
     { id: "reports", label: "My Reports", desc: "Your personal history of reported scams." },
-    { id: "extension", label: "Browser Extension", desc: "Get real-time browser protection." },
-    { id: "help", label: "Help Center", desc: "Chat with the Antibody assistant." },
+    { id: "extension", label: "Browser Extension", desc: "Install the Antibody extension for Chrome" },
+    { id: "help", label: "Help Center", desc: "Ask questions about Antibody. Powered by a separate Cognee memory base containing all project documentation." },
   ];
 
   // Real threat ticker — polls /feed and toasts only genuinely NEW activity
@@ -234,10 +234,15 @@ function MainApp() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(30,58,138,0.6)]">
             <ShieldCheck size={26} strokeWidth={2.5} />
           </div>
-          <div className="text-left">
-            <h1 className="m-0 text-xl font-extrabold tracking-tight text-[var(--color-ink)]">
+          <div className="text-left flex flex-col">
+            <a 
+              href="https://github.com/aniket-3001/Antibody" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="m-0 text-xl font-extrabold tracking-tight text-[var(--color-ink)] hover:text-[var(--color-brand)] transition-colors flex items-center gap-1.5"
+            >
               Antibody
-            </h1>
+            </a>
             <p className="m-0 mt-0.5 text-xs text-[var(--color-muted)] leading-tight">
               Catch scams before they catch you
             </p>
