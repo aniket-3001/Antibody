@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import CheckView from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
 import GraphView from "./components/GraphView.jsx";
+import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
 import { cn } from "./lib/utils.js";
 
 export default function App() {
@@ -14,6 +15,23 @@ export default function App() {
     { id: "feed", label: "What's going around" },
     { id: "graph", label: "Knowledge graph" },
   ];
+
+  // Mock Real-time Threat Alerts
+  useEffect(() => {
+    const alerts = [
+      { title: "Critical Threat", message: "New 'Bank OTP' scam trending — 120 reports in the last hour.", variant: "danger" },
+      { title: "Warning", message: "Spike in 'Fake USPS Delivery' texts detected in your region.", variant: "warn" },
+      { title: "Update", message: "New tactic 'Urgency Threat' mapped to 3 active scam families.", variant: "default" },
+      { title: "Threat Blocked", message: "A highly reported crypto phishing link was just neutralized.", variant: "safe" }
+    ];
+
+    const timer = setInterval(() => {
+      const alert = alerts[Math.floor(Math.random() * alerts.length)];
+      showToast(alert.message, { title: alert.title, variant: alert.variant });
+    }, 18000); // Fire an alert every 18 seconds for demo purposes
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="mx-auto max-w-[760px] px-[18px] pt-[26px] pb-[90px]">
@@ -64,6 +82,7 @@ export default function App() {
         Got something suspicious? Check it here — and if it was a scam, tell us.<br />
         Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b> memory · matched by meaning, not just keywords.
       </footer>
+      <Toaster />
     </div>
   );
 }
