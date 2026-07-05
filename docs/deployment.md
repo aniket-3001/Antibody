@@ -71,6 +71,23 @@ path (and the Help tab degrades to a friendly "not configured" answer).
 empty boot (`load_seed_if_empty()`), so a cold start just reloads the demo data — the
 feed is never empty.
 
+## Continuous deployment (GitHub Actions)
+
+Every push to `master` runs CI (ruff · mypy · pytest · frontend build), and when
+**all of it is green**, the `deploy` job in `.github/workflows/ci.yml` ships the same
+commit to Cloud Run automatically and smoke-tests `/health` + `/help/health`.
+
+Auth is keyless via **Workload Identity Federation** — no service-account key is
+stored in GitHub. The moving parts on the GCP side (already provisioned):
+
+- Workload identity pool `github` + OIDC provider `github-provider`, restricted to
+  the `aniket-3001/Antibody` repository.
+- Service account `github-deployer@antibody-hackathon-2026.iam.gserviceaccount.com`
+  with the Cloud Run / Cloud Build / storage roles needed for `--source` deploys.
+
+The CI deploy passes no `--set-env-vars` / `--set-secrets`, so the env and secrets
+configured on the service are preserved — it only ships new code.
+
 ## Render (git-connected alternative)
 
 The same Dockerfile works as a Render Docker web service (free tier). Point it at the

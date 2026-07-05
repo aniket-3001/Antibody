@@ -52,3 +52,41 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+  deploy:
+    name: deploy (Cloud Run)
+    # Auto-ship master to the live demo once lint/types/tests and the frontend
+    # build are all green. PRs never deploy.
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    # Serialize deploys so two quick pushes can't race each other.
+    concurrency: deploy-cloud-run
+    permissions:
+      contents: read
+      id-token: write # mint the GitHub OIDC token for keyless GCP auth
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/251148844884/locations/global/workloadIdentityPools/github/providers/github-provider
+          service_account: github-deployer@antibody-hackathon-2026.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy to Cloud Run
+        # Env vars and secrets are managed on the service and preserved here —
+        # this deploy only ships new code (see docs/deployment.md).
+        run: |
+          gcloud run deploy antibody \
+            --source . \
+            --region asia-south1 \
+            --project antibody-hackathon-2026 \
+            --memory 2Gi --cpu 1 --max-instances 3 \
+            --allow-unauthenticated \
+            --execution-environment gen2 --no-cpu-throttling \
+            --quiet
+      - name: Smoke test
+        run: |
+          BASE="https://antibody-251148844884.asia-south1.run.app"
+          curl -sf "$BASE/health"
+          curl -sf "$BASE/help/health"
