@@ -12,6 +12,8 @@ into whichever layer you're working on.
 | [Data model](data-model.md) | The ops SQLite schema, the Cognee graph ontology, and the in-memory semantic index — what lives where and why. |
 | [API reference](api-reference.md) | Every endpoint with request/response shapes, the error envelope, and `curl` examples. |
 | [Security & privacy](security-and-privacy.md) | PII handling, the de-identified graph, reporter-trust anti-poisoning, the asymmetric gate as a safety property, and indicator/URL safety. |
+| [Help chatbot](help-chatbot.md) | Why it's a separate process with its own Cognee graph, how a question is answered, and how it's reverse-proxied in production. |
+| [Browser extension](browser-extension.md) | Install steps, all three ways to check text, what it sends (and doesn't), and how to point it at a local backend. |
 | [Deployment](deployment.md) | Docker, Google Cloud Run (with the two non-obvious flags that matter), Render, environment variables, and secret handling. |
 | [Contributing](contributing.md) | Local setup, the test/lint/type/pre-commit workflow, code style, and how to add a new scam family. |
 

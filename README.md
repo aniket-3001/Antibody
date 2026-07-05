@@ -154,7 +154,8 @@ text on any page without leaving the tab.
 
 To install locally: load `extension/` as an unpacked extension in Chrome (`chrome://extensions`
 → Developer mode → Load unpacked). A packaged `.zip` for the Chrome Web Store is in
-`antibody-extension-v1.0.0.zip`.
+`antibody-extension-v1.0.0.zip`. Full guide, including how to point it at a local
+backend: [browser extension](docs/browser-extension.md).
 
 ## Help chatbot
 
@@ -184,6 +185,8 @@ uvicorn help_api.main:app --host 127.0.0.1 --port 8010
 ```
 
 The Vite dev server proxies `/help` → `:8010` automatically, so the frontend just works.
+Full guide, including how answers are composed and cold-start self-healing on Cloud
+Run: [Help chatbot](docs/help-chatbot.md).
 
 ## Documentation
 
@@ -197,6 +200,8 @@ Antibody ships a full [`docs/`](docs/) folder:
 | [Data model](docs/data-model.md) | Ops schema (ER diagram), graph ontology, semantic index |
 | [API reference](docs/api-reference.md) | Every endpoint + the error envelope, with `curl` |
 | [Security & privacy](docs/security-and-privacy.md) | De-identified graph, anti-poisoning, the safety gate |
+| [Help chatbot](docs/help-chatbot.md) | Separate process/graph rationale, how answers are composed, prod reverse proxy |
+| [Browser extension](docs/browser-extension.md) | Install steps, all three ways to check text, what it sends |
 | [Deployment](docs/deployment.md) | Docker, Cloud Run gotchas, env vars, secrets |
 | [Contributing](docs/contributing.md) | Dev setup, the quality gate, adding a scam family |
 
