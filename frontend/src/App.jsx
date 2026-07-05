@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
-import CheckView from "./components/CheckView.jsx";
+import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
 import GraphView from "./components/GraphView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
@@ -9,8 +9,58 @@ import MyReportsView from "./components/MyReportsView.jsx";
 import ExtensionPreviewView from "./components/ExtensionPreviewView.jsx";
 import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
 import { cn } from "./lib/utils.js";
+import { getFeed, getReport, submitOutcome } from "./api.js";
 
-export default function App() {
+function SharedVerdictView({ reportId, onBack }) {
+  const [v, setV] = useState(null);
+  const [outcome, setOutcome] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    getReport(reportId)
+      .then((res) => setV({ ...res, checked_text: res.transcript || "" }))
+      .catch((e) => setErr(String(e)));
+  }, [reportId]);
+
+  const record = async (o) => {
+    if (!v?.report_id) return;
+    try {
+      await submitOutcome(v.report_id, o);
+      setOutcome(o);
+    } catch (e) { setErr(String(e)); }
+  };
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-10 md:py-16">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)]">
+          <ShieldCheck size={20} strokeWidth={2.5} />
+        </div>
+        <div>
+          <h1 className="m-0 text-lg font-extrabold tracking-tight text-[var(--color-ink)]">Antibody</h1>
+          <p className="m-0 text-xs text-[var(--color-muted)]">someone shared this verdict with you</p>
+        </div>
+      </div>
+
+      {err && (
+        <div className="rounded-lg border border-[var(--color-danger-line)] bg-[var(--color-danger-bg)] p-4 text-sm text-[var(--color-danger)]">
+          Couldn't load this report — it may have been removed. ({err})
+        </div>
+      )}
+      {!err && !v && <div className="text-sm text-[var(--color-muted)]">Loading…</div>}
+      {v && <Verdict v={v} outcome={outcome} onOutcome={record} />}
+
+      <button
+        onClick={onBack}
+        className="self-start text-sm font-bold text-[var(--color-brand)] hover:underline"
+      >
+        Check your own message →
+      </button>
+    </div>
+  );
+}
+
+function MainApp() {
   const [tab, setTab] = useState(() => {
     return localStorage.getItem("antibody_active_tab") || "check";
   });
@@ -28,21 +78,54 @@ export default function App() {
     { id: "extension", label: "Extension Preview" },
   ];
 
-  // Mock Real-time Threat Alerts
+  // Real threat ticker — polls /feed and toasts only genuinely NEW activity
+  // (not on every poll tick), so it reflects what's actually happening.
   useEffect(() => {
-    const alerts = [
-      { title: "Critical Threat", message: "New 'Bank OTP' scam trending — 120 reports in the last hour.", variant: "danger" },
-      { title: "Warning", message: "Spike in 'Fake USPS Delivery' texts detected in your region.", variant: "warn" },
-      { title: "Update", message: "New tactic 'Urgency Threat' mapped to 3 active scam families.", variant: "default" },
-      { title: "Threat Blocked", message: "A highly reported crypto phishing link was just neutralized.", variant: "safe" }
-    ];
+    let cancelled = false;
+    let initialized = false;
+    const seenReportIds = new Set();
+    const seenEmerging = new Set();
 
-    const timer = setInterval(() => {
-      const alert = alerts[Math.floor(Math.random() * alerts.length)];
-      showToast(alert.message, { title: alert.title, variant: alert.variant });
-    }, 18000); // Fire an alert every 18 seconds for demo purposes
+    const poll = async () => {
+      let feed;
+      try {
+        feed = await getFeed();
+      } catch {
+        return; // feed unavailable this tick — try again next interval
+      }
+      if (cancelled) return;
 
-    return () => clearInterval(timer);
+      if (!initialized) {
+        // Seed baseline from current state so we don't toast a backlog on load.
+        (feed.recent || []).forEach((r) => seenReportIds.add(r.id));
+        (feed.emerging || []).forEach((e) => seenEmerging.add(e.name));
+        initialized = true;
+        return;
+      }
+
+      for (const r of feed.recent || []) {
+        if (seenReportIds.has(r.id)) continue;
+        seenReportIds.add(r.id);
+        const isConfirmed = r.outcome === "confirmed_scam" || r.outcome === "i_got_scammed";
+        showToast(r.preview || "A new report just came in.", {
+          title: r.family ? `New report: ${r.family}` : "New report",
+          variant: isConfirmed ? "danger" : "default",
+        });
+      }
+
+      for (const e of feed.emerging || []) {
+        if (seenEmerging.has(e.name)) continue;
+        seenEmerging.add(e.name);
+        showToast(
+          `${e.display || e.name} is picking up — ${e.count} reports in the last ${e.emerged_hours_ago}h.`,
+          { title: "Emerging threat", variant: "warn" }
+        );
+      }
+    };
+
+    poll();
+    const timer = setInterval(poll, 20000);
+    return () => { cancelled = true; clearInterval(timer); };
   }, []);
 
   return (
@@ -105,4 +188,27 @@ export default function App() {
       <Toaster />
     </div>
   );
+}
+
+export default function App() {
+  const [sharedReportId, setSharedReportId] = useState(() => {
+    return new URLSearchParams(window.location.search).get("v");
+  });
+
+  if (sharedReportId) {
+    return (
+      <>
+        <SharedVerdictView
+          reportId={sharedReportId}
+          onBack={() => {
+            window.history.pushState({}, "", window.location.pathname);
+            setSharedReportId(null);
+          }}
+        />
+        <Toaster />
+      </>
+    );
+  }
+
+  return <MainApp />;
 }

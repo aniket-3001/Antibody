@@ -258,6 +258,7 @@ def _report_row(r: sqlite3.Row) -> dict:
         "lures": json.loads(r["lures_json"] or "[]"),
         "is_control": bool(r["is_control"]),
         "cognee_data_id": r["cognee_data_id"],
+        "pruned": bool(r["pruned"]),
     }
 
 

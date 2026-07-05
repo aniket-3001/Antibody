@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud, Share2, Copy, CheckCircle2 } from "lucide-react";
 import { checkMessage, submitOutcome, uploadFile } from "../api.js";
+import { addToHistory, updateHistoryOutcome } from "../lib/history.js";
 import { Button } from "./ui/button.jsx";
 import { Card, CardContent } from "./ui/card.jsx";
 import { Textarea } from "./ui/textarea.jsx";
@@ -88,6 +89,18 @@ export default function CheckView() {
     try {
       const res = await checkMessage(sent, channel);
       setV({ ...res, checked_text: sent });
+      if (res.report_id) {
+        addToHistory({
+          report_id: res.report_id,
+          text: sent,
+          channel,
+          input_kind: "text",
+          band: res.band,
+          band_label: res.band_label,
+          band_emoji: res.band_emoji,
+          family_display: res.family_display,
+        });
+      }
     } catch (e) { setErr(String(e.message || e)); }
     setLoading(false);
   };
@@ -125,6 +138,18 @@ export default function CheckView() {
       const res = await uploadFile(f, channel);
       setV({ ...res, checked_text: res.transcript || "" });
       if (res.transcript) setText(res.transcript);
+      if (res.report_id) {
+        addToHistory({
+          report_id: res.report_id,
+          text: res.transcript || `(${res.input_kind || "file"}: ${f.name})`,
+          channel,
+          input_kind: res.input_kind,
+          band: res.band,
+          band_label: res.band_label,
+          band_emoji: res.band_emoji,
+          family_display: res.family_display,
+        });
+      }
     } catch (er) { setErr(String(er.message || er)); }
     setUploading(false);
     e.target.value = "";
@@ -132,7 +157,11 @@ export default function CheckView() {
 
   const record = async (o) => {
     if (!v?.report_id) return;
-    try { await submitOutcome(v.report_id, o); setOutcome(o); } catch (e) { setErr(String(e)); }
+    try {
+      await submitOutcome(v.report_id, o);
+      setOutcome(o);
+      updateHistoryOutcome(v.report_id, o);
+    } catch (e) { setErr(String(e)); }
   };
 
   return (
@@ -211,9 +240,14 @@ export default function CheckView() {
   );
 }
 
-function Verdict({ v, outcome, onOutcome }) {
+export function Verdict({ v, outcome, onOutcome }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const shareUrl = v.report_id
+    ? `${window.location.origin}${window.location.pathname}?v=${v.report_id}`
+    : "";
 
   const seen = fmtDate(v.first_seen);
   
@@ -385,8 +419,22 @@ function Verdict({ v, outcome, onOutcome }) {
               {copied ? <CheckCircle2 size={16} className="text-[var(--color-brand)]" /> : <Copy size={16} />}
             </button>
           </div>
-          <Button 
-            className="w-full mt-2" 
+          {shareUrl && (
+            <Button
+              variant="secondary"
+              className="w-full gap-2"
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              }}
+            >
+              {linkCopied ? <CheckCircle2 size={16} className="text-[var(--color-brand)]" /> : <Share2 size={16} />}
+              {linkCopied ? "Link copied!" : "Copy shareable link instead"}
+            </Button>
+          )}
+          <Button
+            className="w-full mt-2"
             onClick={() => setIsShareModalOpen(false)}
           >
             Done

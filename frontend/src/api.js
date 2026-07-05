@@ -22,6 +22,9 @@ export const uploadFile = (file, channel) => {
   return fetch(`${API_BASE}/report/upload`, { method: "POST", body: fd }).then(j);
 };
 
+export const getReport = (reportId) =>
+  fetch(`${API_BASE}/report/${reportId}`).then(j);
+
 export const submitOutcome = (reportId, outcome) =>
   fetch(`${API_BASE}/report/${reportId}/outcome`, {
     method: "POST",

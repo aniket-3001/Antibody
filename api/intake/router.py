@@ -1,6 +1,7 @@
 """Report intake + lifecycle endpoints (M1 + verdict surface).
 
 POST /report            → verdict now, graph-strengthen in background
+GET  /report/{id}        → re-fetch a prior verdict (shareable link)
 POST /report/{id}/outcome → fold the outcome back in (improve / memify)
 POST /report/{id}/forget  → prune a false positive (forget §10)
 """
@@ -60,6 +61,24 @@ async def _process(text: str, channel: str | None, reporter_id: str | None,
 @router.post("/report")
 async def submit_report(body: ReportIn, background: BackgroundTasks) -> dict:
     return await _process(body.text, body.channel, body.reporter_id, background)
+
+
+@router.get("/report/{report_id}")
+async def get_report(report_id: str) -> dict:
+    """Re-fetch a prior verdict by id (backs the "Warn Others" shareable link).
+
+    Re-runs assess() on the stored text rather than caching the original
+    verdict blob — same report always reflects current family/corroboration
+    data, and no schema migration was needed to add this.
+    """
+    report = store.get_report(report_id)
+    if not report or report["pruned"]:
+        raise HTTPException(404, "report not found")
+    verdict = await assess(report["normalized_text"], channel=report["channel"])
+    verdict["report_id"] = report_id
+    verdict["transcript"] = report["normalized_text"]
+    verdict["input_kind"] = "text"
+    return verdict
 
 
 @router.post("/report/upload")
