@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { History, ShieldAlert, Clock, Smartphone, Mail, Phone, MessageSquare, FileText, Image as ImageIcon, Mic } from "lucide-react";
+import { History, ShieldAlert, Clock, Smartphone, Mail, Phone, MessageSquare, FileText, Image as ImageIcon, Mic, Database, Loader2 } from "lucide-react";
 import { Card, CardContent } from "./ui/card.jsx";
 import { Badge } from "./ui/badge.jsx";
-import { getMyReports } from "../api.js";
+import { Modal } from "./ui/modal.jsx";
+import { getMyReports, getReport, submitOutcome } from "../api.js";
 import { getClientId } from "../lib/identity.js";
+import { Verdict } from "./CheckView.jsx";
 
 function fmtDate(iso) {
   if (!iso) return "";
@@ -30,15 +32,78 @@ const ChannelIcon = ({ channel, inputKind }) => {
   }
 };
 
-export default function MyReportsView() {
-  const [reports, setReports] = useState(null);
+function KbStatus({ dataId }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-[var(--color-surface-2)] p-3 text-sm">
+      <Database size={16} className={dataId ? "text-[var(--color-safe)]" : "text-[var(--color-muted)]"} />
+      {dataId ? (
+        <span className="text-[var(--color-ink)]">
+          Stored in the knowledge graph <span className="text-[var(--color-muted)] font-mono text-xs">({dataId})</span> — future checks can draw on this report.
+        </span>
+      ) : (
+        <span className="text-[var(--color-muted)]">
+          Not yet in the knowledge graph — still processing in the background, or Cognee is unavailable right now (the verdict above still stands on its own).
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ReportDetailModal({ reportId, onClose, onOutcomeChanged }) {
+  const [detail, setDetail] = useState(null);
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    if (!reportId) return;
+    setDetail(null);
+    setErr("");
+    getReport(reportId)
+      .then((res) => setDetail({ ...res, checked_text: res.transcript || "" }))
+      .catch((e) => setErr(String(e.message || e)));
+  }, [reportId]);
+
+  const recordOutcome = async (o) => {
+    try {
+      await submitOutcome(reportId, o);
+      setDetail((d) => ({ ...d, outcome: o }));
+      onOutcomeChanged?.();
+    } catch (e) {
+      setErr(String(e.message || e));
+    }
+  };
+
+  return (
+    <Modal isOpen={!!reportId} onClose={onClose} title="Report details" className="max-w-2xl">
+      <div className="max-h-[70vh] overflow-y-auto -m-6 p-6 flex flex-col gap-4">
+        {err && <div className="rounded-lg bg-[var(--color-danger-bg)] p-3 text-sm text-[var(--color-danger)]">{err}</div>}
+        {!detail && !err && (
+          <div className="flex items-center justify-center gap-2 py-10 text-sm text-[var(--color-muted)]">
+            <Loader2 size={16} className="animate-spin" /> Loading…
+          </div>
+        )}
+        {detail && (
+          <>
+            <Verdict v={detail} outcome={detail.outcome} onOutcome={recordOutcome} />
+            <KbStatus dataId={detail.cognee_data_id} />
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+export default function MyReportsView() {
+  const [reports, setReports] = useState(null);
+  const [err, setErr] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
+
+  const load = () => {
     getMyReports(getClientId())
       .then((res) => setReports(res.reports || []))
       .catch((e) => setErr(String(e.message || e)));
-  }, []);
+  };
+
+  useEffect(load, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,7 +133,11 @@ export default function MyReportsView() {
 
       <div className="grid gap-4">
         {reports?.map((report) => (
-          <Card key={report.id} className="border border-[var(--color-line)] shadow-sm">
+          <Card
+            key={report.id}
+            onClick={() => setSelectedId(report.id)}
+            className="border border-[var(--color-line)] shadow-sm cursor-pointer transition-colors hover:border-[var(--color-brand)] hover:bg-[var(--color-surface-2)]/40"
+          >
             <CardContent className="p-4 flex flex-col gap-3">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3 text-xs text-[var(--color-muted)] font-medium">
@@ -97,6 +166,12 @@ export default function MyReportsView() {
           </Card>
         ))}
       </div>
+
+      <ReportDetailModal
+        reportId={selectedId}
+        onClose={() => setSelectedId(null)}
+        onOutcomeChanged={load}
+      />
     </div>
   );
 }

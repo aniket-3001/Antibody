@@ -100,6 +100,8 @@ async def get_report(report_id: str) -> dict:
     verdict["report_id"] = report_id
     verdict["transcript"] = report["normalized_text"]
     verdict["input_kind"] = "text"
+    verdict["cognee_data_id"] = report.get("cognee_data_id")
+    verdict["outcome"] = report.get("outcome")
     return verdict
 
 
