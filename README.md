@@ -282,8 +282,9 @@ tests/               # unit + API smoke + error-envelope contract
 
 ## Deployment
 
-Antibody ships as a **single Docker container** — `uvicorn api.main:app` serves both the
-API and the built frontend from one process.
+Antibody ships as a **single Docker container** — the main app serves the API and the
+built frontend, and a second in-container process runs the Help chatbot, fronted at
+`/help/*` by the main app (see `docker-entrypoint.sh`).
 
 ```bash
 docker build -t antibody .

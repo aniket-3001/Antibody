@@ -1,16 +1,23 @@
 # Deployment
 
-Antibody ships as a **single Docker container**: `uvicorn api.main:app` serves both
-the JSON API and the built frontend (`frontend/dist`) from one process, so there's no
-second service and no production CORS setup to run.
+Antibody ships as a **single Docker container** that runs **two processes**
+(`docker-entrypoint.sh`): the main app (`api.main:app`, which serves the JSON API
+*and* the built frontend) and the Help chatbot (`help_api.main:app` on an internal
+port). The main app reverse-proxies `/help/*` to the help process, so from outside
+it's still one origin, one service, no production CORS setup. The two are separate
+processes on purpose — Cognee's config is a process-wide singleton, so the docs
+graph and the scam graph each need their own process (see `help_api/config.py`).
 
 ```mermaid
 flowchart LR
-    subgraph Container["one image"]
-        UVI["uvicorn api.main:app"]
+    subgraph Container["one image · docker-entrypoint.sh"]
+        UVI["uvicorn api.main:app · $PORT"]
+        HELP["uvicorn help_api.main:app · :8010"]
         UVI --> API["/report /feed /graph ..."]
         UVI --> STATIC["/ → frontend/dist"]
+        UVI -- "/help/* proxy" --> HELP
         API --> DATA[("DATA_DIR<br/>ops db + Cognee stores<br/>+ model cache")]
+        HELP --> HDATA[("HELP_DATA_DIR<br/>own Cognee graph over help_docs/")]
     end
     LB["Cloud Run / Render"] --> UVI
 ```
@@ -26,13 +33,16 @@ docker run -p 8000:8000 --env-file .env antibody
 The image is a two-stage build: stage 1 builds the frontend with Node, stage 2 is a
 slim Python runtime that installs `api/requirements.txt`, bakes the fastembed model
 into the image (so the first cold-boot report doesn't block downloading it), installs
-the Tesseract binary for OCR, and copies in `api/`, `seed/`, and the built frontend.
+the Tesseract binary for OCR, and copies in `api/`, `seed/`, `help_api/`,
+`help_docs/`, and the built frontend. On boot the help process re-ingests
+`help_docs/*.md` into its own Cognee graph (content-deduped, so it's a no-op
+unless the disk was wiped — which is exactly what Cloud Run cold starts do).
 
 ## Google Cloud Run (what the live demo runs on)
 
 ```bash
 gcloud run deploy antibody --source . --region <region> \
-  --memory 1Gi --cpu 1 --max-instances 3 --allow-unauthenticated \
+  --memory 2Gi --cpu 1 --max-instances 3 --allow-unauthenticated \
   --execution-environment gen2 --no-cpu-throttling --quiet
 ```
 
@@ -48,8 +58,14 @@ gcloud run deploy antibody --source . --region <region> \
 
 **Secrets:** put the LLM key in Secret Manager and reference it —
 `--set-secrets "LLM_API_KEY=<secret-name>:latest"` — never in `--set-env-vars`, which
-would persist it in revision metadata. Without a key, Antibody still runs correctly on
-its deterministic + semantic fallback path.
+would persist it in revision metadata. The Help chatbot reads its own prefixed vars, so
+reference the same secret twice:
+`--set-secrets "LLM_API_KEY=<secret>:latest,HELP_LLM_API_KEY=<secret>:latest"`.
+Without a key, Antibody still runs correctly on its deterministic + semantic fallback
+path (and the Help tab degrades to a friendly "not configured" answer).
+
+**Memory:** use at least `--memory 2Gi` — the container runs two Cognee processes
+(scam graph + help-docs graph), each with its own embedded Kuzu/LanceDB stores.
 
 **Ephemeral disk:** Cloud Run's disk is ephemeral, but the seed graph auto-loads on any
 empty boot (`load_seed_if_empty()`), so a cold start just reloads the demo data — the
@@ -76,6 +92,9 @@ correct verdicts.
 | `EMBEDDING_PROVIDER` / `EMBEDDING_MODEL` / `EMBEDDING_DIMENSIONS` | `fastembed` / `all-MiniLM-L6-v2` / `384` | local, no key |
 | `EMBEDDING_ENDPOINT` / `EMBEDDING_API_KEY` | — | only for a remote embedding provider |
 | `BAND_CONFIRMED` / `BAND_LIKELY` / `BAND_SUSPICIOUS` | `0.85` / `0.60` / `0.35` | verdict thresholds |
+| `HELP_LLM_PROVIDER` / `HELP_LLM_MODEL` / `HELP_LLM_ENDPOINT` / `HELP_LLM_API_KEY` | — | same convention, for the Help chatbot's own process |
+| `HELP_DATA_DIR` | `./.antibody_help_data` | the help-docs graph, isolated from `DATA_DIR` |
+| `HELP_API_URL` | `http://127.0.0.1:8010` | where the main app proxies `/help/*` |
 
 ### LLM provider examples
 
@@ -105,6 +124,7 @@ EMBEDDING_PROVIDER=fastembed
 
 ```bash
 curl -s https://<host>/health                       # {"status":"ok", ...}
+curl -s https://<host>/help/health                  # help chatbot process is up
 curl -s https://<host>/feed | head -c 200            # feed is populated (seed auto-loaded)
 curl -s https://<host>/report -H 'Content-Type: application/json' \
      -d '{"text":"pay a redelivery fee at usps-fee.biz"}'   # returns a verdict

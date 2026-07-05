@@ -11,12 +11,14 @@ stable JSON envelope (see ``api/core/``).
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from api.config import settings
 from api.core.error_handlers import register_error_handlers
@@ -81,6 +83,47 @@ from api.intake.router import router as report_router  # noqa: E402
 
 app.include_router(report_router)
 app.include_router(feed_router)
+
+
+# ---- Help chatbot proxy ------------------------------------------------------
+# The Help chatbot deliberately runs as a separate process — Cognee's config is
+# a process-wide singleton, so the docs graph and the scam graph must not share
+# a process (see help_api/config.py). In the single-container deployment,
+# docker-entrypoint.sh starts help_api on 127.0.0.1:8010 and this route fronts
+# it, so the frontend can call /help/* on the same origin it was served from.
+_HELP_UPSTREAM = os.environ.get("HELP_API_URL", "http://127.0.0.1:8010")
+
+
+@app.api_route("/help/{path:path}", methods=["GET", "POST"], tags=["help"])
+async def help_proxy(path: str, request: Request) -> Response:
+    import httpx
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=5.0)) as client:
+            upstream = await client.request(
+                request.method,
+                f"{_HELP_UPSTREAM}/help/{path}",
+                content=await request.body(),
+                headers={
+                    "content-type": request.headers.get("content-type", "application/json")
+                },
+            )
+    except httpx.HTTPError:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "help_unavailable",
+                "message": (
+                    "The Help service isn't running. Locally, start it with "
+                    "`uvicorn help_api.main:app --port 8010`."
+                ),
+            },
+        )
+    return Response(
+        content=upstream.content,
+        status_code=upstream.status_code,
+        media_type=upstream.headers.get("content-type"),
+    )
 
 
 @app.get("/health", tags=["ops"])

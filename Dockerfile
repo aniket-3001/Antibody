@@ -29,8 +29,14 @@ RUN python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='se
 
 COPY api/ ./api/
 COPY seed/ ./seed/
+COPY help_api/ ./help_api/
+COPY help_docs/ ./help_docs/
 COPY --from=frontend /app/frontend/dist ./frontend/dist
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
-CMD uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Two processes, one container: help_api (own Cognee config) + the main app,
+# which reverse-proxies /help/* to it. See docker-entrypoint.sh.
+CMD ["./docker-entrypoint.sh"]
