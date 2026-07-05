@@ -89,4 +89,12 @@ jobs:
         run: |
           BASE="https://antibody-251148844884.asia-south1.run.app"
           curl -sf "$BASE/health"
-          curl -sf "$BASE/help/health"
+          # help_api runs as a second process in the container and can take a
+          # few seconds to bind after Cloud Run marks the revision ready.
+          for i in $(seq 1 10); do
+            if curl -sf "$BASE/help/health"; then exit 0; fi
+            echo "help/health not ready yet, retrying in 5s ($i/10)..."
+            sleep 5
+          done
+          echo "help/health did not become ready in time" >&2
+          exit 1
