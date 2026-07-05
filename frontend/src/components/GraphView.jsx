@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { Network, Activity } from "lucide-react";
 import { getGraph } from "../api.js";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.jsx";
+import { Badge } from "./ui/badge.jsx";
 
 const TYPE_LABEL = { family: "Scam family", tactic: "Tactic", lure: "Lure" };
 const DEF_COLOR = "#948fab";
 
-// Force-directed single-canvas graph — same node/edge shape as the am1
-// memory-graph template ({id,label,type,props,color} / {id,from,to,label,props}),
-// just one panel instead of the template's dual episodic/preference view.
 function runGraphEngine(canvas, rawNodes, rawEdges, onSelect) {
   const ctx = canvas.getContext("2d");
   const NODE_R = 20;
@@ -218,8 +218,17 @@ export default function GraphView() {
     return cleanup;
   }, [graph]);
 
-  if (err) return <div className="err">⚠ {err}</div>;
-  if (!graph) return <div className="loading">Loading the knowledge graph…</div>;
+  if (err) return (
+    <div className="mx-auto flex max-w-[760px] items-center gap-2 rounded-lg bg-[var(--color-danger-bg)] p-4 text-[var(--color-danger)]">
+      ⚠ {err}
+    </div>
+  );
+  if (!graph) return (
+    <div className="flex animate-pulse flex-col items-center gap-3 pt-12 text-[var(--color-muted)]">
+      <Activity size={32} className="animate-spin opacity-50" />
+      <div className="font-medium">Loading the knowledge graph…</div>
+    </div>
+  );
 
   const types = [...new Set(graph.nodes.map((n) => n.type))];
   const colorFor = (t) => graph.nodes.find((n) => n.type === t)?.color || DEF_COLOR;
@@ -228,71 +237,89 @@ export default function GraphView() {
   const inE = selected ? edges.filter((e) => e.to === selected.id) : [];
 
   return (
-    <>
-      <p className="tagline">
+    <div className="flex flex-col gap-6">
+      <p className="px-2 text-center text-[15px] leading-relaxed text-[var(--color-body)]">
         Every scam family, tactic, and lure lives in one shared graph.{" "}
-        <b>Drag, scroll to zoom, click a node</b> to see how campaigns share the same tricks.
+        <b className="text-[var(--color-ink)]">Drag, scroll to zoom, click a node</b> to see how campaigns share the same tricks.
       </p>
 
-      <div className="card graph-card">
-        <div className="graph-legend">
-          {types.map((t) => (
-            <span className="litem" key={t}>
-              <span className="ldot" style={{ background: colorFor(t) }} />
-              {TYPE_LABEL[t] || t}
-            </span>
-          ))}
-          <span className="muted graph-count">{graph.nodes.length} nodes · {graph.edges.length} edges</span>
-        </div>
-        <div className="graph-canvas-wrap">
-          <canvas ref={canvasRef} />
-        </div>
-      </div>
-
-      <div className="card graph-detail">
-        {!selected ? (
-          <div className="muted" style={{ textAlign: "center", padding: "18px 8px" }}>
-            Click a node above to see its details and connections.
-          </div>
-        ) : (
-          <>
-            <span className="tag shared" style={{ background: selected.color, color: "#fff", borderColor: selected.color }}>
-              {TYPE_LABEL[selected.type] || selected.type}
-            </span>
-            <div className="ntitle">{selected.label}</div>
-            {Object.entries(selected.props || {}).filter(([, v]) => v !== null && v !== "").map(([k, v]) => (
-              <div className="prow" key={k}>
-                <span className="pkey">{k.replace(/_/g, " ")}</span>
-                <span className="pval">{String(v)}</span>
+      <Card className="flex flex-col overflow-hidden p-0 border-[var(--color-line)] shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--color-line)] bg-[var(--color-surface-2)] p-3 px-4 text-xs font-medium">
+          <div className="flex flex-wrap items-center gap-4">
+            {types.map((t) => (
+              <div className="flex items-center gap-1.5" key={t}>
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: colorFor(t) }} />
+                <span className="text-[var(--color-ink)]">{TYPE_LABEL[t] || t}</span>
               </div>
             ))}
-            {outE.length > 0 && (
-              <>
-                <div className="section-label">Outgoing ({outE.length})</div>
-                {outE.map((e) => (
-                  <div className="citem" key={`o${e.id}`}>
-                    <span className="cdot" style={{ background: nodeMap[e.to]?.color || DEF_COLOR }} />
-                    <span className="clbl">{e.label}</span>
-                    <span className="cname">→ {nodeMap[e.to]?.label || e.to}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[var(--color-muted)]">
+            <Network size={14} />
+            {graph.nodes.length} nodes · {graph.edges.length} edges
+          </div>
+        </div>
+        
+        <div className="relative h-[480px] w-full bg-white overflow-hidden touch-none" style={{ touchAction: 'none' }}>
+          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full outline-none" />
+        </div>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          {!selected ? (
+            <div className="flex h-32 flex-col items-center justify-center text-center text-sm font-medium text-[var(--color-muted)]">
+              Click a node above to see its details and connections.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col items-start gap-2">
+                <Badge style={{ backgroundColor: selected.color, color: "#fff" }} className="hover:opacity-100">
+                  {TYPE_LABEL[selected.type] || selected.type}
+                </Badge>
+                <h2 className="text-xl font-bold tracking-tight text-[var(--color-ink)]">{selected.label}</h2>
+              </div>
+              
+              <div className="flex flex-col gap-2 rounded-lg bg-[var(--color-surface-2)] p-4 text-sm">
+                {Object.entries(selected.props || {}).filter(([, v]) => v !== null && v !== "").map(([k, v]) => (
+                  <div className="flex justify-between border-b border-[var(--color-line)] pb-2 last:border-0 last:pb-0" key={k}>
+                    <span className="font-semibold text-[var(--color-ink)] capitalize">{k.replace(/_/g, " ")}</span>
+                    <span className="text-right text-[var(--color-body)]">{String(v)}</span>
                   </div>
                 ))}
-              </>
-            )}
-            {inE.length > 0 && (
-              <>
-                <div className="section-label">Incoming ({inE.length})</div>
-                {inE.map((e) => (
-                  <div className="citem" key={`i${e.id}`}>
-                    <span className="cdot" style={{ background: nodeMap[e.from]?.color || DEF_COLOR }} />
-                    <span className="clbl">{e.label}</span>
-                    <span className="cname">← {nodeMap[e.from]?.label || e.from}</span>
+              </div>
+
+              {outE.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">Outgoing ({outE.length})</div>
+                  <div className="flex flex-col gap-2">
+                    {outE.map((e) => (
+                      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-line)] bg-white p-2.5 text-sm" key={`o${e.id}`}>
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: nodeMap[e.to]?.color || DEF_COLOR }} />
+                        <span className="font-medium text-[var(--color-muted)]">{e.label}</span>
+                        <span className="truncate font-semibold text-[var(--color-ink)]">→ {nodeMap[e.to]?.label || e.to}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </>
-            )}
-          </>
-        )}
-      </div>
-    </>
+                </div>
+              )}
+              {inE.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">Incoming ({inE.length})</div>
+                  <div className="flex flex-col gap-2">
+                    {inE.map((e) => (
+                      <div className="flex items-center gap-2 rounded-lg border border-[var(--color-line)] bg-white p-2.5 text-sm" key={`i${e.id}`}>
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: nodeMap[e.from]?.color || DEF_COLOR }} />
+                        <span className="font-medium text-[var(--color-muted)]">{e.label}</span>
+                        <span className="truncate font-semibold text-[var(--color-ink)]">← {nodeMap[e.from]?.label || e.from}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
