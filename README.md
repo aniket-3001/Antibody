@@ -104,16 +104,19 @@ LLM_PROVIDER=custom
 LLM_MODEL=deepseek/deepseek-chat
 LLM_ENDPOINT=https://api.deepseek.com/v1
 
-# NVIDIA NIM (chat + embeddings)
+# NVIDIA NIM (chat)
 LLM_PROVIDER=custom
 LLM_MODEL=nvidia_nim/meta/llama-4-maverick-17b-128e-instruct
 LLM_ENDPOINT=https://integrate.api.nvidia.com/v1
 LLM_API_KEY=nvapi-...
 
-EMBEDDING_PROVIDER=litellm
-EMBEDDING_MODEL=nvidia_nim/nvidia/nv-embedqa-e5-v5
-EMBEDDING_DIMENSIONS=1024
-EMBEDDING_API_KEY=nvapi-...
+# Embeddings: keep these on local fastembed even when using NIM for chat.
+# NIM's nv-embedqa-e5-v5 is an "asymmetric" model that requires an
+# input_type param on every call; Cognee's litellm adapter doesn't send
+# one, so every embed request 400s and retries with exponential backoff
+# instead of failing outright — it silently stalls requests rather than
+# erroring. fastembed runs locally, needs no key, and is what CI/tests use.
+EMBEDDING_PROVIDER=fastembed
 ```
 
 ### API
