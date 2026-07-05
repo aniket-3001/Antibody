@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw, Info, Github } from "lucide-react";
+import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw, Info, GitBranch } from "lucide-react";
 import { motion } from "framer-motion";
 import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
@@ -252,7 +252,7 @@ function MainApp() {
               rel="noopener noreferrer"
               className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink)] bg-[var(--color-surface-2)] hover:bg-[var(--color-line)] border border-[var(--color-line)] px-2 py-1 rounded-md transition-colors w-max"
             >
-              <Github size={12} /> GitHub Codebase
+              <GitBranch size={12} /> GitHub Codebase
             </a>
           </div>
         </div>
