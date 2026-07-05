@@ -33,6 +33,8 @@ as its shared memory graph.
 [Quick start](#quick-start) ·
 [How it works](#how-it-works) ·
 [Architecture](#architecture) ·
+[Browser extension](#browser-extension) ·
+[Help chatbot](#help-chatbot) ·
 [Docs](docs/) ·
 [AI disclosure](#ai-assistance-disclosure)
 
@@ -139,6 +141,50 @@ The **ops SQLite** store holds operational rows and reporter trust (PII stays he
 **Cognee graph** holds de-identified scam knowledge. This split is why a privacy erasure is
 a cheap DB delete, never graph surgery. Full walkthrough: [architecture](docs/architecture.md).
 
+## Browser extension
+
+Antibody ships a **Chrome/Edge MV3 browser extension** that lets you check any selected
+text on any page without leaving the tab.
+
+- **Right-click → "Check with Antibody"** — highlights suspicious text and fires a read-only
+  `/scan` call. Nothing is saved; it's purely a verdict query.
+- **Popup UI** — type or paste text directly into the extension popup for an instant check.
+- The extension talks to the **live Cloud Run demo** out of the box (no local server needed).
+  Swap `API_BASE` in `background.js` to point at a local backend during development.
+
+To install locally: load `extension/` as an unpacked extension in Chrome (`chrome://extensions`
+→ Developer mode → Load unpacked). A packaged `.zip` for the Chrome Web Store is in
+`antibody-extension-v1.0.0.zip`.
+
+## Help chatbot
+
+The **Help tab** inside the Antibody web app is powered by a dedicated chatbot that answers
+questions about how Antibody works — its confidence bands, privacy model, how to use the
+extension, and more.
+
+```
+help_api/          # separate FastAPI app (uvicorn help_api.main:app --port 8010)
+  config.py        # own LLM / embedding / data-dir settings, isolated from api/
+  ingest.py        # load .md docs from help_docs/ into a Cognee graph
+  memory_service.py # HelpMemoryService — add / cognify / ask over the docs graph
+  main.py          # POST /help/ask, GET /help/health
+help_docs/         # markdown source documents the chatbot is trained on
+```
+
+The help chatbot runs as a **separate process** with its **own Cognee dataset** — completely
+isolated from the scam-report graph so the two knowledge bases never bleed into each other.
+In production it proxies through the main app at `/help/*`. To run it locally:
+
+```bash
+# Ingest the docs once
+python -m help_api.ingest ./help_docs
+
+# Start the help API
+uvicorn help_api.main:app --host 127.0.0.1 --port 8010
+```
+
+The Vite dev server proxies `/help` → `:8010` automatically, so the frontend just works.
+
 ## Documentation
 
 Antibody ships a full [`docs/`](docs/) folder:
@@ -163,7 +209,8 @@ Antibody ships a full [`docs/`](docs/) folder:
 | Verdict | Pure noisy-OR confidence fusion with an asymmetric safety gate |
 | Intake | pytesseract (OCR), faster-whisper (audio), PyMuPDF (PDF) — all optional, graceful |
 | Frontend | React 18, Vite, Tailwind CSS v4, framer-motion |
-| Extension | Chrome/Edge MV3 browser extension — check text or a page via the read-only `/scan` |
+| Extension | Chrome/Edge MV3 browser extension — right-click or popup, read-only `/scan`, no storage |
+| Help chatbot | Separate FastAPI service + own Cognee graph over `help_docs/` — answers app questions |
 | Quality | ruff · mypy · pytest (67 tests, ~75% coverage) · pre-commit · GitHub Actions CI |
 | Deploy | Single Docker image · Google Cloud Run (gen2) · Render |
 
@@ -180,7 +227,11 @@ uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 # Frontend (separate terminal)
 cd frontend
 npm install
-npm run dev    # http://localhost:5173, proxies API paths to :8000
+npm run dev    # http://localhost:5173, proxies API paths to :8000 and /help to :8010
+
+# Help chatbot (optional — powers the Help tab)
+python -m help_api.ingest ./help_docs   # one-off: build the help knowledge graph
+uvicorn help_api.main:app --host 127.0.0.1 --port 8010
 ```
 
 The backend seeds its own graph on first boot (synthetic reports across six scam families
@@ -211,13 +262,19 @@ api/
   main.py            # app boot, lifespan, CORS, request-id middleware, static mount
   config.py          # typed env settings + Cognee env export
   core/              # cross-cutting: logging (correlation ids), typed errors, handlers
-  intake/            # POST /report, /report/upload — loaders + write path
+  intake/            # POST /report, /report/upload, /scan — loaders + write path
   memory/            # indicators · semantic · confidence · store · memory_service · ontology
   verdict/           # engine.py — signals → fusion → band → guidance
   feed/              # live threat feed + shared-tactic graph
+help_api/            # Help chatbot — separate FastAPI process, own Cognee dataset
+  config.py          # isolated LLM/embedding/data-dir config
+  ingest.py          # load help_docs/*.md into Cognee
+  memory_service.py  # HelpMemoryService (add / cognify / ask)
+  main.py            # POST /help/ask, GET /help/health
+help_docs/           # markdown docs the help chatbot is trained on
+extension/           # Chrome/Edge MV3 extension — right-click or popup, read-only /scan
 seed/                # synthetic scam families, reports, and legit controls
-frontend/            # React + Vite (CheckView, FeedView, GraphView, ...)
-extension/           # Chrome/Edge MV3 extension — read-only /scan from the browser
+frontend/            # React + Vite (CheckView, FeedView, GraphView, HelpView, ...)
 docs/                # full project documentation (see above)
 tests/               # unit + API smoke + error-envelope contract
 ```
