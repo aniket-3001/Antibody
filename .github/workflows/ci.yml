@@ -6,8 +6,13 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  python:
+  backend:
+    name: backend (lint · types · tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,12 +22,22 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r api/requirements.txt -r requirements-dev.txt
-      - name: Lint
+      - name: Lint (ruff)
         run: ruff check .
-      - name: Test
-        run: pytest
+      - name: Type-check (mypy)
+        run: mypy
+      - name: Test (pytest + coverage)
+        run: pytest --cov --cov-report=term-missing --cov-report=xml
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: ignore
 
   frontend:
+    name: frontend (build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

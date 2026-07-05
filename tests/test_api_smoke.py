@@ -5,28 +5,6 @@ semantic fallback path used by CI and any judge without NIM credentials set.
 """
 from __future__ import annotations
 
-import os
-
-import pytest
-
-
-@pytest.fixture(scope="module")
-def client(tmp_path_factory):
-    data_dir = tmp_path_factory.mktemp("antibody_data")
-    os.environ["DATA_DIR"] = str(data_dir)
-    # Force the deterministic/fastembed fallback regardless of a local .env.
-    os.environ["LLM_API_KEY"] = ""
-    os.environ["LLM_PROVIDER"] = "openai"
-    os.environ["EMBEDDING_API_KEY"] = ""
-    os.environ["EMBEDDING_PROVIDER"] = "fastembed"
-
-    from fastapi.testclient import TestClient
-
-    from api.main import app
-
-    with TestClient(app) as c:
-        yield c
-
 
 def test_health(client):
     r = client.get("/health")
