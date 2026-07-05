@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud } from "lucide-react";
+import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud, Share2, Copy, CheckCircle2 } from "lucide-react";
 import { checkMessage, submitOutcome, uploadFile } from "../api.js";
 import { Button } from "./ui/button.jsx";
 import { Card, CardContent } from "./ui/card.jsx";
 import { Textarea } from "./ui/textarea.jsx";
 import { Badge } from "./ui/badge.jsx";
+import { Modal } from "./ui/modal.jsx";
 import { cn } from "../lib/utils.js";
 
 const EXAMPLES = [
@@ -211,6 +212,9 @@ export default function CheckView() {
 }
 
 function Verdict({ v, outcome, onOutcome }) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const seen = fmtDate(v.first_seen);
   
   let bandColorClass = "bg-[var(--color-surface-2)] border-[var(--color-line)] text-[var(--color-ink)]";
@@ -234,9 +238,21 @@ function Verdict({ v, outcome, onOutcome }) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--color-surface-2)]/60 px-3 py-1.5 backdrop-blur-md">
-            <span className="text-2xl font-black leading-none">{Math.round((v.confidence || 0) * 100)}%</span>
-            <span className="text-xs font-bold uppercase tracking-wider opacity-80">sure</span>
+          <div className="flex flex-col gap-2 items-end">
+            <div className="flex flex-col items-center justify-center rounded-xl bg-[var(--color-surface-2)]/60 px-3 py-1.5 backdrop-blur-md">
+              <span className="text-2xl font-black leading-none">{Math.round((v.confidence || 0) * 100)}%</span>
+              <span className="text-xs font-bold uppercase tracking-wider opacity-80">sure</span>
+            </div>
+            {v.band !== "safe" && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="gap-1.5 mt-1 border-[var(--color-line)] bg-black/20 hover:bg-black/40 backdrop-blur-sm"
+                onClick={() => setIsShareModalOpen(true)}
+              >
+                <Share2 size={14} /> Warn Others
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -341,6 +357,42 @@ function Verdict({ v, outcome, onOutcome }) {
           )}
         </div>
       </div>
+
+      <Modal isOpen={isShareModalOpen} onClose={() => { setIsShareModalOpen(false); setCopied(false); }} title="Share Scam Warning">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--color-body)]">
+            Copy this summary and send it to your friends and family to keep them safe.
+          </p>
+          <div className="relative rounded-lg bg-[#0a0a0a] border border-[var(--color-line)] p-4 text-sm font-mono text-[var(--color-ink)] leading-relaxed">
+            ⚠️ <b>WARNING: Active Scam Detected</b> ⚠️<br/><br/>
+            <b>Type:</b> {v.family_display || "Suspicious Message"}<br/>
+            <b>Threat Level:</b> {v.band_label.toUpperCase()}<br/><br/>
+            <b>Tactics used:</b><br/>
+            {v.highlights?.filter(h => h.kind === "tactic" || h.kind === "indicator").map(h => `- ${h.label}`).join("\n") || "- Manipulation tactics"}<br/><br/>
+            <i>"Stay cautious and verify any unexpected requests directly!"</i><br/><br/>
+            🛡️ <i>Checked via Antibody</i>
+            
+            <button 
+              onClick={() => {
+                const textToCopy = `⚠️ WARNING: Active Scam Detected ⚠️\n\nType: ${v.family_display || "Suspicious Message"}\nThreat Level: ${v.band_label.toUpperCase()}\n\nTactics used:\n${v.highlights?.filter(h => h.kind === "tactic" || h.kind === "indicator").map(h => `- ${h.label}`).join("\n") || "- Manipulation tactics"}\n\n"Stay cautious and verify any unexpected requests directly!"\n\n🛡️ Checked via Antibody`;
+                navigator.clipboard.writeText(textToCopy);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="absolute top-3 right-3 rounded-md p-1.5 bg-[var(--color-surface-2)] text-[var(--color-ink)] hover:text-[var(--color-brand)] transition-colors border border-[var(--color-line)] shadow-sm"
+              title="Copy to clipboard"
+            >
+              {copied ? <CheckCircle2 size={16} className="text-[var(--color-brand)]" /> : <Copy size={16} />}
+            </button>
+          </div>
+          <Button 
+            className="w-full mt-2" 
+            onClick={() => setIsShareModalOpen(false)}
+          >
+            Done
+          </Button>
+        </div>
+      </Modal>
     </Card>
   );
 }
