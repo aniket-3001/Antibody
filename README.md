@@ -8,7 +8,10 @@ scam campaigns and gives back a verdict, an explanation, and what to do next.
 Every report that comes in — confirmed or false-positive — makes the graph a
 little smarter for the next person.
 
-**Live demo:** _coming soon — see [Deployment](#deployment)._
+**Live demo:** <https://antibody-251148844884.asia-south1.run.app> — full
+Cognee graph pipeline enabled (NVIDIA NIM Llama 3.1 for graph completion,
+local fastembed for embeddings). The first request after an idle period may
+take ~15s while the instance cold-starts.
 
 Built around [Cognee](https://github.com/topoteretes/cognee) as the memory
 layer: reports are `add()`-ed and `cognify()`-ed into a shared knowledge graph,
@@ -160,23 +163,33 @@ docker run -p 8000:8000 --env-file .env antibody
 # open http://localhost:8000
 ```
 
-**Render (recommended, free tier):**
+**Google Cloud Run (what the live demo runs on):**
 
-1. Push this repo to GitHub and create a new **Web Service** on
-   [Render](https://render.com), pointing it at the repo — Render detects the
-   `Dockerfile` automatically.
-2. Set any `LLM_*` / `EMBEDDING_*` values you want (NVIDIA NIM, OpenAI,
-   DeepSeek, ...) in Render's dashboard **Environment** tab, never in a
-   committed file. Without a key, Antibody still runs correctly on its
-   deterministic + semantic fallback path.
-3. Deploy. The seed graph auto-loads on first boot (`load_seed_if_empty()`),
-   so the demo is never empty, even after a cold start.
+```bash
+gcloud run deploy antibody --source . --region <region> \
+  --memory 1Gi --cpu 1 --max-instances 3 --allow-unauthenticated \
+  --execution-environment gen2 --no-cpu-throttling --quiet
+```
 
-The free tier spins the instance down after 15 minutes idle (the first
-request after that takes ~30-60s to wake it back up) and has no persistent
-disk — both fine here since a fresh boot always reloads the seed data. For an
-always-on instance with persistent storage, Render's Starter plan
-(~$7/month) removes both constraints.
+Two flags matter more than they look:
+
+- `--execution-environment gen2` — the default gen1 sandbox (gVisor) breaks
+  Python's async HTTP clients (both aiohttp and httpx fail with a generic
+  "Connection error") on outbound LLM API calls, even though raw `curl` from
+  the same project works. gen2 runs a real Linux kernel and fixes it.
+- `--no-cpu-throttling` — Antibody runs `cognify()` as a background task
+  *after* responding; without this flag Cloud Run throttles CPU to ~zero
+  once the response is sent, starving the graph-enrichment step.
+
+Put the LLM key in Secret Manager and reference it with
+`--set-secrets "LLM_API_KEY=<secret-name>:latest"` — never in `--set-env-vars`
+(it would persist in revision metadata). Without a key, Antibody still runs
+correctly on its deterministic + semantic fallback path.
+
+The seed graph auto-loads on any empty boot (`load_seed_if_empty()`), so the
+demo is never empty even though Cloud Run's disk is ephemeral — a cold start
+just reloads the seed data. Render (free tier, Docker web service) also works
+with the same Dockerfile if you prefer a git-connected deploy.
 
 ## AI-assisted build
 
