@@ -1,108 +1,117 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Antibody — a person working is attacked by scams and shielded by Antibody">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="Antibody — a glowing shield deflecting scam threats inside a knowledge-graph network">
   <title>Antibody — a collective immune system against scams</title>
-  <desc>A person works at a laptop while scam messages fly in from the right and are blocked by the Antibody shield.</desc>
+  <desc>An abstract hero: a glowing shield at the centre of a knowledge-graph constellation deflects scam threats streaming in from both sides.</desc>
 
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1020"/>
-      <stop offset="0.55" stop-color="#1e1b4b"/>
-      <stop offset="1" stop-color="#312e81"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#070a18"/>
+      <stop offset="1" stop-color="#0e1330"/>
     </linearGradient>
-    <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#60a5fa"/>
-      <stop offset="1" stop-color="#6b5cf0"/>
+    <linearGradient id="shieldGrad" x1="0" y1="-70" x2="0" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="0.55" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#4f46e5"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#6b5cf0" stop-opacity="0.8"/>
-      <stop offset="1" stop-color="#6b5cf0" stop-opacity="0"/>
+    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4338ca" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#4338ca" stop-opacity="0"/>
     </radialGradient>
+    <radialGradient id="floor" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6366f1" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#8b93ff" opacity="0.10"/>
+    </pattern>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <clipPath id="round"><rect x="0" y="0" width="1200" height="360" rx="24"/></clipPath>
     <style>
-      .scam  { animation: fly 4.4s linear infinite; }
-      .s2 { animation-delay: 0.9s; }
-      .s3 { animation-delay: 1.8s; }
-      .s4 { animation-delay: 2.6s; }
-      .s5 { animation-delay: 3.4s; }
-      @keyframes fly {
-        0%   { transform: translateX(0);      opacity: 0; }
-        8%   { opacity: 1; }
-        70%  { transform: translateX(-690px); opacity: 1; }
-        79%  { transform: translateX(-712px); opacity: 0; }
-        100% { transform: translateX(-712px); opacity: 0; }
-      }
-      .shield { animation: pulse 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-      @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-      .glow { animation: breathe 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-      @keyframes breathe { 0%,100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.65; transform: scale(1.18); } }
-      .ripple { animation: ripple 4.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
-      @keyframes ripple { 0%,66% { opacity: 0; transform: scale(0.4); } 74% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(1.7); } }
-      .caps { letter-spacing: 4px; }
+      .node   { animation: np 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .n2 { animation-delay: .5s } .n3 { animation-delay: 1s } .n4 { animation-delay: 1.5s }
+      .n5 { animation-delay: .3s } .n6 { animation-delay: .9s } .n7 { animation-delay: 1.4s } .n8 { animation-delay: 1.9s }
+      @keyframes np { 0%,100% { opacity: .45; transform: scale(.9) } 50% { opacity: 1; transform: scale(1.1) } }
+      .edge { stroke-dasharray: 5 11; animation: flow 2.6s linear infinite; }
+      @keyframes flow { to { stroke-dashoffset: -32; } }
+      .shield { animation: pulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+      .aura { animation: aura 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes aura { 0%,100% { opacity: .4; transform: scale(1); } 50% { opacity: .7; transform: scale(1.12); } }
+      .ripple { animation: ripple 2.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes ripple { 0% { opacity: 0; transform: scale(.55); } 55% { opacity: .8; transform: scale(1); } 100% { opacity: 0; transform: scale(1.55); } }
+      .dl { animation: flyR 3.8s linear infinite; } .dr { animation: flyL 3.8s linear infinite; }
+      .d2 { animation-delay: 1.2s } .d3 { animation-delay: 2.4s } .d4 { animation-delay: .7s } .d5 { animation-delay: 1.9s }
+      @keyframes flyR { 0% { transform: translateX(0); opacity: 0 } 9% { opacity: 1 } 66% { transform: translateX(452px); opacity: 1 } 76% { transform: translateX(486px); opacity: 0 } 100% { opacity: 0 } }
+      @keyframes flyL { 0% { transform: translateX(0); opacity: 0 } 9% { opacity: 1 } 66% { transform: translateX(-452px); opacity: 1 } 76% { transform: translateX(-486px); opacity: 0 } 100% { opacity: 0 } }
       @media (prefers-reduced-motion: reduce) {
-        .scam, .shield, .glow, .ripple { animation: none; }
-        .scam { opacity: 0.9; }
+        .node,.edge,.shield,.aura,.ripple,.dl,.dr { animation: none; }
+        .dl,.dr { opacity: .85; }
       }
     </style>
   </defs>
 
-  <rect x="0" y="0" width="1200" height="320" rx="24" fill="url(#bg)"/>
+  <g clip-path="url(#round)">
+  <rect x="0" y="0" width="1200" height="360" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="360" fill="url(#dots)"/>
+  <ellipse cx="600" cy="180" rx="440" ry="200" fill="url(#vignette)"/>
 
-  <!-- Wordmark -->
-  <g transform="translate(600,0)" text-anchor="middle" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-    <text y="72" font-size="54" font-weight="800" fill="#ffffff">Antibody</text>
-    <text y="106" font-size="21" fill="#c4b5fd">a collective immune system against scams</text>
-    <text y="140" class="caps" font-size="12" font-weight="700" fill="#818cf8">TEXT · IMAGE · VOICE · POWERED BY COGNEE</text>
+  <!-- Knowledge-graph constellation (the shared Cognee memory) -->
+  <g fill="none" stroke="#6366f1" stroke-width="1.4" opacity="0.6">
+    <path class="edge" d="M235,120 L360,92"/>
+    <path class="edge" d="M360,92 L318,214"/>
+    <path class="edge" d="M318,214 L210,244"/>
+    <path class="edge" d="M210,244 L235,120"/>
+    <path class="edge" d="M360,92 L470,150"/>
+    <path class="edge" d="M965,120 L842,92"/>
+    <path class="edge" d="M842,92 L884,214"/>
+    <path class="edge" d="M884,214 L990,244"/>
+    <path class="edge" d="M990,244 L965,120"/>
+    <path class="edge" d="M842,92 L730,150"/>
+  </g>
+  <g fill="#a5b4fc" filter="url(#glow)">
+    <circle class="node n1" cx="235" cy="120" r="5"/>
+    <circle class="node n2" cx="360" cy="92" r="6"/>
+    <circle class="node n3" cx="318" cy="214" r="5"/>
+    <circle class="node n4" cx="210" cy="244" r="4.5"/>
+    <circle class="node n5" cx="965" cy="120" r="5"/>
+    <circle class="node n6" cx="842" cy="92" r="6"/>
+    <circle class="node n7" cx="884" cy="214" r="5"/>
+    <circle class="node n8" cx="990" cy="244" r="4.5"/>
+    <circle class="node n5" cx="470" cy="150" r="3.5"/>
+    <circle class="node n2" cx="730" cy="150" r="3.5"/>
   </g>
 
-  <!-- Scene: person (left) protected by shield from incoming scams (right) -->
-  <g transform="translate(0,18)">
-    <!-- soft ground shadow -->
-    <ellipse cx="150" cy="292" rx="66" ry="10" fill="#000000" opacity="0.22"/>
+  <!-- Incoming scam threats, converging on the shield from both sides.
+       Position lives on the outer <g> (a transform attribute); the inner <path>
+       carries ONLY the CSS translateX animation, so the two compose instead of
+       the CSS transform overriding the lane offset. -->
+  <g fill="#f43f5e" filter="url(#glow)">
+    <g transform="translate(70,120)"><path class="dl d1" d="M0,-9 L15,0 L0,9 L6,0 Z"/></g>
+    <g transform="translate(70,180)"><path class="dl d2" d="M0,-9 L15,0 L0,9 L6,0 Z"/></g>
+    <g transform="translate(70,240)"><path class="dl d3" d="M0,-9 L15,0 L0,9 L6,0 Z"/></g>
+    <g transform="translate(1130,150)"><path class="dr d4" d="M0,-9 L-15,0 L0,9 L-6,0 Z"/></g>
+    <g transform="translate(1130,220)"><path class="dr d5" d="M0,-9 L-15,0 L0,9 L-6,0 Z"/></g>
+  </g>
 
-    <!-- Person at a laptop -->
-    <g transform="translate(150,205)">
-      <circle cx="0" cy="0" r="19" fill="#ede9fe"/>
-      <path d="M-30,26 h60 a16,16 0 0 1 16,16 v34 h-92 v-34 a16,16 0 0 1 16,-16 Z" fill="#7c6cf0"/>
-      <rect x="-36" y="70" width="72" height="9" rx="2.5" fill="#c4b5fd"/>
-      <rect x="-25" y="45" width="50" height="27" rx="3" fill="#a78bfa"/>
-      <rect x="-19" y="51" width="38" height="15" rx="2" fill="#1e1b4b" opacity="0.55"/>
+  <!-- Antibody shield -->
+  <g transform="translate(600,180)">
+    <circle class="aura" cx="0" cy="0" r="96" fill="url(#floor)"/>
+    <circle class="ripple" cx="0" cy="0" r="80" fill="none" stroke="#34d399" stroke-width="2.5"/>
+    <g class="shield">
+      <path filter="url(#softglow)" d="M0,-70 L58,-46 L58,16 C58,55 32,80 0,92 C-32,80 -58,55 -58,16 L-58,-46 Z" fill="#6366f1" opacity="0.6"/>
+      <path d="M0,-70 L58,-46 L58,16 C58,55 32,80 0,92 C-32,80 -58,55 -58,16 L-58,-46 Z"
+            fill="url(#shieldGrad)" stroke="#c7d2fe" stroke-width="2"/>
+      <path d="M-24,4 L-7,25 L29,-24" fill="none" stroke="#eafff7" stroke-width="9"
+            stroke-linecap="round" stroke-linejoin="round"/>
     </g>
+  </g>
 
-    <!-- Antibody shield -->
-    <g transform="translate(330,205)">
-      <circle class="glow" cx="0" cy="0" r="66" fill="url(#glow)"/>
-      <circle class="ripple" cx="0" cy="0" r="52" fill="none" stroke="#34d399" stroke-width="3"/>
-      <g class="shield">
-        <path d="M0,-48 L40,-31 L40,11 C40,38 21,55 0,63 C-21,55 -40,38 -40,11 L-40,-31 Z"
-              fill="url(#shieldGrad)" stroke="#c7d2fe" stroke-width="2"/>
-        <path d="M-17,3 L-5,17 L19,-15" fill="none" stroke="#34d399" stroke-width="7"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </g>
-    </g>
-
-    <!-- Incoming scam messages (fly in from the right, blocked at the shield) -->
-    <g class="scam s1" transform="translate(1090,150)">
-      <rect x="-6" y="-16" width="96" height="32" rx="16" fill="#ef4d63"/>
-      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff2f4"/>
-      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">OTP?</text>
-    </g>
-    <g class="scam s2" transform="translate(1140,208)">
-      <rect x="-6" y="-16" width="98" height="32" rx="16" fill="#ef4d63"/>
-      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff2f4"/>
-      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">SCAM</text>
-    </g>
-    <g class="scam s3" transform="translate(1105,262)">
-      <rect x="-6" y="-16" width="92" height="32" rx="16" fill="#f2971b"/>
-      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff7ec"/>
-      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">$ $ $</text>
-    </g>
-    <g class="scam s4" transform="translate(1165,178)">
-      <rect x="-6" y="-16" width="112" height="32" rx="16" fill="#ef4d63"/>
-      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff2f4"/>
-      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">YOU WON</text>
-    </g>
-    <g class="scam s5" transform="translate(1120,236)">
-      <rect x="-6" y="-16" width="94" height="32" rx="16" fill="#f2971b"/>
-      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff7ec"/>
-      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">CLICK</text>
-    </g>
+  <!-- Floor reflection -->
+  <ellipse cx="600" cy="322" rx="150" ry="16" fill="url(#floor)" opacity="0.5"/>
   </g>
 </svg>
