@@ -178,7 +178,7 @@ async def assess(
 
     # --- explanation (Cognee first, template fallback) ---
     explanation = {"text": "", "citations": [], "source": "fallback"}
-    if verdict.band != "unrecognized" and family:
+    if verdict.band != "unrecognized" and family and settings.has_llm:
         explanation = await _cognee_explanation(text, family)
     if not explanation["text"]:
         explanation = {

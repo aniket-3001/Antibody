@@ -1,4 +1,6 @@
 .antibody_data/
+.cognee_system/
+.cognee_data/
 node_modules/
 dist/
 __pycache__/
