@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Mic, Paperclip, AlertTriangle, ShieldCheck, Info, UploadCloud, Share2, Copy, CheckCircle2 } from "lucide-react";
 import { checkMessage, submitOutcome, uploadFile } from "../api.js";
-import { addToHistory, updateHistoryOutcome } from "../lib/history.js";
 import { getClientId } from "../lib/identity.js";
 import { Button } from "./ui/button.jsx";
 import { Card, CardContent } from "./ui/card.jsx";
@@ -90,18 +89,6 @@ export default function CheckView() {
     try {
       const res = await checkMessage(sent, channel, getClientId());
       setV({ ...res, checked_text: sent });
-      if (res.report_id) {
-        addToHistory({
-          report_id: res.report_id,
-          text: sent,
-          channel,
-          input_kind: "text",
-          band: res.band,
-          band_label: res.band_label,
-          band_emoji: res.band_emoji,
-          family_display: res.family_display,
-        });
-      }
     } catch (e) { setErr(String(e.message || e)); }
     setLoading(false);
   };
@@ -139,18 +126,6 @@ export default function CheckView() {
       const res = await uploadFile(f, channel, getClientId());
       setV({ ...res, checked_text: res.transcript || "" });
       if (res.transcript) setText(res.transcript);
-      if (res.report_id) {
-        addToHistory({
-          report_id: res.report_id,
-          text: res.transcript || `(${res.input_kind || "file"}: ${f.name})`,
-          channel,
-          input_kind: res.input_kind,
-          band: res.band,
-          band_label: res.band_label,
-          band_emoji: res.band_emoji,
-          family_display: res.family_display,
-        });
-      }
     } catch (er) { setErr(String(er.message || er)); }
     setUploading(false);
     e.target.value = "";
@@ -161,7 +136,6 @@ export default function CheckView() {
     try {
       await submitOutcome(v.report_id, o);
       setOutcome(o);
-      updateHistoryOutcome(v.report_id, o);
     } catch (e) { setErr(String(e)); }
   };
 
