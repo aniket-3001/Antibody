@@ -27,7 +27,10 @@ person.
 [Quick start](#quick-start) ·
 [How it works](#how-it-works) ·
 [Architecture](#architecture) ·
-[Docs](docs/)
+[Docs](docs/) ·
+[AI disclosure](#ai-assistance-disclosure)
+
+<sub>🤖 Built with AI assistance (Claude / Claude Code) — see the [full disclosure](#ai-assistance-disclosure).</sub>
 
 </div>
 
@@ -229,13 +232,17 @@ The live demo runs on Google Cloud Run. Two flags matter more than they look —
 `--no-cpu-throttling` (background `cognify()` needs CPU after the response). Full guide:
 [deployment](docs/deployment.md).
 
-## AI-assisted build
+## AI assistance disclosure
 
-This project was built with substantial AI assistance (Claude / Claude Code) —
-architecture drafting, code generation, and iterative debugging — per the hackathon's
-disclosure requirement. The design decisions (the shared-node ontology, the four-rule
-confidence gate, the reuse of Cognee's `add`/`cognify`/`search`/`improve`/`forget` verbs)
-were directed by the human author.
+**This project was built with substantial AI assistance.** We used Anthropic's Claude
+(via Claude Code) throughout development — for architecture drafting, code generation
+across the backend and frontend, documentation, test writing, and iterative debugging.
+
+We disclose this openly, per the hackathon's requirement and in the spirit of honest
+engineering. The **design decisions were directed by the human author**: the shared-node
+Cognee ontology, the four-band confidence gate and its asymmetric safety property, and
+the reuse of Cognee's `add` / `cognify` / `search` / `improve` / `forget` verbs. AI was
+the pair programmer; the product direction, review, and final judgment were human.
 
 ## License
 

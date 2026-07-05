@@ -115,7 +115,12 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 w-full bg-[var(--color-surface)] p-6 md:p-8 rounded-2xl border border-[var(--color-line)] shadow-[var(--shadow-custom-sm)]">
-        {tab === "check" && <CheckView />}
+        {/* CheckView stays mounted (just hidden) so a typed/spoken message and its
+            verdict survive a tab switch — unmounting it would wipe that state. The
+            other tabs are read-only views, so they mount on demand. */}
+        <div className={tab === "check" ? "" : "hidden"}>
+          <CheckView />
+        </div>
         {tab === "feed" && <FeedView />}
         {tab === "graph" && <GraphView />}
         {tab === "leaderboard" && <LeaderboardView />}
