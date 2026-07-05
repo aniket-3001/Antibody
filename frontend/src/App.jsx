@@ -40,47 +40,54 @@ export default function App() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-[760px] px-[18px] pt-[26px] pb-[90px]">
-      <header className="mb-6 text-center">
-        <div className="inline-flex items-center gap-[13px]">
-          <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[18px] bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(0,255,65,0.6)]">
-            <ShieldCheck size={28} strokeWidth={2.5} />
+    <div className="mx-auto flex max-w-[1200px] gap-10 px-6 pt-10 pb-20 items-start min-h-screen">
+      {/* Sidebar Navigation */}
+      <aside className="w-64 shrink-0 sticky top-10 flex flex-col gap-10">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(30,58,138,0.6)]">
+            <ShieldCheck size={26} strokeWidth={2.5} />
           </div>
           <div className="text-left">
-            <h1 className="m-0 text-[25px] font-extrabold tracking-tight text-[var(--color-ink)]">
+            <h1 className="m-0 text-xl font-extrabold tracking-tight text-[var(--color-ink)]">
               Antibody
             </h1>
-            <p className="m-0 mt-[3px] text-[13px] text-[var(--color-muted)]">
+            <p className="m-0 mt-0.5 text-xs text-[var(--color-muted)] leading-tight">
               your collective immune system
             </p>
           </div>
         </div>
 
-        <div className="mx-auto mt-5 inline-flex gap-1 rounded-full bg-[var(--color-surface)] p-[5px] shadow-[var(--shadow-custom-sm)] border border-[var(--color-line)]">
+        <nav className="flex flex-col gap-2">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
-                "relative rounded-full px-[22px] py-[10px] text-[14px] font-bold transition-colors",
-                tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left",
+                tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-line)] shadow-none"
               )}
             >
               {tab === t.id && (
                 <motion.div
                   layoutId="active-tab"
-                  className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(30,58,138,0.6)]"
+                  className="absolute inset-0 rounded-lg bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(30,58,138,0.6)]"
                   initial={false}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
-              <span className="relative z-10">{t.label}</span>
+              <span className="relative z-10 block">{t.label}</span>
             </button>
           ))}
-        </div>
-      </header>
+        </nav>
 
-      <main>
+        <div className="mt-auto pt-8 text-[13px] leading-relaxed text-[var(--color-muted)]">
+          Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
+          Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 min-w-0 bg-[var(--color-surface)] p-8 rounded-2xl border border-[var(--color-line)] shadow-[var(--shadow-custom-sm)]">
         {tab === "check" && <CheckView />}
         {tab === "feed" && <FeedView />}
         {tab === "graph" && <GraphView />}
@@ -89,10 +96,6 @@ export default function App() {
         {tab === "extension" && <ExtensionPreviewView />}
       </main>
 
-      <footer className="mt-12 text-center text-[15px] leading-relaxed text-[var(--color-body)]">
-        Got something suspicious? Check it here — and if it was a scam, tell us.<br />
-        Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b> memory · matched by meaning, not just keywords.
-      </footer>
       <Toaster />
     </div>
   );
