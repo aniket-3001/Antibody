@@ -1,8 +1,10 @@
 {
   "manifest_version": 3,
   "name": "Antibody — Scam Checker",
-  "version": "0.1.0",
-  "description": "Check suspicious text against Antibody's shared scam-pattern graph, right from your browser.",
+  "short_name": "Antibody",
+  "version": "1.0.0",
+  "description": "Check suspicious text against Antibody's shared scam-pattern graph, right from your browser. Read-only — nothing is saved from a quick check.",
+  "homepage_url": "https://github.com/aniket-3001/Antibody",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Check with Antibody",

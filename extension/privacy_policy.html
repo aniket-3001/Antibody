@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Antibody — Privacy Policy</title>
+<style>
+  body { max-width: 680px; margin: 40px auto; font: 16px/1.7 -apple-system, sans-serif; color: #1e293b; padding: 0 20px; }
+  h1  { color: #1e3a8a; }
+  h2  { color: #334155; margin-top: 2em; }
+</style>
+</head>
+<body>
+<h1>Antibody — Privacy Policy</h1>
+<p><em>Last updated: July 2025</em></p>
+
+<h2>What the extension does</h2>
+<p>
+  Antibody is a browser extension that lets you check suspicious text (messages,
+  emails, web-page snippets) against the Antibody scam-pattern graph.  It calls the
+  read-only <code>/scan</code> endpoint of the Antibody API.
+</p>
+
+<h2>Data we collect</h2>
+<p>
+  When you click <strong>Check it</strong> or use the right-click menu, the selected
+  text is sent over HTTPS to the Antibody API at
+  <code>https://antibody-251148844884.asia-south1.run.app</code>.
+  The <code>/scan</code> endpoint is <strong>read-only</strong>: it returns a verdict
+  and does not store your text, does not create a report, and does not record your IP
+  address or any identifiers in its database.
+</p>
+<p>We do not collect, store, or share any personal data.</p>
+
+<h2>Permissions used</h2>
+<ul>
+  <li><strong>activeTab / scripting</strong> — to read the visible text of the current
+      page when you click "Scan this page".</li>
+  <li><strong>contextMenus</strong> — to add the right-click "Check … with Antibody"
+      menu item.</li>
+  <li><strong>notifications</strong> — to show a desktop alert with the verdict after a
+      right-click check.</li>
+  <li><strong>host_permissions</strong> to the Antibody API URL — so the background
+      service worker can fetch the API without being blocked by CORS.</li>
+</ul>
+
+<h2>Third parties</h2>
+<p>
+  The extension calls only the Antibody API.  The API itself may internally call an
+  NVIDIA NIM or OpenAI-compatible LLM to generate the explanation text, but your raw
+  message is not retained by those services beyond the single API call.
+</p>
+
+<h2>Children</h2>
+<p>This extension is not directed at children under 13.</p>
+
+<h2>Changes</h2>
+<p>
+  If we change this policy we will update the date at the top. Continued use of the
+  extension after a change constitutes acceptance.
+</p>
+
+<h2>Contact</h2>
+<p>
+  Questions? Open an issue at
+  <a href="https://github.com/aniket-3001/Antibody/issues">github.com/aniket-3001/Antibody</a>.
+</p>
+</body>
+</html>
