@@ -1,34 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #6b5cf0;
-  --color-brand-2: #9b6cf2;
-  --color-brand-soft: #eeeaff;
-  --color-ink: #241f3a;
-  --color-body: #55506b;
-  --color-muted: #948fab;
-  --color-surface: #ffffff;
-  --color-surface-2: #f7f6fc;
-  --color-line: #ece9f6;
-  --color-danger: #ef4d63;
-  --color-danger-bg: #fff2f3;
-  --color-danger-line: #ffd8dd;
-  --color-warn: #f2971b;
-  --color-warn-bg: #fff8ec;
-  --color-warn-line: #ffe4b8;
-  --color-calm: #6473f0;
-  --color-calm-bg: #eff1ff;
-  --color-calm-line: #dde1ff;
-  --color-safe: #14b083;
-  --color-safe-bg: #e9fbf3;
-  --color-safe-line: #c3f0dd;
+  --color-brand: #00ff41;
+  --color-brand-2: #00cc33;
+  --color-brand-soft: #003300;
   
-  --radius-xl: 22px;
-  --radius-lg: 14px;
+  --color-ink: #f5f5f5;
+  --color-body: #a3a3a3;
+  --color-muted: #737373;
+  
+  --color-surface: #0a0a0a;
+  --color-surface-2: #141414;
+  --color-line: #262626;
+  
+  --color-danger: #ff003c;
+  --color-danger-bg: #33000c;
+  --color-danger-line: #660018;
+  
+  --color-warn: #ffb703;
+  --color-warn-bg: #332500;
+  --color-warn-line: #664a00;
+  
+  --color-calm: #00f0ff;
+  --color-calm-bg: #003033;
+  --color-calm-line: #006066;
+  
+  --color-safe: #00ff41;
+  --color-safe-bg: #003300;
+  --color-safe-line: #00661a;
+  
+  --radius-xl: 16px;
+  --radius-lg: 12px;
   --radius-pill: 999px;
   
-  --shadow-custom: 0 1px 3px rgba(45, 30, 90, 0.05), 0 16px 34px -18px rgba(80, 55, 165, 0.30);
-  --shadow-custom-sm: 0 1px 2px rgba(45, 30, 90, 0.06), 0 6px 16px -10px rgba(80, 55, 165, 0.22);
+  --shadow-custom: 0 4px 24px -8px rgba(0, 255, 65, 0.15);
+  --shadow-custom-sm: 0 2px 12px -4px rgba(0, 255, 65, 0.1);
 }
 
 @layer base {
@@ -42,11 +48,10 @@
     margin: 0;
     color: var(--color-body);
     -webkit-font-smoothing: antialiased;
-    background:
-      radial-gradient(900px 480px at 12% -8%, #ffe7de 0%, transparent 55%),
-      radial-gradient(820px 460px at 100% -6%, #e5ebff 0%, transparent 55%),
-      radial-gradient(700px 500px at 50% 110%, #f0e9ff 0%, transparent 60%),
-      #f7f7fc;
+    background-color: #050505;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(0, 255, 65, 0.04), transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(255, 0, 60, 0.03), transparent 50%);
     background-attachment: fixed;
   }
 }
