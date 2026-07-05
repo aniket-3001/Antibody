@@ -33,11 +33,12 @@ log = logging.getLogger("antibody")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
+
     from api.intake.ingest import rebuild_semantic_index
     from api.memory import store
-    from seed.load_seed import load_seed_if_empty
     from help_api.main import _ensure_docs_ingested
-    import asyncio
+    from seed.load_seed import load_seed_if_empty
 
     store.init_db(settings.data_dir)
     n = load_seed_if_empty()
@@ -81,7 +82,7 @@ register_error_handlers(app)
 
 from api.feed.router import router as feed_router  # noqa: E402
 from api.intake.router import router as report_router  # noqa: E402
-from help_api.main import app as help_app
+from help_api.main import app as help_app  # noqa: E402
 
 app.include_router(report_router)
 app.include_router(feed_router)
