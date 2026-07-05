@@ -1,1 +1,0 @@
-Dear customer, your KYC has expired. Your bank account will be suspended today. Verify KYC as soon as possible at https://verify-account.example and confirm your OTP.

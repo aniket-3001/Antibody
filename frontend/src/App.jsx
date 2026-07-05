@@ -47,8 +47,12 @@ function ReporterIdPanel() {
 
   return (
     <div className="hidden md:flex flex-col gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-3 text-xs">
-      <div className="flex items-center gap-1.5 font-bold text-[var(--color-ink)]">
+      <div className="flex items-center gap-1.5 font-bold text-[var(--color-ink)] group relative cursor-help w-max">
         <Fingerprint size={14} className="text-[var(--color-brand)]" /> Your anonymous id
+        <Info size={12} className="text-[var(--color-body)] group-hover:text-[var(--color-ink)] transition-colors" />
+        <div className="absolute bottom-full left-0 mb-2 w-56 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] font-normal text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+          This ID is used to rank you on the leaderboard while keeping you completely anonymous.
+        </div>
       </div>
       <div className="truncate font-mono text-[var(--color-muted)]" title={id}>{id}</div>
       <div className="flex gap-2">
@@ -59,12 +63,18 @@ function ReporterIdPanel() {
           {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
           {copied ? "Copied" : "Copy"}
         </button>
-        <button
-          onClick={() => setConfirming(true)}
-          className="flex items-center gap-1 font-bold text-[var(--color-danger)] hover:underline"
-        >
-          <RotateCcw size={12} /> Forget me
-        </button>
+        <div className="relative group flex items-center cursor-help">
+          <button
+            onClick={() => setConfirming(true)}
+            className="flex items-center gap-1 font-bold text-[var(--color-danger)] hover:underline"
+          >
+            <RotateCcw size={12} /> Forget me
+          </button>
+          <Info size={12} className="ml-1 text-[var(--color-body)] group-hover:text-[var(--color-ink)] transition-colors" />
+          <div className="absolute bottom-full right-0 md:left-0 mb-2 w-56 p-2 bg-[var(--color-ink)] text-[var(--color-surface)] font-normal text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+            Uses Cognee's API to completely wipe your ID and all its associated reports from the knowledge graph.
+          </div>
+        </div>
       </div>
 
       <Modal isOpen={confirming} onClose={() => setConfirming(false)} title="Forget this id?">
