@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/banner.svg" alt="Antibody — a person working is attacked by scams and shielded by Antibody" width="100%" />
+
 # 🛡️ Antibody
 
 **A collective immune system against scams.** Forward a text, a screenshot, or a
@@ -7,6 +9,10 @@ scam-call recording — Antibody matches it against a shared memory graph of kno
 campaigns and hands back a **verdict**, a **cited explanation**, and **what to do next**.
 Every report, confirmed or false-positive, makes the graph a little smarter for the next
 person.
+
+**Multi-modal by design** — Antibody takes **text**, **images** (SMS/email screenshots),
+and **voice** (scam-call recordings), and is built on **[Cognee](https://github.com/topoteretes/cognee)**
+as its shared memory graph.
 
 <p>
   <a href="https://antibody-251148844884.asia-south1.run.app"><img src="https://img.shields.io/badge/live%20demo-online-14b083?style=for-the-badge" height="28" alt="Live demo"/></a>
@@ -104,10 +110,7 @@ verbs:
 - **improve** — `memify()` reinforces a family after a confirmed outcome and decays stale ones.
 - **forget** — scoped `forget()` prunes a false positive back out.
 
-Take Cognee out and Antibody loses cross-family traversal and cited evidence — but it
-**still works**: with no LLM key, deterministic indicator matching and local `fastembed`
-semantic matching produce correct verdicts on their own. The demo is never dark. Details:
-[memory layer](docs/memory-layer.md).
+Details: [memory layer](docs/memory-layer.md).
 
 ## Architecture
 
@@ -234,7 +237,7 @@ The live demo runs on Google Cloud Run. Two flags matter more than they look —
 
 ## AI assistance disclosure
 
-**This project was built with substantial AI assistance.** We used Anthropic's Claude
+**This project was built with AI assistance.** We used Anthropic's Claude
 (via Claude Code) throughout development — for architecture drafting, code generation
 across the backend and frontend, documentation, test writing, and iterative debugging.
 

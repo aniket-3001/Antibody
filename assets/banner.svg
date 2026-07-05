@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Antibody — a person working is attacked by scams and shielded by Antibody">
+  <title>Antibody — a collective immune system against scams</title>
+  <desc>A person works at a laptop while scam messages fly in from the right and are blocked by the Antibody shield.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="0.55" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#6b5cf0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6b5cf0" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#6b5cf0" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .scam  { animation: fly 4.4s linear infinite; }
+      .s2 { animation-delay: 0.9s; }
+      .s3 { animation-delay: 1.8s; }
+      .s4 { animation-delay: 2.6s; }
+      .s5 { animation-delay: 3.4s; }
+      @keyframes fly {
+        0%   { transform: translateX(0);      opacity: 0; }
+        8%   { opacity: 1; }
+        70%  { transform: translateX(-690px); opacity: 1; }
+        79%  { transform: translateX(-712px); opacity: 0; }
+        100% { transform: translateX(-712px); opacity: 0; }
+      }
+      .shield { animation: pulse 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+      .glow { animation: breathe 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes breathe { 0%,100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.65; transform: scale(1.18); } }
+      .ripple { animation: ripple 4.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes ripple { 0%,66% { opacity: 0; transform: scale(0.4); } 74% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(1.7); } }
+      .caps { letter-spacing: 4px; }
+      @media (prefers-reduced-motion: reduce) {
+        .scam, .shield, .glow, .ripple { animation: none; }
+        .scam { opacity: 0.9; }
+      }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="320" rx="24" fill="url(#bg)"/>
+
+  <!-- Wordmark -->
+  <g transform="translate(600,0)" text-anchor="middle" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+    <text y="72" font-size="54" font-weight="800" fill="#ffffff">Antibody</text>
+    <text y="106" font-size="21" fill="#c4b5fd">a collective immune system against scams</text>
+    <text y="140" class="caps" font-size="12" font-weight="700" fill="#818cf8">TEXT · IMAGE · VOICE · POWERED BY COGNEE</text>
+  </g>
+
+  <!-- Scene: person (left) protected by shield from incoming scams (right) -->
+  <g transform="translate(0,18)">
+    <!-- soft ground shadow -->
+    <ellipse cx="150" cy="292" rx="66" ry="10" fill="#000000" opacity="0.22"/>
+
+    <!-- Person at a laptop -->
+    <g transform="translate(150,205)">
+      <circle cx="0" cy="0" r="19" fill="#ede9fe"/>
+      <path d="M-30,26 h60 a16,16 0 0 1 16,16 v34 h-92 v-34 a16,16 0 0 1 16,-16 Z" fill="#7c6cf0"/>
+      <rect x="-36" y="70" width="72" height="9" rx="2.5" fill="#c4b5fd"/>
+      <rect x="-25" y="45" width="50" height="27" rx="3" fill="#a78bfa"/>
+      <rect x="-19" y="51" width="38" height="15" rx="2" fill="#1e1b4b" opacity="0.55"/>
+    </g>
+
+    <!-- Antibody shield -->
+    <g transform="translate(330,205)">
+      <circle class="glow" cx="0" cy="0" r="66" fill="url(#glow)"/>
+      <circle class="ripple" cx="0" cy="0" r="52" fill="none" stroke="#34d399" stroke-width="3"/>
+      <g class="shield">
+        <path d="M0,-48 L40,-31 L40,11 C40,38 21,55 0,63 C-21,55 -40,38 -40,11 L-40,-31 Z"
+              fill="url(#shieldGrad)" stroke="#c7d2fe" stroke-width="2"/>
+        <path d="M-17,3 L-5,17 L19,-15" fill="none" stroke="#34d399" stroke-width="7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Incoming scam messages (fly in from the right, blocked at the shield) -->
+    <g class="scam s1" transform="translate(1090,150)">
+      <rect x="-6" y="-16" width="96" height="32" rx="16" fill="#ef4d63"/>
+      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff2f4"/>
+      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">OTP?</text>
+    </g>
+    <g class="scam s2" transform="translate(1140,208)">
+      <rect x="-6" y="-16" width="98" height="32" rx="16" fill="#ef4d63"/>
+      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff2f4"/>
+      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">SCAM</text>
+    </g>
+    <g class="scam s3" transform="translate(1105,262)">
+      <rect x="-6" y="-16" width="92" height="32" rx="16" fill="#f2971b"/>
+      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff7ec"/>
+      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">$ $ $</text>
+    </g>
+    <g class="scam s4" transform="translate(1165,178)">
+      <rect x="-6" y="-16" width="112" height="32" rx="16" fill="#ef4d63"/>
+      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff2f4"/>
+      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">YOU WON</text>
+    </g>
+    <g class="scam s5" transform="translate(1120,236)">
+      <rect x="-6" y="-16" width="94" height="32" rx="16" fill="#f2971b"/>
+      <path d="M8,-9 L18,9 L-2,9 Z" fill="#fff7ec"/>
+      <text x="24" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#ffffff">CLICK</text>
+    </g>
+  </g>
+</svg>
