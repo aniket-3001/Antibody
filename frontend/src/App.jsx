@@ -142,19 +142,28 @@ function MainApp() {
   const [tab, setTab] = useState(() => {
     return localStorage.getItem("antibody_active_tab") || "check";
   });
+  // Tabs are lazy-mounted on first visit, then kept alive (hidden, not
+  // unmounted) so switching away and back doesn't lose in-progress input or
+  // an in-flight request — e.g. typing a message on Check, or a Help chat.
+  const [visited, setVisited] = useState(() => new Set([tab]));
 
   useEffect(() => {
     localStorage.setItem("antibody_active_tab", tab);
   }, [tab]);
 
+  const selectTab = (id) => {
+    setVisited((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    setTab(id);
+  };
+
   const tabs = [
-    { id: "check", label: "Check a message" },
-    { id: "feed", label: "What's going around" },
-    { id: "graph", label: "Knowledge graph" },
-    { id: "leaderboard", label: "Leaderboard" },
+    { id: "check", label: "Check a Message" },
+    { id: "feed", label: "Live Threat Feed" },
+    { id: "graph", label: "Knowledge Graph" },
+    { id: "leaderboard", label: "Community Leaderboard" },
     { id: "reports", label: "My Reports" },
-    { id: "extension", label: "Extension Preview" },
-    { id: "help", label: "Help" },
+    { id: "extension", label: "Browser Extension" },
+    { id: "help", label: "Help Center" },
   ];
 
   // Real threat ticker — polls /feed and toasts only genuinely NEW activity
@@ -229,7 +238,7 @@ function MainApp() {
           {tabs.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => selectTab(t.id)}
               className={cn(
                 "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left shrink-0",
                 tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-line)] shadow-none"
@@ -259,13 +268,13 @@ function MainApp() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-w-0 w-full bg-[var(--color-surface)] p-6 md:p-8 rounded-2xl border border-[var(--color-line)] shadow-[var(--shadow-custom-sm)]">
-        {tab === "check" && <CheckView />}
-        {tab === "feed" && <FeedView />}
-        {tab === "graph" && <GraphView />}
-        {tab === "leaderboard" && <LeaderboardView />}
-        {tab === "reports" && <MyReportsView />}
-        {tab === "extension" && <ExtensionPreviewView />}
-        {tab === "help" && <HelpView />}
+        {visited.has("check") && <div className={tab === "check" ? "" : "hidden"}><CheckView /></div>}
+        {visited.has("feed") && <div className={tab === "feed" ? "" : "hidden"}><FeedView /></div>}
+        {visited.has("graph") && <div className={tab === "graph" ? "" : "hidden"}><GraphView /></div>}
+        {visited.has("leaderboard") && <div className={tab === "leaderboard" ? "" : "hidden"}><LeaderboardView /></div>}
+        {visited.has("reports") && <div className={tab === "reports" ? "" : "hidden"}><MyReportsView /></div>}
+        {visited.has("extension") && <div className={tab === "extension" ? "" : "hidden"}><ExtensionPreviewView /></div>}
+        {visited.has("help") && <div className={tab === "help" ? "" : "hidden"}><HelpView /></div>}
       </main>
 
       <Toaster />
