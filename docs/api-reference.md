@@ -12,9 +12,12 @@ Every response carries an `X-Request-ID` header; every error shares one JSON sha
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/report` | Submit a text report, get a verdict |
+| `POST` | `/scan` | Read-only verdict — nothing recorded (browser extension) |
 | `POST` | `/report/upload` | Submit a screenshot / audio / PDF, get a verdict |
+| `GET` | `/report/{id}` | Re-fetch a prior verdict (shareable link) |
 | `POST` | `/report/{id}/outcome` | Record what happened (strengthens the family) |
 | `POST` | `/report/{id}/forget` | Prune a false positive out of the graph |
+| `POST` | `/reporter/forget` | Hard-delete a browser's own data (real erasure) |
 | `GET` | `/reports/mine` | A browser's own submitted reports |
 | `GET` | `/leaderboard` | Community leaderboard by verified reports |
 | `GET` | `/feed` | Trending families, recent reports, emerging campaigns |
@@ -75,6 +78,31 @@ curl -s http://localhost:8000/report \
   -d '{"text":"pay a small redelivery fee at usps-fee.biz","channel":"sms"}'
 ```
 
+## `POST /scan`
+
+Read-only verdict — the **same engine as `/report`**, but it never records a
+report or touches trust/leaderboard. Backs the browser extension, where scanning
+a page shouldn't silently add it to the shared graph.
+
+**Request**: `{ "text": "…", "channel": "sms" }` (channel optional).
+**Response `200`**: the verdict object, **without** a `report_id` (nothing was recorded).
+**Errors**: `400 empty_report`.
+
+```bash
+curl -s http://localhost:8000/scan -H 'Content-Type: application/json' \
+  -d '{"text":"pay a redelivery fee at usps-fee.biz"}'
+```
+
+## `GET /report/{id}`
+
+Re-fetch a prior verdict by id — backs the "Warn Others" **shareable link**
+(`?v=<id>` on the web app). It re-runs `assess()` on the stored text rather than
+caching the original verdict, so a shared link always reflects current
+family/corroboration data.
+
+**Response `200`**: the verdict object (with `report_id`, `transcript`, `input_kind`).
+**Errors**: `404 report_not_found` (unknown or pruned).
+
 ## `POST /report/upload`
 
 Multimodal intake. `multipart/form-data` with `file` (required) and optional
@@ -109,6 +137,20 @@ semantic matches), rebuilds the semantic index, and scopes a Cognee `forget()` t
 exact document in the background.
 
 **Response `200`**: `{ "ok": true, "pruned": "rep_ab12cd34ef56" }`
+
+## `POST /reporter/forget`
+
+**Real erasure** (§10) for a browser's own anonymous id — hard-deletes its
+reporter row and every report it filed from the ops DB, and scopes a Cognee
+`forget()` against the graph for each report that reached it. Distinct from
+`/report/{id}/forget`, which soft-prunes a single false-positive report.
+
+**Request**: `{ "reporter_id": "<anonymous client id>" }`
+**Response `200`**: `{ "ok": true, "deleted_reports": 3 }`
+
+Because reporter identity lives only in the ops DB (never the graph), this is a
+normal `DELETE`, not graph surgery — see
+[Security & privacy](security-and-privacy.md#2-privacy-by-construction-de-identified-graph).
 
 ## `GET /reports/mine?reporter_id=...`
 

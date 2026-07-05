@@ -1,17 +1,147 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
-import CheckView from "./components/CheckView.jsx";
+import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
 import GraphView from "./components/GraphView.jsx";
 import LeaderboardView from "./components/LeaderboardView.jsx";
 import MyReportsView from "./components/MyReportsView.jsx";
 import ExtensionPreviewView from "./components/ExtensionPreviewView.jsx";
 import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
+import { Modal } from "./components/ui/modal.jsx";
+import { Button } from "./components/ui/button.jsx";
 import { cn } from "./lib/utils.js";
-import { getFeed } from "./api.js";
+import { getFeed, getReport, submitOutcome, forgetReporter } from "./api.js";
+import { getClientId, resetClientId } from "./lib/identity.js";
 
-export default function App() {
+// Sidebar panel: shows this browser's anonymous id and offers real erasure —
+// hard-deletes the id and every report tied to it, then rotates to a fresh id.
+function ReporterIdPanel() {
+  const [id, setId] = useState(() => getClientId());
+  const [copied, setCopied] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const doReset = async () => {
+    setBusy(true);
+    try {
+      await forgetReporter(id);
+      const fresh = resetClientId();
+      setId(fresh);
+      showToast("Your old id and every report tied to it were deleted from our server.", {
+        title: "Forgotten",
+        variant: "safe",
+      });
+    } catch (e) {
+      showToast(String(e.message || e), { title: "Couldn't reach the server", variant: "danger" });
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="hidden md:flex flex-col gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-3 text-xs">
+      <div className="flex items-center gap-1.5 font-bold text-[var(--color-ink)]">
+        <Fingerprint size={14} className="text-[var(--color-brand)]" /> Your anonymous id
+      </div>
+      <div className="truncate font-mono text-[var(--color-muted)]" title={id}>{id}</div>
+      <div className="flex gap-2">
+        <button
+          onClick={copy}
+          className="flex items-center gap-1 font-bold text-[var(--color-brand)] hover:underline"
+        >
+          {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+        <button
+          onClick={() => setConfirming(true)}
+          className="flex items-center gap-1 font-bold text-[var(--color-danger)] hover:underline"
+        >
+          <RotateCcw size={12} /> Forget me
+        </button>
+      </div>
+
+      <Modal isOpen={confirming} onClose={() => setConfirming(false)} title="Forget this id?">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--color-body)]">
+            This deletes every report you've filed and your trust/leaderboard
+            score from our server, then gives this browser a brand-new
+            anonymous id. It can't be undone, and your old My Reports history
+            won't be recoverable.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" className="flex-1" onClick={() => setConfirming(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button variant="destructive" className="flex-1" onClick={doReset} disabled={busy}>
+              {busy ? "Deleting…" : "Yes, forget me"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// Standalone page for a shared verdict link (?v=<report_id>) — someone was sent
+// a verdict and lands here without the full app chrome.
+function SharedVerdictView({ reportId, onBack }) {
+  const [v, setV] = useState(null);
+  const [outcome, setOutcome] = useState(null);
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    getReport(reportId)
+      .then((res) => setV({ ...res, checked_text: res.transcript || "" }))
+      .catch((e) => setErr(String(e)));
+  }, [reportId]);
+
+  const record = async (o) => {
+    if (!v?.report_id) return;
+    try {
+      await submitOutcome(v.report_id, o);
+      setOutcome(o);
+    } catch (e) { setErr(String(e)); }
+  };
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-10 md:py-16">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)]">
+          <ShieldCheck size={20} strokeWidth={2.5} />
+        </div>
+        <div>
+          <h1 className="m-0 text-lg font-extrabold tracking-tight text-[var(--color-ink)]">Antibody</h1>
+          <p className="m-0 text-xs text-[var(--color-muted)]">someone shared this verdict with you</p>
+        </div>
+      </div>
+
+      {err && (
+        <div className="rounded-lg border border-[var(--color-danger-line)] bg-[var(--color-danger-bg)] p-4 text-sm text-[var(--color-danger)]">
+          Couldn't load this report — it may have been removed. ({err})
+        </div>
+      )}
+      {!err && !v && <div className="text-sm text-[var(--color-muted)]">Loading…</div>}
+      {v && <Verdict v={v} outcome={outcome} onOutcome={record} />}
+
+      <button
+        onClick={onBack}
+        className="self-start text-sm font-bold text-[var(--color-brand)] hover:underline"
+      >
+        Check your own message →
+      </button>
+    </div>
+  );
+}
+
+function MainApp() {
   const [tab, setTab] = useState(() => {
     return localStorage.getItem("antibody_active_tab") || "check";
   });
@@ -29,35 +159,48 @@ export default function App() {
     { id: "extension", label: "Extension Preview" },
   ];
 
-  // Real-time threat alerts — polls the live feed and toasts genuinely new
-  // reports as they land, instead of a scripted/fake alert stream.
+  // Real threat ticker — polls /feed and toasts only genuinely NEW activity
+  // (not on every poll tick), so it reflects what's actually happening.
   useEffect(() => {
-    let seen = null;
     let cancelled = false;
+    let initialized = false;
+    const seenReportIds = new Set();
+    const seenEmerging = new Set();
 
     const poll = async () => {
+      let feed;
       try {
-        const feed = await getFeed();
-        const recent = feed?.recent || [];
-        if (cancelled) return;
-        if (seen === null) {
-          // First load: just remember what's already there, don't toast history.
-          seen = new Set(recent.map((r) => r.id));
-          return;
-        }
-        for (const r of recent) {
-          if (seen.has(r.id)) continue;
-          seen.add(r.id);
-          const isConfirmed = r.outcome === "confirmed_scam" || r.outcome === "i_got_scammed";
-          showToast(r.preview || "A new report just came in.", {
-            title: r.family
-              ? `New '${r.family.replace(/_/g, " ")}' report`
-              : "New report",
-            variant: isConfirmed ? "danger" : "default",
-          });
-        }
+        feed = await getFeed();
       } catch {
-        // Feed unreachable — stay silent rather than showing fake activity.
+        return; // feed unavailable this tick — try again next interval
+      }
+      if (cancelled) return;
+
+      if (!initialized) {
+        // Seed baseline from current state so we don't toast a backlog on load.
+        (feed.recent || []).forEach((r) => seenReportIds.add(r.id));
+        (feed.emerging || []).forEach((e) => seenEmerging.add(e.name));
+        initialized = true;
+        return;
+      }
+
+      for (const r of feed.recent || []) {
+        if (seenReportIds.has(r.id)) continue;
+        seenReportIds.add(r.id);
+        const isConfirmed = r.outcome === "confirmed_scam" || r.outcome === "i_got_scammed";
+        showToast(r.preview || "A new report just came in.", {
+          title: r.family ? `New '${r.family.replace(/_/g, " ")}' report` : "New report",
+          variant: isConfirmed ? "danger" : "default",
+        });
+      }
+
+      for (const e of feed.emerging || []) {
+        if (seenEmerging.has(e.name)) continue;
+        seenEmerging.add(e.name);
+        showToast(
+          `${e.display || e.name} is picking up — ${e.count} reports in the last ${e.emerged_hours_ago}h.`,
+          { title: "Emerging threat", variant: "warn" }
+        );
       }
     };
 
@@ -107,9 +250,12 @@ export default function App() {
           ))}
         </nav>
 
-        <div className="mt-auto pt-8 text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
-          Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
-          Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+        <div className="mt-auto pt-8 flex flex-col gap-4">
+          <div className="text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
+            Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
+            Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+          </div>
+          <ReporterIdPanel />
         </div>
       </aside>
 
@@ -131,4 +277,27 @@ export default function App() {
       <Toaster />
     </div>
   );
+}
+
+export default function App() {
+  const [sharedReportId, setSharedReportId] = useState(() => {
+    return new URLSearchParams(window.location.search).get("v");
+  });
+
+  if (sharedReportId) {
+    return (
+      <>
+        <SharedVerdictView
+          reportId={sharedReportId}
+          onBack={() => {
+            window.history.pushState({}, "", window.location.pathname);
+            setSharedReportId(null);
+          }}
+        />
+        <Toaster />
+      </>
+    );
+  }
+
+  return <MainApp />;
 }

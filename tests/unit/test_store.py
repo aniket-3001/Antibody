@@ -113,6 +113,31 @@ def test_shared_tactic_map_only_includes_tactics_used_by_2plus_families():
     assert "romance_grooming" not in tactics
 
 
+def test_forget_reporter_hard_deletes_reports_and_row():
+    store.ensure_reporter("r_erase")
+    store.add_report("rep_1", "t1", "sms", "fam_a", "r_erase",
+                     indicators=[{"kind": "url_domain", "value": "bad.biz"}])
+    store.set_cognee_data_id("rep_1", "data-xyz")
+    store.add_report("rep_2", "t2", "sms", "fam_a", "r_erase")
+    store.add_report("rep_other", "t3", "sms", "fam_a", "r_keep")
+
+    deleted, data_ids = store.forget_reporter("r_erase")
+    assert deleted == 2
+    assert data_ids == ["data-xyz"]  # only the report that had a cognee id
+    assert store.get_report("rep_1") is None
+    assert store.get_report("rep_2") is None
+    assert store.get_report("rep_other") is not None  # other reporters untouched
+    assert store.reports_by_reporter("r_erase") == []
+
+
+def test_report_row_exposes_pruned_flag():
+    store.add_report("rep_1", "t1", "sms", "fam_a", "r_1")
+    assert store.get_report("rep_1")["pruned"] is False
+    store.prune_report("rep_1")
+    # get_report ignores pruned filter, so we can still read the flag
+    assert store.get_report("rep_1")["pruned"] is True
+
+
 def test_guidance_roundtrip():
     assert store.get_guidance("fam_a") is None
     store.set_guidance("fam_a", ["do this"], ["report here"], ["recover like this"])

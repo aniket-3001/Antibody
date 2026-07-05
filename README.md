@@ -163,7 +163,8 @@ Antibody ships a full [`docs/`](docs/) folder:
 | Verdict | Pure noisy-OR confidence fusion with an asymmetric safety gate |
 | Intake | pytesseract (OCR), faster-whisper (audio), PyMuPDF (PDF) — all optional, graceful |
 | Frontend | React 18, Vite, Tailwind CSS v4, framer-motion |
-| Quality | ruff · mypy · pytest (60 tests, ~75% coverage) · pre-commit · GitHub Actions CI |
+| Extension | Chrome/Edge MV3 browser extension — check text or a page via the read-only `/scan` |
+| Quality | ruff · mypy · pytest (67 tests, ~75% coverage) · pre-commit · GitHub Actions CI |
 | Deploy | Single Docker image · Google Cloud Run (gen2) · Render |
 
 ## Quick start
@@ -194,7 +195,7 @@ provider examples.
 pip install -r requirements-dev.txt
 ruff check .        # lint
 mypy                # types
-pytest              # 60 tests, no API keys needed
+pytest              # 67 tests, no API keys needed
 pytest --cov        # with coverage
 ```
 
@@ -216,6 +217,7 @@ api/
   feed/              # live threat feed + shared-tactic graph
 seed/                # synthetic scam families, reports, and legit controls
 frontend/            # React + Vite (CheckView, FeedView, GraphView, ...)
+extension/           # Chrome/Edge MV3 extension — read-only /scan from the browser
 docs/                # full project documentation (see above)
 tests/               # unit + API smoke + error-envelope contract
 ```

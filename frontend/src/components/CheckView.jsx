@@ -212,9 +212,14 @@ export default function CheckView() {
   );
 }
 
-function Verdict({ v, outcome, onOutcome }) {
+export function Verdict({ v, outcome, onOutcome }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const shareUrl = v.report_id
+    ? `${window.location.origin}${window.location.pathname}?v=${v.report_id}`
+    : "";
 
   const seen = fmtDate(v.first_seen);
   
@@ -386,8 +391,22 @@ function Verdict({ v, outcome, onOutcome }) {
               {copied ? <CheckCircle2 size={16} className="text-[var(--color-brand)]" /> : <Copy size={16} />}
             </button>
           </div>
-          <Button 
-            className="w-full mt-2" 
+          {shareUrl && (
+            <Button
+              variant="secondary"
+              className="w-full gap-2"
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              }}
+            >
+              {linkCopied ? <CheckCircle2 size={16} className="text-[var(--color-brand)]" /> : <Share2 size={16} />}
+              {linkCopied ? "Link copied!" : "Copy shareable link instead"}
+            </Button>
+          )}
+          <Button
+            className="w-full mt-2"
             onClick={() => setIsShareModalOpen(false)}
           >
             Done

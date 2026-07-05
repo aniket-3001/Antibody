@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, ShieldAlert, X } from "lucide-react";
+import { AlertTriangle, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { cn } from "../../lib/utils.js";
 
 // Global toast state manager
@@ -43,16 +43,20 @@ export function Toaster() {
         {currentToasts.map((t) => {
           const isDanger = t.variant === "danger";
           const isWarn = t.variant === "warn";
-          
+          const isSafe = t.variant === "safe";
+
           let cardClasses = "bg-[var(--color-surface-2)] border-[var(--color-line)] text-[var(--color-ink)] shadow-lg";
           let icon = <ShieldAlert className="text-[var(--color-brand)]" size={20} />;
-          
+
           if (isDanger) {
             cardClasses = "bg-[var(--color-danger-bg)] border-[var(--color-danger-line)] text-[var(--color-danger)] shadow-[0_4px_24px_-8px_rgba(255,0,60,0.4)]";
             icon = <AlertTriangle size={20} />;
           } else if (isWarn) {
             cardClasses = "bg-[var(--color-warn-bg)] border-[var(--color-warn-line)] text-[var(--color-warn)] shadow-[0_4px_24px_-8px_rgba(255,183,3,0.3)]";
             icon = <AlertTriangle size={20} />;
+          } else if (isSafe) {
+            cardClasses = "bg-[var(--color-safe-bg)] border-[var(--color-safe-line)] text-[var(--color-safe)] shadow-[0_4px_24px_-8px_rgba(20,176,131,0.35)]";
+            icon = <ShieldCheck size={20} />;
           }
 
           return (
