@@ -29,8 +29,6 @@ RUN python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='se
 
 COPY api/ ./api/
 COPY seed/ ./seed/
-COPY help_api/ ./help_api/
-COPY help_docs/ ./help_docs/
 COPY --from=frontend /app/frontend/dist ./frontend/dist
 
 ENV PYTHONUNBUFFERED=1

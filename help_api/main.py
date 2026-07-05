@@ -75,7 +75,7 @@ def _compose_query(question: str, history: list[Turn]) -> str:
     return f"Earlier in this conversation:\n{convo}\n\nNow the user asks: {question}"
 
 
-@app.post("/ask")
+@app.post("/help/ask")
 async def ask(body: AskIn) -> dict:
     question = (body.question or "").strip()
     if not question:
@@ -94,6 +94,6 @@ async def ask(body: AskIn) -> dict:
     return result
 
 
-@app.get("/health")
+@app.get("/help/health")
 async def health() -> dict:
     return {"status": "ok", "llm": help_settings.has_llm}
