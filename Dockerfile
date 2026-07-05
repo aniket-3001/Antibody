@@ -11,7 +11,7 @@ FROM python:3.11-slim AS runtime
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
+    && apt-get install -y --no-install-recommends build-essential tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 COPY api/requirements.txt ./api/requirements.txt
