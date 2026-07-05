@@ -11,7 +11,13 @@ import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
 import { cn } from "./lib/utils.js";
 
 export default function App() {
-  const [tab, setTab] = useState("check");
+  const [tab, setTab] = useState(() => {
+    return localStorage.getItem("antibody_active_tab") || "check";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("antibody_active_tab", tab);
+  }, [tab]);
 
   const tabs = [
     { id: "check", label: "Check a message" },
@@ -40,9 +46,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className="mx-auto flex max-w-[1200px] gap-10 px-6 pt-10 pb-20 items-start min-h-screen">
+    <div className="mx-auto flex flex-col md:flex-row max-w-[1200px] gap-6 md:gap-10 px-4 md:px-6 pt-6 md:pt-10 pb-20 items-start min-h-screen">
       {/* Sidebar Navigation */}
-      <aside className="w-64 shrink-0 sticky top-10 flex flex-col gap-10">
+      <aside className="w-full md:w-64 shrink-0 md:sticky top-10 flex flex-col gap-6 md:gap-10">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] text-[var(--color-surface)] shadow-[0_10px_22px_-8px_rgba(30,58,138,0.6)]">
             <ShieldCheck size={26} strokeWidth={2.5} />
@@ -57,13 +63,13 @@ export default function App() {
           </div>
         </div>
 
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-row overflow-x-auto md:flex-col gap-2 pb-2 md:pb-0 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
-                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left",
+                "relative rounded-lg px-4 py-3 text-sm font-bold transition-colors text-left shrink-0",
                 tab === t.id ? "text-[var(--color-surface)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-line)] shadow-none"
               )}
             >
@@ -80,14 +86,14 @@ export default function App() {
           ))}
         </nav>
 
-        <div className="mt-auto pt-8 text-[13px] leading-relaxed text-[var(--color-muted)]">
+        <div className="mt-auto pt-8 text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
           Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
           Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 bg-[var(--color-surface)] p-8 rounded-2xl border border-[var(--color-line)] shadow-[var(--shadow-custom-sm)]">
+      <main className="flex-1 min-w-0 w-full bg-[var(--color-surface)] p-6 md:p-8 rounded-2xl border border-[var(--color-line)] shadow-[var(--shadow-custom-sm)]">
         {tab === "check" && <CheckView />}
         {tab === "feed" && <FeedView />}
         {tab === "graph" && <GraphView />}
