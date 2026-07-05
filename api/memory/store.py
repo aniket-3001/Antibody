@@ -244,6 +244,47 @@ def active_reports() -> list[dict]:
     return [_report_row(r) for r in rows]
 
 
+def reports_by_reporter(reporter_id: str) -> list[dict]:
+    with _lock, _c() as c:
+        rows = c.execute(
+            "SELECT * FROM reports WHERE reporter_id=? AND pruned=0 ORDER BY reported_at DESC",
+            (reporter_id,),
+        ).fetchall()
+    return [_report_row(r) for r in rows]
+
+
+def leaderboard(limit: int = 20) -> list[dict]:
+    """Rank reporters by verified reports then trust (spec §9 anti-poisoning:
+    scoring rewards confirmed hits, not raw submission volume)."""
+    with _lock, _c() as c:
+        rows = c.execute(
+            """
+            SELECT reporter_id,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN outcome IN ('confirmed_scam','i_got_scammed') THEN 1 ELSE 0 END) AS verified
+            FROM reports
+            WHERE pruned=0 AND reporter_id IS NOT NULL
+            GROUP BY reporter_id
+            """
+        ).fetchall()
+        out = []
+        for r in rows:
+            trust_row = c.execute(
+                "SELECT trust FROM reporters WHERE id=?", (r["reporter_id"],)
+            ).fetchone()
+            trust = trust_row["trust"] if trust_row else 0.3
+            verified = r["verified"] or 0
+            out.append({
+                "reporter_id": r["reporter_id"],
+                "verified": verified,
+                "total": r["total"],
+                "trust": trust,
+                "points": verified * 50 + r["total"] * 5,
+            })
+    out.sort(key=lambda x: (-x["points"], -x["trust"]))
+    return out[:limit]
+
+
 def _report_row(r: sqlite3.Row) -> dict:
     return {
         "id": r["id"],

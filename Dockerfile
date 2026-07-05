@@ -17,6 +17,16 @@ RUN apt-get update \
 COPY api/requirements.txt ./api/requirements.txt
 RUN pip install --no-cache-dir -r api/requirements.txt
 
+# Bake the fastembed model into the image so the first real report on a cold
+# boot doesn't block the event loop downloading it from HuggingFace Hub — on
+# Render's free tier that download was slow/blocking enough to fail health
+# checks mid-request and trigger a restart before cognify finished. Pinned to
+# a fixed path (not under DATA_DIR) so it's baked in regardless of DATA_DIR
+# overrides — api/memory/memory_service.py's os.environ.setdefault() will
+# respect this pre-set value instead of pointing fastembed at DATA_DIR/cache.
+ENV FASTEMBED_CACHE_PATH=/opt/fastembed_cache
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='sentence-transformers/all-MiniLM-L6-v2')"
+
 COPY api/ ./api/
 COPY seed/ ./seed/
 COPY --from=frontend /app/frontend/dist ./frontend/dist

@@ -1,17 +1,20 @@
-import React from "react";
-import { Trophy, Medal, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Trophy, Star } from "lucide-react";
 import { Card, CardContent } from "./ui/card.jsx";
 import { Badge } from "./ui/badge.jsx";
-
-const LEADERBOARD_DATA = [
-  { rank: 1, user: "Alex_Guardian", points: 15420, verified: 312, tier: "gold" },
-  { rank: 2, user: "ScamHunter99", points: 12150, verified: 245, tier: "gold" },
-  { rank: 3, user: "CyberShield_01", points: 10400, verified: 198, tier: "silver" },
-  { rank: 4, user: "PatrolBot_Human", points: 9200, verified: 175, tier: "silver" },
-  { rank: 5, user: "You (Anonymous)", points: 850, verified: 12, tier: "bronze" },
-];
+import { getLeaderboard } from "../api.js";
+import { getClientId } from "../lib/identity.js";
 
 export default function LeaderboardView() {
+  const [entries, setEntries] = useState(null);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    getLeaderboard(getClientId())
+      .then((res) => setEntries(res.leaderboard || []))
+      .catch((e) => setErr(String(e.message || e)));
+  }, []);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="text-center">
@@ -24,15 +27,29 @@ export default function LeaderboardView() {
         </p>
       </div>
 
+      {err && (
+        <div className="rounded-lg bg-[var(--color-danger-bg)] p-3 text-sm text-[var(--color-danger)]">{err}</div>
+      )}
+
+      {entries === null && !err && (
+        <div className="text-center text-sm text-[var(--color-muted)]">Loading…</div>
+      )}
+
+      {entries?.length === 0 && (
+        <div className="text-center text-sm text-[var(--color-muted)]">
+          No verified reports yet — be the first on the board.
+        </div>
+      )}
+
       <div className="grid gap-3">
-        {LEADERBOARD_DATA.map((entry) => (
-          <Card key={entry.rank} className={`border ${entry.user.includes('You') ? 'border-[var(--color-brand)] bg-[var(--color-surface-2)] shadow-[var(--shadow-custom-sm)]' : 'border-[var(--color-line)]'}`}>
+        {entries?.map((entry) => (
+          <Card key={entry.rank} className={`border ${entry.is_you ? 'border-[var(--color-brand)] bg-[var(--color-surface-2)] shadow-[var(--shadow-custom-sm)]' : 'border-[var(--color-line)]'}`}>
             <CardContent className="p-4 flex items-center gap-4">
               <div className="flex w-10 justify-center font-bold text-lg text-[var(--color-muted)]">
                 #{entry.rank}
               </div>
               <div className="flex-1">
-                <div className="font-bold text-[var(--color-ink)]">{entry.user}</div>
+                <div className="font-bold text-[var(--color-ink)]">{entry.is_you ? "You" : entry.label}</div>
                 <div className="text-xs text-[var(--color-body)] flex items-center gap-2 mt-1">
                   <span>{entry.verified} verified scams reported</span>
                 </div>

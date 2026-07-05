@@ -170,6 +170,52 @@ async def _improve_after_outcome(family: str) -> None:
         log.exception("memify failed (non-fatal)")
 
 
+@router.get("/reports/mine")
+async def my_reports(reporter_id: str) -> dict:
+    """List a browser's own submitted reports, keyed off its client-generated
+    anonymous id (never a real identity — hashed the same as at submit time)."""
+    rid = ingest.anon_reporter(reporter_id)
+    reports = store.reports_by_reporter(rid)
+    out = []
+    for r in reports:
+        if r["outcome"] in ("confirmed_scam", "i_got_scammed"):
+            status, points = "confirmed", "+50"
+        elif r["outcome"] == "actually_legit":
+            status, points = "legit", "0"
+        else:
+            status, points = "pending", "Pending"
+        out.append({
+            "id": r["id"],
+            "date": r["reported_at"],
+            "text": r["normalized_text"],
+            "channel": r["channel"],
+            "family": r["family_name"],
+            "status": status,
+            "points": points,
+        })
+    return {"reports": out}
+
+
+@router.get("/leaderboard")
+async def leaderboard(limit: int = 20, reporter_id: str | None = None) -> dict:
+    """Community leaderboard ranked by verified reports (spec §9 trust model).
+    Reporters are anonymous ids — we only ever mark which row is 'you'."""
+    me = ingest.anon_reporter(reporter_id) if reporter_id else None
+    rows = store.leaderboard(limit)
+    entries = []
+    for i, r in enumerate(rows, start=1):
+        is_you = r["reporter_id"] == me
+        entries.append({
+            "rank": i,
+            "label": "You" if is_you else f"Reporter #{r['reporter_id'][-6:]}",
+            "is_you": is_you,
+            "points": r["points"],
+            "verified": r["verified"],
+            "tier": "gold" if i <= 2 else ("silver" if i <= 5 else "bronze"),
+        })
+    return {"leaderboard": entries}
+
+
 @router.post("/report/{report_id}/forget")
 async def forget_report(report_id: str, background: BackgroundTasks) -> dict:
     """Admin false-positive prune (spec §10 job 1). Stops it poisoning matches."""
