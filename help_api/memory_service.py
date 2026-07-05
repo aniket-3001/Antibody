@@ -99,7 +99,7 @@ class HelpMemoryService:
             shaped = self._shape_results(results)
             shaped["available"] = True
             return shaped
-        except (Exception, asyncio.TimeoutError) as exc:
+        except (Exception, TimeoutError) as exc:
             log.debug("help search failed: %s", exc)
             return {"answer": "", "citations": [], "available": False}
 
