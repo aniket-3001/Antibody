@@ -113,19 +113,33 @@ async def get_report(report_id: str) -> dict:
     return verdict
 
 
+@router.post("/report/extract")
+async def extract_preview(
+    file: UploadFile = File(...)
+) -> dict:
+    """Extract text from a file without running evaluation. Used for UI preview."""
+    suffix = Path(file.filename or "upload").suffix or ".bin"
+    tmp = Path(tempfile.gettempdir()) / f"antibody_extract_{uuid.uuid4().hex}{suffix}"
+    tmp.write_bytes(await file.read())
+    
+    text = extract_text(str(tmp), file.content_type)
+    return {"transcript": text}
+
+
 @router.post("/report/upload")
 async def submit_upload(
     background: BackgroundTasks,
     file: UploadFile = File(...),
     channel: str | None = Form(None),
     reporter_id: str | None = Form(None),
+    transcript_override: str | None = Form(None),
 ) -> dict:
     """Multimodal intake: SMS screenshot / scam-call audio / PDF document (spec §11)."""
     suffix = Path(file.filename or "upload").suffix or ".bin"
     tmp = Path(tempfile.gettempdir()) / f"antibody_{uuid.uuid4().hex}{suffix}"
     tmp.write_bytes(await file.read())
 
-    text = extract_text(str(tmp), file.content_type)
+    text = transcript_override if transcript_override is not None else extract_text(str(tmp), file.content_type)
     # Hand the RAW file to Cognee's native loaders regardless (graph-layer multimodal).
     background.add_task(_remember_raw_file, str(tmp), channel, text)
 

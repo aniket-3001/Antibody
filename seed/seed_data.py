@@ -49,7 +49,7 @@ FAMILIES: dict = {
             "We detected unusual activity. To prevent restriction, complete identity verification within 2 hours: https://parcel-update.example",
             "Dear customer, aapka KYC expire ho gaya hai. Account block hone se bachane ke liye https://secure-check.example par verify karein."
         ],
-        "emerging": true
+        "emerging": True
     },
     "loan_scam": {
         "summary": "A collection of loan_scam scams targeting victims via whatsapp, sms, email.",
@@ -99,7 +99,7 @@ FAMILIES: dict = {
             "Funds are ready. A refundable processing deposit of \u20b999 is required within 24 hours.",
             "CIBIL check ke bina loan approved. Disbursal se pehle \u20b9499 insurance fee pay karein."
         ],
-        "emerging": true
+        "emerging": True
     },
     "tech_support": {
         "summary": "A collection of tech_support scams targeting victims via sms, email, whatsapp.",
@@ -149,7 +149,7 @@ FAMILIES: dict = {
             "Computer hack ho gaya hai. Technician ko remote access do aur \u20b999 security renewal pay karo.",
             "Your system license expired. Immediate remote access is required to prevent permanent data loss."
         ],
-        "emerging": true
+        "emerging": True
     },
     "impersonation": {
         "summary": "A collection of impersonation scams targeting victims via sms, email, whatsapp.",
@@ -199,7 +199,7 @@ FAMILIES: dict = {
             "I am in a meeting. Buy gift cards worth \u20b925,000 and send the codes immediately. I will reimburse you.",
             "My phone is damaged; this is my new number. I urgently need \u20b95,000. Please transfer now."
         ],
-        "emerging": false
+        "emerging": False
     },
     "lottery_prize": {
         "summary": "A collection of lottery_prize scams targeting victims via sms, whatsapp, email.",
@@ -249,7 +249,7 @@ FAMILIES: dict = {
             "Your email has been selected for a cash award. Send ID details and transfer clearance fee of \u20b9999.",
             "Your email has been selected for a cash award. Send ID details and transfer clearance fee of \u20b9999."
         ],
-        "emerging": false
+        "emerging": False
     },
     "parcel_customs": {
         "summary": "A collection of parcel_customs scams targeting victims via email, whatsapp, sms.",
@@ -299,7 +299,7 @@ FAMILIES: dict = {
             "Illegal items found in a parcel linked to your ID. Pay verification charge as soon as possible to close the case.",
             "Your parcel is detained. Pay \u20b9999 customs charge within 2 hours at https://verify-account.example to avoid legal action."
         ],
-        "emerging": false
+        "emerging": False
     },
     "investment_crypto": {
         "summary": "A collection of investment_crypto scams targeting victims via email, sms, whatsapp.",
@@ -349,7 +349,7 @@ FAMILIES: dict = {
             "SEBI guaranteed secret plan! \u20b9299 invest karo aur fixed 50% monthly return pao. Loss impossible.",
             "SEBI guaranteed secret plan! \u20b9499 invest karo aur fixed 30% monthly return pao. Loss impossible."
         ],
-        "emerging": false
+        "emerging": False
     },
     "job_scam": {
         "summary": "A collection of job_scam scams targeting victims via sms, email, whatsapp.",
@@ -399,7 +399,7 @@ FAMILIES: dict = {
             "Aap select ho gaye ho. Joining letter ke liye security deposit \u20b9499 pay karo. Interview required nahi hai.",
             "You are selected without interview for a work-from-home role earning \u20b910,000/day. Pay \u20b9999 registration fee to start today."
         ],
-        "emerging": false
+        "emerging": False
     },
     "upi_payment": {
         "summary": "A collection of upi_payment scams targeting victims via whatsapp, sms, email.",
@@ -449,7 +449,7 @@ FAMILIES: dict = {
             "\u20b925,000 refund pending. Open https://parcel-update.example and enter UPI PIN to receive the amount.",
             "A payment dispute requires immediate validation. Approve the collect request and share confirmation code 820420."
         ],
-        "emerging": false
+        "emerging": False
     },
     "account_takeover": {
         "summary": "A collection of account_takeover scams targeting victims via whatsapp, email, sms.",
@@ -499,7 +499,7 @@ FAMILIES: dict = {
             "A confidential document was shared with you. Sign in to view it: https://parcel-update.example",
             "A confidential document was shared with you. Sign in to view it: https://parcel-update.example"
         ],
-        "emerging": false
+        "emerging": False
     }
 }
 

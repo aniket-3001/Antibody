@@ -324,7 +324,7 @@ def _report_row(r: sqlite3.Row) -> dict:
         "is_control": bool(r["is_control"]),
         "cognee_data_id": r["cognee_data_id"],
         "pruned": bool(r["pruned"]),
-        "verdict_json": r.get("verdict_json"),
+        "verdict_json": r["verdict_json"],
     }
 
 
