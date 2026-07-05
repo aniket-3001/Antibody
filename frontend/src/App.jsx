@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Fingerprint, Copy, CheckCircle2, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import CheckView, { Verdict } from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
@@ -8,8 +8,85 @@ import LeaderboardView from "./components/LeaderboardView.jsx";
 import MyReportsView from "./components/MyReportsView.jsx";
 import ExtensionPreviewView from "./components/ExtensionPreviewView.jsx";
 import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
+import { Modal } from "./components/ui/modal.jsx";
+import { Button } from "./components/ui/button.jsx";
 import { cn } from "./lib/utils.js";
-import { getFeed, getReport, submitOutcome } from "./api.js";
+import { getFeed, getReport, submitOutcome, forgetReporter } from "./api.js";
+import { getClientId, resetClientId } from "./lib/identity.js";
+
+function ReporterIdPanel() {
+  const [id, setId] = useState(() => getClientId());
+  const [copied, setCopied] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const doReset = async () => {
+    setBusy(true);
+    try {
+      await forgetReporter(id);
+      const fresh = resetClientId();
+      setId(fresh);
+      showToast("Your old id and every report tied to it were deleted from our server.", {
+        title: "Forgotten",
+        variant: "safe",
+      });
+    } catch (e) {
+      showToast(String(e.message || e), { title: "Couldn't reach the server", variant: "danger" });
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="hidden md:flex flex-col gap-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-3 text-xs">
+      <div className="flex items-center gap-1.5 font-bold text-[var(--color-ink)]">
+        <Fingerprint size={14} className="text-[var(--color-brand)]" /> Your anonymous id
+      </div>
+      <div className="truncate font-mono text-[var(--color-muted)]" title={id}>{id}</div>
+      <div className="flex gap-2">
+        <button
+          onClick={copy}
+          className="flex items-center gap-1 font-bold text-[var(--color-brand)] hover:underline"
+        >
+          {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+        <button
+          onClick={() => setConfirming(true)}
+          className="flex items-center gap-1 font-bold text-[var(--color-danger)] hover:underline"
+        >
+          <RotateCcw size={12} /> Forget me
+        </button>
+      </div>
+
+      <Modal isOpen={confirming} onClose={() => setConfirming(false)} title="Forget this id?">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--color-body)]">
+            This deletes every report you've filed and your trust/leaderboard
+            score from our server, then gives this browser a brand-new
+            anonymous id. It can't be undone, and your old My Reports history
+            won't be recoverable.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" className="flex-1" onClick={() => setConfirming(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button variant="destructive" className="flex-1" onClick={doReset} disabled={busy}>
+              {busy ? "Deleting…" : "Yes, forget me"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
 
 function SharedVerdictView({ reportId, onBack }) {
   const [v, setV] = useState(null);
@@ -169,9 +246,12 @@ function MainApp() {
           ))}
         </nav>
 
-        <div className="mt-auto pt-8 text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
-          Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
-          Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+        <div className="mt-auto pt-8 flex flex-col gap-4">
+          <div className="text-[13px] leading-relaxed text-[var(--color-muted)] hidden md:block">
+            Got something suspicious? Check it here — and if it was a scam, tell us.<br /><br />
+            Every report helps protect the next person. Powered by <b className="text-[var(--color-ink)]">Cognee</b>.
+          </div>
+          <ReporterIdPanel />
         </div>
       </aside>
 

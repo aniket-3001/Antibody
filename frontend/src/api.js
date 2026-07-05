@@ -45,3 +45,10 @@ export const getMyReports = (reporterId) =>
 
 export const getLeaderboard = (reporterId) =>
   fetch(`${API_BASE}/leaderboard?reporter_id=${encodeURIComponent(reporterId)}`).then(j);
+
+export const forgetReporter = (reporterId) =>
+  fetch(`${API_BASE}/reporter/forget`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reporter_id: reporterId }),
+  }).then(j);
