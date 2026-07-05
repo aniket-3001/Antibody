@@ -38,7 +38,7 @@ export function Modal({ isOpen, onClose, title, children, className }) {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               className={cn(
-                "pointer-events-auto relative w-full max-w-md overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_16px_48px_-12px_rgba(0,255,65,0.15)]",
+                "pointer-events-auto relative w-full max-w-md overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_16px_48px_-12px_rgba(30,58,138,0.15)]",
                 className
               )}
             >

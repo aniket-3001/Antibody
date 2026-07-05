@@ -100,8 +100,8 @@ function runGraphEngine(canvas, rawNodes, rawEdges, onSelect) {
         const mx = (e.src.x + e.dst.x) / 2, my = (e.src.y + e.dst.y) / 2;
         ctx.save(); ctx.font = "600 9px system-ui,sans-serif";
         const tw = ctx.measureText(e.label).width;
-        ctx.fillStyle = "rgba(10,10,10,0.9)"; ctx.fillRect(mx - tw / 2 - 3, my - 7, tw + 6, 13);
-        ctx.fillStyle = hasSel ? "#00ff41" : "#a3a3a3"; ctx.globalAlpha = alpha;
+        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(mx - tw / 2 - 3, my - 7, tw + 6, 13);
+        ctx.fillStyle = hasSel ? "#1e3a8a" : "#64748b"; ctx.globalAlpha = alpha;
         ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e.label, mx, my);
         ctx.restore();
       }
@@ -115,14 +115,14 @@ function runGraphEngine(canvas, rawNodes, rawEdges, onSelect) {
       if (isSel) { ctx.shadowColor = n.color || DEF_COLOR; ctx.shadowBlur = 20; }
       ctx.beginPath(); ctx.arc(n.x, n.y, NODE_R, 0, Math.PI * 2);
       ctx.fillStyle = col; ctx.fill();
-      ctx.strokeStyle = isSel ? "#00ff41" : "rgba(10,10,10,0.9)";
+      ctx.strokeStyle = isSel ? "#1e3a8a" : "rgba(255,255,255,0.9)";
       ctx.lineWidth = isSel ? 3 : 2; ctx.stroke(); ctx.shadowBlur = 0;
       if (scale > 0.32) {
         ctx.font = "600 11px system-ui,sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
         const lbl = n.label.length > 20 ? n.label.slice(0, 18) + "…" : n.label;
         const tw = ctx.measureText(lbl).width;
-        ctx.fillStyle = "rgba(10,10,10,0.9)"; ctx.fillRect(n.x - tw / 2 - 3, n.y + NODE_R + 3, tw + 6, 14);
-        ctx.fillStyle = active ? "#e5e5e5" : "#737373"; ctx.fillText(lbl, n.x, n.y + NODE_R + 4);
+        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(n.x - tw / 2 - 3, n.y + NODE_R + 3, tw + 6, 14);
+        ctx.fillStyle = active ? "#0f172a" : "#64748b"; ctx.fillText(lbl, n.x, n.y + NODE_R + 4);
       }
       ctx.globalAlpha = 1;
     });
@@ -298,7 +298,7 @@ export default function GraphView() {
               </div>
 
               {selected.type === "tactic" && (
-                <div className="mt-2 flex flex-col gap-3 rounded-lg border border-[var(--color-line)] bg-black/40 p-4 relative overflow-hidden">
+                <div className="mt-2 flex flex-col gap-3 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-2)] p-4 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-brand)] opacity-50" />
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
                     <Activity size={14} className="text-[var(--color-brand)]" /> Tactic Intel

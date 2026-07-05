@@ -1,40 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #00ff41;
-  --color-brand-2: #00cc33;
-  --color-brand-soft: #003300;
+  --color-brand: #1e3a8a;
+  --color-brand-2: #3b82f6;
+  --color-brand-soft: #eff6ff;
   
-  --color-ink: #f5f5f5;
-  --color-body: #a3a3a3;
-  --color-muted: #737373;
+  --color-ink: #0f172a;
+  --color-body: #475569;
+  --color-muted: #94a3b8;
   
-  --color-surface: #0a0a0a;
-  --color-surface-2: #141414;
-  --color-line: #262626;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-line: #e2e8f0;
   
-  --color-danger: #ff003c;
-  --color-danger-bg: #33000c;
-  --color-danger-line: #660018;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-danger-line: #fca5a5;
   
-  --color-warn: #ffb703;
-  --color-warn-bg: #332500;
-  --color-warn-line: #664a00;
+  --color-warn: #f59e0b;
+  --color-warn-bg: #fffbeb;
+  --color-warn-line: #fcd34d;
   
-  --color-calm: #00f0ff;
-  --color-calm-bg: #003033;
-  --color-calm-line: #006066;
+  --color-calm: #06b6d4;
+  --color-calm-bg: #ecfeff;
+  --color-calm-line: #67e8f9;
   
-  --color-safe: #00ff41;
-  --color-safe-bg: #003300;
-  --color-safe-line: #00661a;
+  --color-safe: #10b981;
+  --color-safe-bg: #ecfdf5;
+  --color-safe-line: #6ee7b7;
   
   --radius-xl: 16px;
   --radius-lg: 12px;
   --radius-pill: 999px;
   
-  --shadow-custom: 0 4px 24px -8px rgba(0, 255, 65, 0.15);
-  --shadow-custom-sm: 0 2px 12px -4px rgba(0, 255, 65, 0.1);
+  --shadow-custom: 0 10px 25px -5px rgba(30, 58, 138, 0.1);
+  --shadow-custom-sm: 0 4px 6px -1px rgba(30, 58, 138, 0.05);
 }
 
 @layer base {
@@ -48,10 +48,8 @@
     margin: 0;
     color: var(--color-body);
     -webkit-font-smoothing: antialiased;
-    background-color: #050505;
-    background-image: 
-      radial-gradient(circle at 15% 50%, rgba(0, 255, 65, 0.04), transparent 50%),
-      radial-gradient(circle at 85% 30%, rgba(255, 0, 60, 0.03), transparent 50%);
+    background-color: #f8fafc;
+    background-image: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
     background-attachment: fixed;
   }
 }

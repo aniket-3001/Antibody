@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils"
 
 const Button = React.forwardRef(({ className, variant = "default", size = "default", ...props }, ref) => {
   const variants = {
-    default: "bg-[var(--color-brand)] text-[var(--color-surface)] hover:bg-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(0,255,65,0.7)]",
+    default: "bg-[var(--color-brand)] text-[var(--color-surface)] hover:bg-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(30,58,138,0.7)]",
     secondary: "bg-[var(--color-surface-2)] text-[var(--color-ink)] hover:bg-[var(--color-line)]",
     ghost: "hover:bg-[var(--color-surface-2)] text-[var(--color-muted)] hover:text-[var(--color-ink)]",
     destructive: "bg-[var(--color-danger)] text-white hover:opacity-90",

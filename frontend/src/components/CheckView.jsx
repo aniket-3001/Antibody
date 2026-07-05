@@ -247,7 +247,7 @@ function Verdict({ v, outcome, onOutcome }) {
               <Button 
                 variant="secondary" 
                 size="sm" 
-                className="gap-1.5 mt-1 border-[var(--color-line)] bg-black/20 hover:bg-black/40 backdrop-blur-sm"
+                className="gap-1.5 mt-1 border-[var(--color-line)] bg-[var(--color-surface-2)]/50 hover:bg-[var(--color-surface-2)] backdrop-blur-sm"
                 onClick={() => setIsShareModalOpen(true)}
               >
                 <Share2 size={14} /> Warn Others
@@ -363,7 +363,7 @@ function Verdict({ v, outcome, onOutcome }) {
           <p className="text-sm text-[var(--color-body)]">
             Copy this summary and send it to your friends and family to keep them safe.
           </p>
-          <div className="relative rounded-lg bg-[#0a0a0a] border border-[var(--color-line)] p-4 text-sm font-mono text-[var(--color-ink)] leading-relaxed">
+          <div className="relative rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-line)] p-4 text-sm font-mono text-[var(--color-ink)] leading-relaxed">
             ⚠️ <b>WARNING: Active Scam Detected</b> ⚠️<br/><br/>
             <b>Type:</b> {v.family_display || "Suspicious Message"}<br/>
             <b>Threat Level:</b> {v.band_label.toUpperCase()}<br/><br/>

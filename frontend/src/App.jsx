@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import CheckView from "./components/CheckView.jsx";
 import FeedView from "./components/FeedView.jsx";
 import GraphView from "./components/GraphView.jsx";
+import LeaderboardView from "./components/LeaderboardView.jsx";
+import MyReportsView from "./components/MyReportsView.jsx";
+import ExtensionPreviewView from "./components/ExtensionPreviewView.jsx";
 import { Toaster, toast as showToast } from "./components/ui/toast.jsx";
 import { cn } from "./lib/utils.js";
 
@@ -14,6 +17,9 @@ export default function App() {
     { id: "check", label: "Check a message" },
     { id: "feed", label: "What's going around" },
     { id: "graph", label: "Knowledge graph" },
+    { id: "leaderboard", label: "Leaderboard" },
+    { id: "reports", label: "My Reports" },
+    { id: "extension", label: "Extension Preview" },
   ];
 
   // Mock Real-time Threat Alerts
@@ -63,7 +69,7 @@ export default function App() {
               {tab === t.id && (
                 <motion.div
                   layoutId="active-tab"
-                  className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(0,255,65,0.6)]"
+                  className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-2)] shadow-[0_8px_18px_-8px_rgba(30,58,138,0.6)]"
                   initial={false}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
@@ -74,8 +80,13 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mt-4">
-        {tab === "check" ? <CheckView /> : tab === "feed" ? <FeedView /> : <GraphView />}
+      <main>
+        {tab === "check" && <CheckView />}
+        {tab === "feed" && <FeedView />}
+        {tab === "graph" && <GraphView />}
+        {tab === "leaderboard" && <LeaderboardView />}
+        {tab === "reports" && <MyReportsView />}
+        {tab === "extension" && <ExtensionPreviewView />}
       </main>
 
       <footer className="mt-12 text-center text-[15px] leading-relaxed text-[var(--color-body)]">

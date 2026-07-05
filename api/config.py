@@ -9,10 +9,27 @@ verdict band (see api/verdict/engine.py) — Cognee is the star, not a crutch.
 from __future__ import annotations
 
 import os
+import socket
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# This dev network assigns IPv6 addresses via SLAAC but doesn't actually route
+# them — outbound connect() to any AAAA-resolved host (HF Hub, NIM, etc.) hangs
+# in SYN_SENT until the OS's own ~75s timeout, freezing the whole event loop
+# (no library here does Happy-Eyeballs fallback). Force IPv4-only resolution
+# for this process so DNS never hands out an address we can't reach.
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if family == socket.AF_UNSPEC:
+        family = socket.AF_INET
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+
+
+socket.getaddrinfo = _ipv4_only_getaddrinfo
 
 
 class Settings(BaseSettings):
@@ -73,6 +90,12 @@ class Settings(BaseSettings):
             # Deterministic search + fast startup (spec/meetgraph parity)
             "AUTO_FEEDBACK": "false",
             "COGNEE_SKIP_CONNECTION_TEST": "true",
+            # `import litellm` otherwise does a *synchronous* network fetch of
+            # model_prices_and_context_window.json on first import, blocking
+            # the whole event loop (it runs on the request path, not a thread).
+            # On flaky/restricted networks the connect() itself can hang for
+            # 75s+. The bundled backup file is fine for our purposes.
+            "LITELLM_LOCAL_MODEL_COST_MAP": "True",
         }
         if self.llm_endpoint:
             env["LLM_ENDPOINT"] = self.llm_endpoint

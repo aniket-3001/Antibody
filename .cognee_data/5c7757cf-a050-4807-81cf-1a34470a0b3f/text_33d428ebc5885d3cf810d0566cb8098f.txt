@@ -1,0 +1,1 @@
+We hypothesize that CNN-based object detectors from the YOLO family provide the best balance between inference latency and detection accuracy for real-time edge deployment. Transformer-based detectors are generally more computationally expensive and therefore less suitable for real-time applications.
