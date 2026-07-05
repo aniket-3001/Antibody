@@ -41,8 +41,11 @@ family after a confirmed outcome, and `forget` prunes false positives back out.
 
    The gate is asymmetric by design: a legitimate message can never be
    hard-accused, only an exact indicator match can.
-4. **Feed** (`api/feed/`) — `GET /feed`, `GET /families`, `GET /graph` surface
+4. **Feed & Graph** (`api/feed/`) — `GET /feed`, `GET /families`, `GET /graph` surface
    trending families and the shared-tactic graph for the live threat feed.
+5. **Help Chatbot** (`help_api/`) — A completely isolated FastAPI process that runs 
+   on a separate port (`8010`) to provide an interactive Q&A assistant against a 
+   knowledge base of markdown documents, preventing memory scope bleed with the main app.
 
 ## Project layout
 
@@ -54,8 +57,11 @@ api/
   memory/           # the only package that imports cognee: ontology + MemoryService,
                      # ops store (SQLite), semantic index, confidence signals
   verdict/          # 4-band confidence engine + guidance mapping
-frontend/           # React + Vite — CheckView (submit/verdict) + FeedView (live feed)
+frontend/           # React + Vite — CheckView (submit/verdict), FeedView (live feed), HelpView (chatbot)
+help_api/         # Isolated Help Chatbot backend (FastAPI) serving on port 8010
+help_docs/        # Markdown knowledge base files for the Help Chatbot
 seed/               # synthetic scam families, reports, and legit controls
+api/seed.py         # Production data seeder script to populate a realistic baseline
 ```
 
 ## Running it
@@ -68,12 +74,19 @@ cp .env.example .env
 pip install -r api/requirements.txt
 # optional, for scanned-screenshot OCR (needs the Tesseract binary on PATH):
 pip install pytesseract pillow
+# Main Backend (Port 8000)
 uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 
-# Frontend (separate terminal)
+# Help Chatbot Backend (Port 8010 - Separate terminal)
+uvicorn help_api.main:app --host 127.0.0.1 --port 8010 --reload
+
+# Seed Production Data (Run once to populate the UI)
+python3 -m api.seed
+
+# Frontend (Separate terminal)
 cd frontend
 npm install
-npm run dev    # http://localhost:5173, proxies /report /feed /families /graph /health to :8000
+npm run dev    # http://localhost:5173, proxies /report /feed /graph to :8000 and /help to :8010
 ```
 
 The backend seeds its own graph on first boot (synthetic reports across six
@@ -180,6 +193,8 @@ Two flags matter more than they look:
 - `--no-cpu-throttling` — Antibody runs `cognify()` as a background task
   *after* responding; without this flag Cloud Run throttles CPU to ~zero
   once the response is sent, starving the graph-enrichment step.
+
+*Security & Performance Note:* Antibody employs "Denial of Wallet" protection by caching the LLM output `verdict_json` in the SQLite database (`PRAGMA journal_mode=WAL;` is enabled for high concurrency). Shareable links dynamically fetch the cached report instantly rather than invoking the LLM repeatedly.
 
 Put the LLM key in Secret Manager and reference it with
 `--set-secrets "LLM_API_KEY=<secret-name>:latest"` — never in `--set-env-vars`
